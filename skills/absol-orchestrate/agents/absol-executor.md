@@ -63,7 +63,7 @@ Append one `[job]` entry to `todo-run.md`:
 
 ```
 - [job]
-  - batch_id: {provided by orchestrator}
+  - run_id: {provided by orchestrator}
   - task_id: {from the task}
   - status: {done|failed|blocked|needs-review}
   - worker: sonnet

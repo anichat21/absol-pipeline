@@ -76,12 +76,13 @@ For each task, write using the exact `[task]` schema:
   - acceptance_criteria: {how to verify this is done correctly}
   - verification: {specific command or check to run}
   - risk: {low|medium|high}
-  - batching_hint: {grouping suggestion for batch-builder}
-  - parallelizable: {yes|no}
+  - execution_order: {N}
   - status: pending
 ```
 
-## Step 5 — Set dependencies
+## Step 5 — Set dependencies and assign execution order
+
+### Dependencies
 
 Map dependencies accurately:
 - If task B modifies a file that task A creates, B depends on A
@@ -89,10 +90,15 @@ Map dependencies accurately:
 - ARCH refactor tasks come before FEATURE tasks that need the refactored code
 - Do not create circular dependencies
 
-Mark `parallelizable: yes` only when:
-- The task has no dependencies on other pending tasks
-- The task does not share files or modules with other tasks in the same batch hint
-- The task's subsystem is not actively being modified by another task
+### Execution order
+
+Assign `execution_order` as a 1-indexed integer to each task. This determines the exact sequence the orchestrator will run tasks — one at a time, serially. The ordering replaces the old batch-builder; the planner now owns the full run sequence.
+
+Order by these priorities (highest first):
+1. **Dependency chains** — prerequisites always come before dependents
+2. **Subsystem grouping** — tasks touching the same subsystem should be adjacent in the order, even without explicit dependencies, so related changes stay close together and each task builds on the previous one's output
+3. **Risk level** — lower risk before higher risk, so early tasks are less likely to block the run
+4. **Scope** — smaller, more contained tasks before larger ones, for early wins
 
 ## Step 6 — Record tech debt
 
@@ -117,6 +123,7 @@ If `state.md` has no "Tech Debt" section, create one.
 Output a summary:
 - How many tasks were created
 - Task IDs and titles (brief list)
+- Execution order: TSK-001 → TSK-003 → TSK-002 → ... (showing the planned run sequence)
 - Any prerequisite refactors that were added
 - Any tech debt recorded
 - Any items skipped and why
@@ -125,6 +132,7 @@ Output a summary:
 
 - You are the ONLY writer of `todo.md`. No other component may add tasks.
 - Every task must follow the `[task]` schema exactly. No extra fields, no missing fields.
+- Every task must have a unique `execution_order` value. No gaps, no duplicates. Values run from 1 to N where N is the total number of tasks.
 - Descriptions must reference specific files, functions, or code patterns — use function names, variable names, and string literals. Do NOT reference line numbers as they go stale immediately after other tasks modify files.
 - Do not create vague tasks like "improve the auth system". Be specific: "Add rate limiting to POST /api/login in src/routes/auth.ts".
 - If a work item is too vague to decompose, leave it in plan.md with status: blocked and note what information is missing.

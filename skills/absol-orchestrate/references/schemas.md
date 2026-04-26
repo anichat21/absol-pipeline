@@ -52,8 +52,7 @@ All markdown data files use these compact, machine-readable schemas. Each item i
   - acceptance_criteria: How to verify done
   - verification: Command or check to run
   - risk: low | medium | high
-  - batching_hint: grouping suggestion (e.g. "auth-cleanup", "api-v2")
-  - parallelizable: yes | no
+  - execution_order: 1 | 2 | 3 ... (1-indexed, planner-assigned run sequence)
   - status: pending | in-progress | done | failed | blocked
 ```
 
@@ -63,30 +62,15 @@ All markdown data files use these compact, machine-readable schemas. Each item i
 
 ```
 - [job]
-  - batch_id: BAT-001
+  - run_id: RUN-2026-04-26
   - task_id: TSK-001
   - status: running | done | failed | blocked | needs-review
-  - worker: sonnet | opus
+  - worker: sonnet | opus | inline
   - files_touched: path/a.ts, path/b.ts
   - summary: One-line description of what was done
   - verification_result: pass | fail | skipped
   - blocker: Description of blocker (or: none)
   - review_flag: yes | no
-```
-
----
-
-## Batch output — `[batch]`
-
-```
-- [batch]
-  - id: BAT-001
-  - title: Short batch description
-  - included_tasks: TSK-001, TSK-002, TSK-003
-  - blocked_tasks: TSK-004 (reason)
-  - parallel_groups: [TSK-001, TSK-002] | [TSK-003]
-  - serial_chain: TSK-001 → TSK-003 (if dependency)
-  - notes: Any relevant context
 ```
 
 ---
@@ -113,7 +97,7 @@ All markdown data files use these compact, machine-readable schemas. Each item i
 | INB-   | inbox.md items |
 | PLN-   | plan.md items |
 | TSK-   | todo.md tasks |
-| BAT-   | batch output |
+| RUN-   | Pipeline invocation run IDs |
 
 IDs are monotonically increasing within each file. When promoting items between files (e.g. inbox → plan → todo), create a new ID in the target file and reference the source ID in the description or notes.
 
