@@ -1,59 +1,49 @@
 ---
 name: absol-newproject
-description: "Scaffolds a new project for the absol pipeline with the .absol/ layout — root holds CLAUDE.md, state.md, vision.md, roadmap.md; .absol/ holds CONTEXT.md, adr/, inbox.md, plan.md, todo.md, todo-run.md, bugs.md, tech-debt.md, archive/. Also writes Docker files (Dockerfile, docker-compose.yml, nginx.conf, .dockerignore), .gitignore, and runs git init. Use this skill whenever the user wants to start a new project, create a project, scaffold a project, init a project, or set up a new project. Trigger on phrases like 'new project', 'start a project', 'scaffold', 'create a project', 'init project', 'set up a new project', or when the user describes a project idea and wants to get started building it. This skill handles ONLY the project skeleton and MD files — it does NOT select languages, frameworks, or create package.json/tsconfig. The absol pipeline handles all actual implementation after scaffolding."
+description: "Scaffolds a new project for the absol pipeline with the .absol/ layout — root holds CLAUDE.md, state.md, vision.md, roadmap.md; .absol/ holds CONTEXT.md, adr/, inbox.md, plan.md, todo.md, todo-run.md, bugs.md, tech-debt.md, archive/. Also writes Docker files, .gitignore, and runs git init. Use whenever the user wants to start, create, scaffold, init, or set up a new project. Trigger on phrases like 'new project', 'start a project', 'scaffold', 'create a project', 'init project', 'set up a new project', or when the user describes a project idea and wants to get started building it. Handles ONLY skeleton + MD files — no language/framework choices. The absol pipeline handles implementation."
 ---
 
 # absol-newproject
 
-Scaffold a new project directory with everything the absol pipeline needs to start working.
+Scaffold a new project at `/mnt/nas/dev/projects/<name>/` with the `.absol/` layout, Docker files, `.gitignore`, and `git init`.
 
-## What This Skill Does
+Layout written:
 
-Creates a project folder under `/mnt/nas/dev/projects/<name>/` with the absol `.absol/` layout:
+```
+<name>/
+├── CLAUDE.md  state.md  vision.md  roadmap.md          (root, tracked)
+├── Dockerfile  docker-compose.yml  nginx.conf  .dockerignore
+├── .gitignore
+└── .absol/
+    ├── CONTEXT.md  bugs.md  tech-debt.md  adr/0000-template.md   (tracked)
+    ├── inbox.md  plan.md  todo.md  todo-run.md                   (gitignored)
+    └── archive/                                                  (gitignored)
+```
 
-- **Root** (human-facing, version-controlled): `CLAUDE.md`, `state.md`, `vision.md`, `roadmap.md`
-- **`.absol/`** (pipeline-owned, hidden — convention matches `.git/`, `.github/`):
-  - `CONTEXT.md` — empty domain glossary, lazy-grown by grill-me / architect / note-taker
-  - `adr/0000-template.md` — Architecture Decision Record template
-  - `inbox.md`, `plan.md`, `todo.md`, `todo-run.md` — pipeline state (gitignored)
-  - `bugs.md`, `tech-debt.md` — durable issue/debt logs (tracked)
-  - `archive/` — finalizer's archive folder (gitignored)
-- Docker files (`Dockerfile`, `docker-compose.yml`, `nginx.conf`, `.dockerignore`)
-- `.gitignore` with the absol churn-files ignored
-- An initialised git repo
+## Inputs
 
-This skill is the **entry point** before the absol pipeline. After scaffolding, the user runs absol-orchestrate to triage, plan, and execute actual implementation work.
+- **Project name** — lowercase, hyphenated. Normalise spaces → hyphens, uppercase → lowercase.
+- **Project description** — flows into vision.md and CLAUDE.md. Don't write "TBD"; use what the user gave you.
 
-## Workflow
+If either is missing, ask one focused question. Don't run a questionnaire.
 
-### Step 1: Gather Input
-
-You need two things from the user. They may have already provided these in their message — extract them if so, don't re-ask unnecessarily.
-
-1. **Project name** — lowercase, hyphenated (e.g. `my-cool-app`). If the user gives a name with spaces or mixed case, normalize it.
-2. **Project idea / description** — a brief description of what the project is. This populates vision.md and CLAUDE.md. Can be a sentence or a paragraph.
-
-If either is missing, ask. Keep it brief — one question, not a questionnaire.
-
-### Step 2: Find Next Available Port
-
-Scan all existing `docker-compose.yml` files under `/mnt/nas/dev/projects/` to find which host ports are already mapped. Pick the next available port starting from 8180, incrementing by 1. Use this command:
+## Allocate port
 
 ```bash
 grep -rh 'ports:' -A1 /mnt/nas/dev/projects/*/docker-compose.yml 2>/dev/null | grep -oP '\d+(?=:80)' | sort -n
 ```
 
-If no ports are found, start at 8180.
+Pick the next free port from 8180 up. If nothing is allocated, start at 8180.
 
-### Step 3: Create Project Directory
+## Create directories
 
 ```bash
 mkdir -p /mnt/nas/dev/projects/<name>/.absol/adr /mnt/nas/dev/projects/<name>/.absol/archive
 ```
 
-### Step 4: Write All Files
+## Write files
 
-Write these files using the Write tool. All templates below use `{name}` for the project name, `{description}` for the user's project idea, `{port}` for the allocated port, and `{date}` for today's date.
+Templates use `{name}`, `{description}`, `{port}`, `{date}` placeholders.
 
 ---
 
@@ -106,8 +96,8 @@ Root (human-facing, tracked):
 
 | File | Purpose |
 |---|---|
-| `CLAUDE.md` | This file. Project meta, stack, run commands. |
-| `state.md` | **Current truth snapshot.** Last session, in progress, parked items. Updated by the finalizer. |
+| `CLAUDE.md` | Project meta, stack, run commands. |
+| `state.md` | Truth snapshot. Last session, in progress, parked items. Finalizer-owned. |
 | `vision.md` | High-level vision, design philosophy, project brief. |
 | `roadmap.md` | Phased roadmap and milestones. |
 
@@ -115,26 +105,30 @@ Root (human-facing, tracked):
 
 | File | Purpose | Tracked |
 |---|---|---|
-| `CONTEXT.md` | **Domain glossary.** Names of concepts in this project, definitions, naming conventions. Lazy-grown. | yes |
-| `adr/` | **Architecture Decision Records.** One file per load-bearing decision. Only the architect skill writes ADRs. | yes |
-| `bugs.md` | Known bugs. Removed only by fix-and-task or "won't fix" ADR. | yes |
-| `tech-debt.md` | Known debt. Reviewed by `/absol-architect` to promote into tasks or ADR away. | yes |
-| `inbox.md` | Active intake. Items at `status: new`, `needs-shaping`, or `shaped`. | no (gitignored) |
-| `plan.md` | Shaped items with PRD sub-fields (modules, testing, out_of_scope). | no (gitignored) |
-| `todo.md` | Executable tasks. | no (gitignored) |
-| `todo-run.md` | Live execution log. | no (gitignored) |
-| `archive/` | Finalizer-snapshotted history (per-run inbox snapshots, run logs, monthly session summaries). | no (gitignored) |
+| `CONTEXT.md` | Domain glossary. Lazy-grown. | yes |
+| `adr/` | Architecture Decision Records. Architect-only writes. | yes |
+| `bugs.md` | Known bugs. Removed by fix-and-task or "won't fix" ADR. | yes |
+| `tech-debt.md` | Known debt. Reviewed by `/absol-architect`. | yes |
+| `inbox.md` | Active intake. | no |
+| `plan.md` | Shaped items with `modules` / `testing` / `out_of_scope`. | no |
+| `todo.md` | Executable tasks. | no |
+| `todo-run.md` | Live execution log. | no |
+| `archive/` | Finalizer snapshots. | no |
 
 ## Git
 
 - **Repo:** TBD
-- Commit only when explicitly asked. Use short, descriptive commit messages.
+- Commit only when explicitly asked.
 - Never commit `.env`, credentials, or large binary assets.
-- Do not force-push to `main`.
+- Don't force-push `main`.
 
-## Wrap-Up Rule
+## Capture as we discuss
 
-When asked to **wrap up**, the absol-finalizer skill runs end-of-session: updates `state.md`, snapshots `inbox.md` promoted items into `.absol/archive/`, snapshots `todo-run.md`, compacts old session entries, clears resolved todos. Don't edit pipeline state files by hand — let finalize own them.
+When the user is brainstorming features, bugs, or improvements in conversation (rather than asking to build right now), log them via the `note-taker` skill so they don't get lost. note-taker routes: bugs → `.absol/bugs.md`, tech debt → `.absol/tech-debt.md`, anything else → `.absol/inbox.md` as `status: new`. Default to inbox when ambiguous. Don't break flow to ask — note in passing, confirm in one line, keep the conversation going.
+
+## Wrap-Up
+
+Don't edit pipeline state files by hand. The absol-finalizer skill runs end-of-session: updates `state.md`, snapshots `inbox.md` promoted items + `todo-run.md` into `.absol/archive/`, compacts old sessions, clears resolved todos.
 ```
 
 ---
@@ -185,7 +179,7 @@ Nothing — ready for absol pipeline.
 None.
 ```
 
-Note: `state.md` no longer carries Tech Debt, Known Bugs, or Planned Features sections. Those live in `.absol/tech-debt.md`, `.absol/bugs.md`, and `.absol/inbox.md` respectively. The finalizer keeps `state.md` a clean truth snapshot.
+`state.md` doesn't carry Tech Debt / Known Bugs / Planned Features sections. Those live in `.absol/tech-debt.md`, `.absol/bugs.md`, `.absol/inbox.md`.
 
 ---
 
@@ -204,16 +198,11 @@ No phases completed yet. Run absol pipeline to begin planning.
 ```markdown
 # {Name} — Context Glossary
 
-Domain terms and naming conventions for this project. Every absol agent reads this file at start of run.
-
-This file is lazy-grown: `/grill-me`, `/absol-architect`, and `note-taker` add terms when new concepts are named or sharpened. Edit by hand any time.
+Domain terms and naming conventions. Every absol agent reads this at start of run. Lazy-grown by `/grill-me`, `/absol-architect`, `note-taker`. Edit by hand any time.
 
 ## Domain Terms
 
-<!--
-Format:
-**Term** — definition. Use for X. Don't say Y or Z.
--->
+<!-- Format: **Term** — definition. Use for X. Don't say Y or Z. -->
 
 None yet.
 
@@ -231,23 +220,19 @@ None yet.
 ```markdown
 # ADR-0000 — Template
 
-**Status:** template — copy this file as `NNNN-short-slug.md` for new decisions.
+**Status:** template — copy as `NNNN-short-slug.md` for new decisions.
 
 ## Status
-
 proposed | accepted | superseded by ADR-NNNN
 
 ## Context
-
-What problem are we facing? What constraints are in play?
+What problem are we facing? What constraints?
 
 ## Decision
-
 What did we choose?
 
 ## Consequences
-
-What tradeoffs did we accept? What does this make easier? What does this make harder? What are we no longer able to reconsider casually?
+What tradeoffs did we accept? What does this make easier or harder?
 ```
 
 ---
@@ -260,8 +245,6 @@ What tradeoffs did we accept? What does this make easier? What does this make ha
 No items yet.
 ```
 
----
-
 ### .absol/plan.md
 
 ```markdown
@@ -269,8 +252,6 @@ No items yet.
 
 No active plans yet. Run absol pipeline to triage work and generate plans.
 ```
-
----
 
 ### .absol/todo.md
 
@@ -280,43 +261,31 @@ No active plans yet. Run absol pipeline to triage work and generate plans.
 No tasks yet — run absol pipeline to generate.
 ```
 
----
-
 ### .absol/todo-run.md
 
 ```markdown
 # todo-run.md — cleared after scaffolding on {date}
 ```
 
----
-
 ### .absol/bugs.md
 
 ```markdown
 # {Name} — Known Bugs
 
-No known bugs. Add via `note-taker` (e.g. "note that X is broken because Y") or via the pipeline reviewer.
-
-Each entry follows the absol note schema (see absol README). Bugs are removed only when fixed (and a task records the fix) or when an ADR records the decision not to fix.
+No known bugs. Add via `note-taker`. Bugs are removed only when fixed (a task records the fix) or when an ADR records the decision not to fix.
 ```
-
----
 
 ### .absol/tech-debt.md
 
 ```markdown
 # {Name} — Tech Debt
 
-No tech debt logged. Add via `note-taker` ("note this as tech debt: …").
-
-Reviewed by `/absol-architect` runs: top items get promoted into `inbox.md` as actionable tasks or get ADR'd as accepted shape.
+No tech debt logged. Add via `note-taker`. Reviewed by `/absol-architect`: top items get promoted to `inbox.md` as actionable or get ADR'd as accepted shape.
 ```
-
----
 
 ### .absol/archive/.gitkeep
 
-(Empty file — preserves the folder so finalizer doesn't have to mkdir on first run. The folder itself is gitignored so the .gitkeep won't actually be tracked; create it anyway as a marker.)
+Empty file. Marks the folder so the finalizer doesn't have to mkdir on first run. (The folder is gitignored, so the .gitkeep won't track — create it anyway as a marker.)
 
 ---
 
@@ -336,8 +305,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 ```
 
----
-
 ### docker-compose.yml
 
 ```yaml
@@ -348,8 +315,6 @@ services:
       - "{port}:80"
     restart: unless-stopped
 ```
-
----
 
 ### nginx.conf
 
@@ -365,8 +330,6 @@ server {
 }
 ```
 
----
-
 ### .dockerignore
 
 ```
@@ -376,8 +339,6 @@ dist
 .absol
 *.md
 ```
-
----
 
 ### .gitignore
 
@@ -398,30 +359,22 @@ dist/
 .absol/archive/
 ```
 
-Tracked inside `.absol/`: `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`. These are decision-bearing or human-readable artefacts a future contributor needs.
+Tracked inside `.absol/`: `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.
 
 ---
 
-### Step 5: Initialize Git
+## Init git & confirm
 
 ```bash
 cd /mnt/nas/dev/projects/<name> && git init
 ```
 
-### Step 6: Confirm & Next Steps
+Tell the user: project path, port allocated, files created (root + `.absol/`), suggest *"Run /absol-orchestrate on this project to triage your idea and start building."*
 
-After all files are written, tell the user:
+## Rules
 
-1. Project scaffolded at `/mnt/nas/dev/projects/<name>/`
-2. Docker port allocated: `{port}`
-3. List the files created (root + `.absol/`)
-4. Suggest next step: "You can now run the absol pipeline on this project to triage your idea, plan the implementation, and start building."
-
-## Important Rules
-
-- **No language/framework decisions.** Don't create package.json, tsconfig, requirements.txt, or any code files. The absol pipeline handles tech choices during planning.
-- **No code files.** This skill creates only MD files, Docker files, .gitignore, and git init.
-- **Normalize project names.** Convert spaces to hyphens, uppercase to lowercase.
-- **Port scanning is required.** Always check existing projects before assigning a port. Don't hardcode ports.
-- **Populate vision.md meaningfully.** The user's project description should flow into vision.md so the absol pipeline has context to work with. Don't just write "TBD" — use what the user gave you.
-- **`.absol/` ownership.** Everything inside `.absol/` is pipeline territory. The user shouldn't edit `inbox.md`, `plan.md`, `todo.md`, or `todo-run.md` directly during normal use — the pipeline owns them. `CONTEXT.md`, `bugs.md`, `tech-debt.md`, and `adr/` are durable and user-editable.
+- No code files (no `package.json`, `tsconfig`, `requirements.txt`, etc.). The pipeline picks the stack during planning.
+- No language/framework decisions.
+- Always allocate a port via the scan — don't hardcode.
+- Populate `vision.md` meaningfully from the user's description.
+- Pipeline owns `.absol/inbox.md`, `plan.md`, `todo.md`, `todo-run.md`. The user can edit `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.

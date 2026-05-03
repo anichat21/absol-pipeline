@@ -135,6 +135,26 @@ User provides work request(s)
 
 Triage and fast-track are no longer separate agents — triage merged into the planner; fast-track merged into the executor as the `micro` tier.
 
+## Model selection
+
+**Default: sonnet.** All skills run in your session model (sonnet by default). Two skills are heavy enough to recommend switching to opus first; two pipeline agents are pinned to opus regardless.
+
+| Component | Where | Model |
+|---|---|---|
+| `absol-orchestrate` | skill (your session) | sonnet |
+| `absol-shaper` | inline in orchestrate | sonnet |
+| `absol-executor` (micro) | inline in orchestrate | sonnet |
+| `absol-finalizer` | skill (inline) | sonnet |
+| `absol-newproject`, `absol-migrate`, `note-taker` | skill (your session) | sonnet |
+| `absol-planner` | spawned agent | **opus** (pinned) |
+| `absol-executor` (full) | spawned agent | **sonnet** (pinned) |
+| `absol-reviewer` | spawned agent | **sonnet** (pinned) |
+| `absol-reviewer-complex` | spawned agent | **opus** (pinned) |
+| `grill-me` | skill (your session) | **switch to opus before invoking** |
+| `absol-architect` | skill (your session) | **switch to opus before invoking** |
+
+The orchestrator delegates cognitively heavy pipeline steps (decomposition, deep review) to opus agents automatically — you don't have to switch sessions to run `/absol-orchestrate`. Only `/grill-me` and `/absol-architect` need an opus session, since they run as user-invoked skills (no agent spawn).
+
 ## Project file structure
 
 | File | Purpose | Owner |
