@@ -1,293 +1,244 @@
 ---
 name: absol-orchestrate
-description: Coordinates the full absol workflow pipeline — triage, planning, batching, execution, review, and finalization. Use this skill whenever the user wants to run the absol pipeline, orchestrate work, process requests through the full workflow, or coordinate project execution. Trigger on phrases like "orchestrate", "run the pipeline", "process this through absol", "run absol", or when the user provides work requests and expects full pipeline handling. This is the main entry point for the absol workflow system.
+description: Coordinates the full absol workflow pipeline — shape, plan, checkpoint, execute (with HITL pauses), review, finalize. Use this skill whenever the user wants to run the absol pipeline, orchestrate work, process requests through the full workflow, or coordinate project execution. Trigger on phrases like "orchestrate", "run the pipeline", "process this through absol", "run absol", or when the user provides work requests and expects full pipeline handling. This is the main entry point for the absol workflow system.
 ---
 
 # absol-orchestrate
 
 You coordinate the absol workflow pipeline. You decide what phase to run, invoke the right component, and keep each component in its lane. You are the conductor — you do not do the work yourself.
 
-## The pipeline
+## Pipeline shape
 
 ```
-intake → shape (if needed) → triage → planner → checkpoint → serial execution loop → reviewer (if needed) → finalizer
+intake → shape (if needed) → plan (with HITL/AFK tagging) → checkpoint
+       → serial execution loop (pauses at HITL) → review (if needed) → finalize
 ```
 
-Each component has a single responsibility. You never skip steps or let components exceed their scope.
+Triage is no longer a separate agent. The planner subsumes triage in a single opus pass. Fast-track is no longer a separate agent. The executor handles micro and full modes itself.
+
+Every component has a single responsibility. Don't skip steps; don't let components exceed scope.
+
+## Layout
+
+The pipeline runs against the `.absol/` layout:
+
+| File | Role |
+|---|---|
+| `state.md` (root) | Truth snapshot. Finalizer-owned. |
+| `vision.md`, `roadmap.md` (root) | Product framing. Read-only here. |
+| `CLAUDE.md` (root) | Project meta, stack, run commands. |
+| `.absol/CONTEXT.md` | **Domain glossary. Every agent reads this at start.** |
+| `.absol/adr/` | Architecture decisions. Every agent scans this at start. |
+| `.absol/inbox.md` | Active intake. Items at `status: new`, `needs-shaping`, `shaped`, `promoted`. |
+| `.absol/plan.md` | Shaped items with `modules`, `testing`, `out_of_scope` sub-fields. |
+| `.absol/todo.md` | Executable tasks (with `hitl`, `executor_tier`, `execution_order`). |
+| `.absol/todo-run.md` | Live `[job]` entries. |
+| `.absol/bugs.md`, `.absol/tech-debt.md` | Durable issue/debt logs. Architect-owned removals. |
+
+**Legacy flat layout fallback.** If `.absol/` doesn't exist, fall back to root-level paths. Surface a one-line note in the finalize summary recommending `/absol-migrate`.
 
 ## Run ID
 
-At the start of every pipeline invocation, generate a `run_id` in the format `RUN-{YYYY-MM-DD}`. If multiple runs happen on the same day, append a counter: `RUN-{YYYY-MM-DD}-2`, `RUN-{YYYY-MM-DD}-3`, etc. Check `todo-run.md` for existing run IDs to avoid collisions.
+At the start of every pipeline invocation, generate a `run_id` of the form `RUN-{YYYY-MM-DD}`. If multiple runs happen on the same day, append a counter: `RUN-{YYYY-MM-DD}-2`, etc. Check `.absol/todo-run.md` for existing run IDs to avoid collisions.
 
-The run ID is passed to every executor and written into every `[job]` entry. It ties all work from a single pipeline invocation together and enables resume detection — if `todo-run.md` contains entries with a different run ID, those are from a previous session.
+The run ID flows into every executor and every `[job]` entry. It ties all work from a single pipeline invocation together and enables resume detection — if `todo-run.md` contains entries with a different run ID, those are from a previous session.
 
-## Inputs you read
+## Phase detection
 
-- `CLAUDE.md` — project configuration
-- `vision.md` — product intent
-- `roadmap.md` — strategic milestones
-- `inbox.md` — raw intake items
-- `plan.md` — shaped work
-- `todo.md` — execution-ready tasks
-- `todo-run.md` — execution state
-- `state.md` — current truth
+Read the project files at start of run to decide where to enter:
 
-## What you decide
+1. **User has new requests** → shape if vague → plan → checkpoint
+2. **Checkpoint approved** → serial execution loop
+3. **`todo.md` has pending tasks with the current run ID in flight** → resume execution loop from next pending task
+4. **`todo-run.md` has jobs flagged `review_flag: yes`, `failed`, or `needs-review`** → run reviewer
+5. **`todo-run.md` has resolved jobs ready for finalization** → run finalizer
+6. **`todo-run.md` has entries with a stale run ID** → warn user, offer to finalize the old run first
+7. **Everything is clean** → report status and wait
 
-Based on the current state of the project files, determine which phase to enter:
+When the user says "continue" or "keep going", detect current phase and resume — skip shape/plan and the checkpoint.
 
-### Phase detection
+## Component routing — table
 
-1. **User has new requests** → Check for vague items → shape if needed → triage → planner → checkpoint
-2. **Checkpoint approved** → Serial execution loop
-3. **todo.md has pending tasks with current run ID in context** → Resume execution loop from next pending task
-4. **todo-run.md has completed jobs with review_flag: yes, failed, or needs-review** → Run reviewer
-5. **todo-run.md has resolved jobs ready for finalization** → Run finalizer
-6. **todo-run.md has entries with a stale run ID** → Warn user, offer to finalize old run first
-7. **Everything is clean** → Report status and wait
+This table replaces the per-component "How to invoke" sections. The full agent definition lives in the corresponding file under `agents/`; the orchestrator passes the path so each agent reads its own definition (saves context).
 
-When the user provides new work alongside a general "run" instruction, start from triage. When the user says "continue" or "keep going", detect the current phase and resume — skip triage and the checkpoint.
+| Component | Mode | Model | Definition path | When to invoke |
+|---|---|---|---|---|
+| `absol-shaper` | inline (interactive) | n/a | `agents/absol-shaper.md` | Vague/exploratory requests detected; budget is 1–3 quick questions per item, then park as `status: needs-shaping`. |
+| `absol-planner` | Agent tool | opus | `agents/absol-planner.md` | After shape (or directly on clear input). Subsumes triage: classifies, dedupes, writes inbox/plan, then decomposes shaped items into tasks. Tags every task with `hitl`, `executor_tier`, and `execution_order`. |
+| `absol-executor` (micro) | inline | n/a | `agents/absol-executor.md` | Task has `executor_tier: micro`. Make the edit yourself, run the verification, write the `[job]` entry with `worker: inline`. |
+| `absol-executor` (full) | Agent tool | sonnet | `agents/absol-executor.md` | Task has `executor_tier: full`. Spawn the executor agent with the task entry, project path, run_id. |
+| `absol-reviewer` | Agent tool | sonnet | `agents/absol-reviewer.md` | Routine reviews: standard flagged work, medium-risk tasks, routine verification failures. Pass the filtered job list — don't make the reviewer read all of `todo-run.md`. |
+| `absol-reviewer-complex` | Agent tool | opus | `agents/absol-reviewer-complex.md` | Deep reviews: ARCH tasks, high-risk tasks, complex refactors, inconclusive prior reviews, multiple related failures. Pass filtered jobs. |
+| `absol-finalizer` | Skill (inline) | n/a | `skills/absol-finalizer/SKILL.md` | End-of-run, after all execution and review is done. Mandatory — never end a run without it. |
 
-## How to spawn agents — CRITICAL
+### Agent self-loading
 
-Every agent component MUST be spawned using the **Agent tool**. Do NOT read an agent definition file and execute the instructions inline. The Agent tool creates a proper subagent with its own context, tool permissions, and model. Running instructions inline breaks isolation, wastes orchestrator context, and bypasses tool restrictions.
+Spawn pattern for every agent:
 
-**Spawning pattern for all agents:**
-1. Read the agent definition file to get the full prompt
-2. Use the **Agent tool** with the agent's `model` parameter and the definition content as the prompt
-3. Include the task-specific inputs (task entry, project path, run_id, etc.) in the prompt
-4. Wait for the agent to return its result
+1. Build the prompt as: *"Read your definition at `{absolute path to agents/<name>.md}` first. Then handle this task: {task-specific inputs}."*
+2. Use the **Agent tool** with `subagent_type: general-purpose` (or the matching specialised agent type if one exists locally) and the agent's `model` parameter from the routing table.
+3. Don't paste the full agent definition into the prompt — the agent reads it itself. This removes ~12 full definitions per 10-task run from orchestrator context.
+4. Wait for the agent to return.
 
-If an agent fails (e.g. permission errors, tool failures), capture its output and handle recovery in the orchestrator. Do not re-run the agent's work inline — either retry the spawn or apply the agent's analysis yourself if the agent produced useful output but couldn't write files.
-
-## How to invoke components
-
-### absol-shaper (inline — exception)
-
-The ONLY component that runs inline. It needs interactive back-and-forth with the user, which agents cannot do. Reference the definition at `agents/absol-shaper.md` for behavior details.
-
-Invoked when the orchestrator detects vague or exploratory requests in the user's input. The orchestrator pauses, hands the vague items to the shaper, the shaper has a conversation with the user, and returns shaped requests. The orchestrator then feeds those into triage.
-
-**Detection signals — route to shaper when any of these are present:**
-
-Explicit: "discuss", "let's talk about", "what do you think", "not sure", "maybe", "I'm thinking", "plan for", "ideas for", "what should we", "no exec", "don't execute", "just notes"
-
-Implicit: question marks asking for design input, alternatives without a decision ("X or Y?"), unspecified quantities ("some performance tweaks", "more settings"), missing key details needed for triage
-
-**How to invoke:** Do NOT spawn as an agent. Instead, follow the shaper's conversation protocol directly inline. Read the shaper definition for the full flow. Once the conversation concludes and you have shaped requests, proceed to triage with those shaped requests plus any clear requests that didn't need shaping.
-
-Input: vague request(s) + project directory path
-Output: shaped requests block (structured text) ready for triage
-
-### absol-triage (agent — spawn with Agent tool)
-
-Read `agents/absol-triage.md` and spawn via the **Agent tool** with `model: sonnet`.
-
-Handles single requests or textwalls of notes. Parses, classifies, deduplicates, and writes entries to `inbox.md` and/or `plan.md`. Returns a triage summary that feeds directly into the planner.
-
-Input: user requests (raw text) + project directory path
-Output: writes to `inbox.md` and/or `plan.md` + returns triage summary
-
-### absol-planner (agent — spawn with Agent tool)
-
-Read `agents/absol-planner.md` and spawn via the **Agent tool** with `model: opus`.
-
-Decomposes work into structured, executable tasks with dependency-aware ordering. Each task gets an `execution_order` field that determines run sequence.
-
-Input: `plan.md`, `inbox.md`, `state.md`, higher-level docs
-Output: structured tasks in `todo.md` (with execution_order), tech debt observations in `state.md`
-
-### absol-fast-track (agent — spawn with Agent tool)
-
-Read `agents/absol-fast-track.md` and spawn via the **Agent tool** with `model: sonnet`.
-
-Handles a single low-risk task through a lighter execution protocol. Used during the serial execution loop when a task meets fast-track criteria.
-
-Input: one task entry + project directory path + run_id
-Output: writes to `todo-run.md`, modifies source code, returns structured summary
-
-### absol-executor (agent — spawn with Agent tool)
-
-Read `agents/absol-executor.md` and spawn via the **Agent tool** with `model: sonnet`.
-
-Executes a single task with full protocol — read context, execute, verify, write results.
-
-Input: one task + project context + run_id
-Output: `[job]` entry in `todo-run.md`
-
-### absol-reviewer (agent — spawn with Agent tool) — routine reviews
-
-Read `agents/absol-reviewer.md` and spawn via the **Agent tool** with `model: sonnet`.
-
-Use for: standard flagged reviews, medium-risk tasks, routine verification failures.
-
-Input: `todo-run.md` jobs with review flags
-Output: `[review]` entries
-
-### absol-reviewer-complex (agent — spawn with Agent tool) — deep reviews
-
-Read `agents/absol-reviewer-complex.md` and spawn via the **Agent tool** with `model: opus`.
-
-Use for: ARCH-type tasks, high-risk tasks, complex refactors, inconclusive prior reviews, multiple related failures.
-
-Input: `todo-run.md` jobs with review flags
-Output: `[review]` entries
-
-### absol-finalizer (skill — invoke inline)
-
-Invoke for updating state and closing the run. This runs inline as a skill.
-
-Input: `todo-run.md`, `state.md`
-Output: updated `state.md`, cleared `todo-run.md`, updated `todo.md` task statuses
+If an agent fails (permission errors, tool failures), capture its output and decide: retry the spawn, or apply the agent's analysis yourself if it produced something useful but couldn't write files. Do not re-execute the agent's logic inline.
 
 ## Pipeline rules
 
-1. **Shape before triaging vague requests.** If any requests are exploratory or under-specified, run them through the shaper first. Clear requests skip shaping and go straight to triage.
-2. **Plan before executing.** Work must be in `todo.md` with the `[task]` schema before any executor touches it.
-3. **Checkpoint before executing.** After planning, always present the checkpoint to the user before execution begins.
-4. **Review selectively.** Only send risky, failed, or uncertain work to the reviewer. Clean passes skip review.
-5. **Finalize after execution.** State updates happen only after execution (and review, if applicable) is complete. The finalizer is mandatory — never end a run without it.
-6. **Planning and execution stay separate.** The planner never executes. The executor never plans.
-7. **Features must integrate.** Features that don't fit cleanly get prerequisite refactor tasks first.
-8. **Escalate, don't force.** If architecture resists a change, create an ARCH task instead of hacking around it.
-9. **Execute serially.** One task at a time, in execution_order. No parallel execution.
+1. **Shape before planning vague requests.** If any are exploratory or under-specified, run them through the shaper first. Clear requests skip shaping.
+2. **Plan owns triage, classification, and decomposition.** It writes inbox/plan entries and `[task]` entries in one pass.
+3. **Checkpoint before executing.** After planning, always present the checkpoint to the user before any task runs.
+4. **HITL pauses; AFK doesn't.** Tasks tagged `hitl: yes` halt the loop and prompt the user. Tasks tagged `hitl: no` run unattended.
+5. **Review selectively.** Only flagged/failed/uncertain work goes to the reviewer. Clean passes skip review.
+6. **Finalize after execution.** State updates happen only after execution (and review, if applicable). Mandatory.
+7. **Planning and execution stay separate.** The planner never executes. The executor never plans.
+8. **Features must integrate.** Features that don't fit cleanly get prerequisite refactor tasks first.
+9. **Escalate, don't force.** If architecture resists a change, the executor marks blocked. Do not hack around — let the planner spawn an ARCH task next run, or recommend the user run `/absol-architect`.
+10. **Execute serially.** One task at a time, in `execution_order`. No parallel.
 
 ## Orchestration flow
 
 ### Step 1 — Assess
 
-Read all project files. Determine current state. Generate a run_id for this invocation (or reuse the current one if resuming). If resuming ("continue", "keep going"), detect the current phase and resume from there — skip triage and the checkpoint.
+Read all project files. Detect layout (`.absol/` or flat). Generate a `run_id` (or reuse the in-flight one if resuming). If the user said "continue" / "keep going", skip to the right resume point — don't re-shape, don't re-plan.
 
 ### Step 2 — Shape (if needed)
 
-Scan the user's input for vague or exploratory requests. Split the input into two buckets:
-- **Clear requests** — well-scoped, have enough detail to triage directly
-- **Vague requests** — exploratory, missing key details, asking for discussion, presenting undecided alternatives
+Scan the user's input for vague or exploratory requests. Split into:
 
-If vague requests exist, run the shaper inline (follow the protocol in `agents/absol-shaper.md`). The shaper has a conversation with the user to nail down specifics, then outputs shaped requests. Once shaping is done, combine shaped requests + clear requests and proceed to triage.
+- **Clear** — well-scoped, has enough detail to plan.
+- **Vague** — exploratory, missing key details, asks for discussion, presents undecided alternatives, or uses signals like "discuss", "thinking about", "X or Y?", "some Y", question marks.
 
-If all requests are clear, skip this step entirely.
+If vague exists, run `absol-shaper` inline (it's interactive — agents can't talk to the user). The shaper has a **strict budget of 1–3 quick clarifying questions per vague item.** If an item still isn't clear after the budget is spent, the shaper parks it back in `inbox.md` with `status: needs-shaping` and the pipeline continues.
 
-### Step 3 — Triage
+This keeps orchestrate unattended-friendly. The user never *has* to grill — they choose to via `/grill-me` later. The finalize summary will surface parked items.
 
-Process all requests (shaped + clear) through absol-triage. Classify each request by type, priority, risk, and subsystem. The triage summary feeds directly into the planner — do not stop for a checkpoint here.
+When all vague items are either shaped or parked, combine shaped + clear and proceed.
 
-### Step 4 — Plan
+If everything was clear, skip shaping entirely.
 
-Run absol-planner. The planner reads triage output from `inbox.md` and `plan.md`, performs integration analysis against the source code, and writes structured `[task]` entries to `todo.md`. Each task includes an `execution_order` field that defines the run sequence — prerequisites first, lower risk first, dependency chains respected.
+### Step 3 — Plan (subsumes triage)
 
-### Step 5 — Checkpoint (REQUIRED)
+Spawn `absol-planner` (opus). The planner:
 
-After planning, ALWAYS present a checkpoint to the user before execution begins. Never auto-run past this point.
+1. Reads `inbox.md`, `plan.md`, `state.md`, `CLAUDE.md`, `vision.md`, `roadmap.md`, `.absol/CONTEXT.md`, `.absol/adr/` to load context.
+2. Classifies and routes incoming requests (the old triage step) into `inbox.md` and `plan.md` entries.
+3. Performs integration analysis against source code.
+4. Decomposes shaped items in `plan.md` into `[task]` entries written to `todo.md`.
+5. Tags every task with `hitl: yes|no`, `executor_tier: micro|full`, and `execution_order`.
+6. Re-orders tasks per the HITL clustering rule (see below).
 
-Present the checkpoint like this:
+**HITL clustering rule.** Tasks tagged `hitl: yes` cluster at the start of the run when the dependency graph allows; otherwise at the end. Beginning-cluster is preferred — the user sits through pauses up front, then walks away while the AFK tail runs. Never interleave HITL between AFK runs of work; that defeats the kick-off-and-walk-away goal.
+
+**Vertical-slice rule.** Every `[task]` must be a tracer bullet — a thin path through every layer it touches (schema + API + UI + test, where applicable). Pure horizontal tasks ("rewrite all schemas," "add all API endpoints") are forbidden. Build slice 1 working end-to-end, then slice 2, then slice 3. Each slice is independently demoable.
+
+Pass to the planner: project path, run_id, the user's clear+shaped input.
+
+### Step 4 — Checkpoint (REQUIRED)
+
+After planning, present the checkpoint. Never auto-run past this.
 
 ```
-## Pipeline Checkpoint
+## Pipeline Checkpoint — {run_id}
 
 Found {N} tasks after planning:
-1. {title} — {type}, {risk} risk
-2. {title} — {type}, {risk} risk
-...
+
+  HITL cluster (will pause for input):
+    1. {title}  — {type}, {risk} risk, tier: {micro|full}
+    ...
+
+  AFK (run unattended):
+    M. {title}  — {type}, {risk} risk, tier: {micro|full}
+    ...
+
+Total: {N_hitl} HITL + {N_afk} AFK = {N}.
 
 Proceed? [y / n / adjust]
 ```
 
-If the user says **y** — proceed with serial execution.
-If the user says **n** — stop and wait for instructions.
-If the user says **adjust** or provides modifications — update the plan accordingly. If the changes are minor, edit `todo.md` directly. If significant, re-run the planner.
+- `y` — proceed with serial execution.
+- `n` — stop.
+- `adjust` — apply the user's modifications. Minor edits land directly on `todo.md`; significant changes re-run the planner.
 
-### Step 6 — Serial Execution Loop
+### Step 5 — Serial execution loop
 
-Walk through tasks in `execution_order`, one at a time. For each task, pick an executor tier based on the task's characteristics:
+Walk tasks in `execution_order`, one at a time. For each task:
 
-#### Executor tier selection
+#### HITL pause (when `hitl: yes`)
 
-**Micro-exec (inline — no agent spawn):**
-All of these must be true:
-- `risk: low`
-- Touches only 1 file (based on task description)
-- `type` is TWEAK or CHORE
-- Description is unambiguous — no judgment calls needed
-- No verification beyond a build check
+Present the **full task entry** (id, title, description, files involved, risk, dependencies, acceptance criteria, verification). Accept **free-form input**, not just `y/n`. The user can:
 
-When micro-executing: make the edit yourself, run the build/lint check, and write the `[job]` entry to `todo-run.md` with `worker: inline`.
+- Approve as-is → run the executor.
+- Reject → mark the task `status: failed` with the user's reason; continue to the next task.
+- Request changes → update the task description per the user's input, then run the executor.
+- Pivot the approach → re-plan the task (or whole subtree) — call the planner with the user's redirect.
 
-**Fast-track (spawn absol-fast-track agent):**
-All of these must be true:
-- `risk: low`
-- All dependencies already satisfied (status: done)
-- `type` is TWEAK, CHORE, or low-risk BUG
-- No design decisions needed
+#### Executor selection (when `hitl: no` or HITL approved)
 
-Spawn absol-fast-track with the single task entry, project path, and run_id.
+The planner already tagged `executor_tier`. Trust it.
 
-**Full executor (spawn absol-executor agent):**
-Everything that doesn't qualify for micro-exec or fast-track. This is the default.
-
-Spawn absol-executor with the single task entry, project path, and run_id.
+- **`executor_tier: micro`** — make the edit yourself inline, run the task's `verification`, write the `[job]` entry with `worker: inline`. No agent spawn. Works for any low-risk single-file task — the planner doesn't restrict this to TWEAK/CHORE.
+- **`executor_tier: full`** — spawn `absol-executor` (sonnet) with the task entry, project path, run_id. The executor handles its own work (TDD discipline for FEAT/medium+ BUG, plain make-the-edit for TWEAK/CHORE — see executor definition).
 
 #### After each task
 
-1. Check the result from the `[job]` entry or agent output
-2. If **success** — report progress: `"Task {N}/{total} complete: {title}"` and continue to the next task
-3. If **failed or blocked** — stop the loop. Report the failure to the user with the blocker description. Wait for instructions: retry, skip, or abort.
+1. Read the result from the `[job]` entry or the agent return.
+2. If **success** → report `"Task {N}/{total} complete: {title}"` and continue.
+3. If **failed or blocked** → stop the loop. Report the failure to the user with the blocker description. Wait for instructions: retry, skip, abort.
 
-### Step 7 — Review (if needed)
+### Step 6 — Review (if needed)
 
-After all tasks complete (or the user decides to stop), check `todo-run.md` for items needing review:
+After all tasks complete (or the user stops), scan `todo-run.md` for items needing review:
+
 - `review_flag: yes`
 - `status: failed`
 - `status: needs-review`
 
-If none found, skip to Step 8.
+If none, skip to Step 7.
 
-Route reviews to the appropriate reviewer:
-- `absol-reviewer` (sonnet) for routine reviews: standard flagged work, medium-risk tasks, routine verification failures
-- `absol-reviewer-complex` (opus) for deep reviews: ARCH tasks, high-risk items, complex refactors, inconclusive prior reviews, multiple related failures
+**Pass filtered data to the reviewer.** Extract just the relevant `[job]` and the matching `[task]` entries; pass them in the prompt. Don't make the reviewer parse the entire `todo-run.md` to find the 2 flagged items in 15.
 
-Handle review results: if fixes are required, create new tasks in the next planning cycle. Do not re-execute immediately.
+Route by complexity:
 
-### Step 8 — Finalization Checkpoint (REQUIRED)
+- `absol-reviewer` (sonnet) — routine: standard flagged work, medium-risk tasks, routine verification failures.
+- `absol-reviewer-complex` (opus) — deep: ARCH tasks, high-risk items, complex refactors, inconclusive prior reviews, multiple related failures.
 
-After ALL execution and review is complete, ALWAYS present the finalization checkpoint. This step is NOT optional and CANNOT be skipped.
+If fixes are required, do **not** re-execute immediately. Report the verdicts to the user; the next planning cycle creates fix tasks. This keeps fix tasks visible in `todo.md` rather than buried in re-runs.
+
+### Step 7 — Finalization Checkpoint (REQUIRED)
+
+After all execution and review is done, ALWAYS present the finalization checkpoint. Not optional. Cannot be skipped.
 
 ```
-## Finalization Checkpoint
+## Finalization Checkpoint — {run_id}
 
-Run: {run_id}
-Execution complete. {N}/{M} tasks done, {F} failed, {B} blocked.
+Execution: {done}/{total} done, {failed} failed, {blocked} blocked, {parked} parked (needs-shaping).
 
-Files modified across all tasks:
+Files modified:
 - {file list}
 
 Build & test? [y / skip]
-Then finalize (update state.md, clear todo-run.md, update todo.md statuses)? [y / n]
+Then finalize (state.md, archive snapshots, clear todo-run, update todo statuses)? [y / n]
 ```
 
-If the user says **build & test: y** — run the project's build and test commands. Report results. If build/test fails, report the failure and ask how to proceed before finalizing.
+- **build & test: y** → run project's build/test commands. Report. If they fail, ask how to proceed before finalizing.
+- **finalize: y** → run `absol-finalizer` (skill, inline). Finalizer handles state.md, archive snapshots, todo cleanup. Surfaces parked needs-shaping items in its summary.
+- **finalize: n** → stop. Report that finalization was skipped and state may be inconsistent.
 
-If the user says **finalize: y** — run `absol-finalizer`. The finalizer MUST:
-1. Update `state.md` with completed work
-2. Clear resolved entries from `todo-run.md`
-3. Update `todo.md` task statuses (mark done tasks as `status: done`, failed as `status: failed`)
-
-If the user says **n** — stop. Report that finalization was skipped and state may be inconsistent.
-
-**Never end a pipeline run without presenting this checkpoint.** If context is running low, present the checkpoint before anything else.
+If context is running low, present the checkpoint before anything else. **Never end a pipeline run without finalize.**
 
 ## Status reporting
 
 After each phase, briefly report:
+
 - What was done
 - What's next
-- Any blockers or items needing human attention
+- Any blockers or parked items
 
-Keep reports to 3-5 lines between phases. Save verbose output for the final summary.
+Keep reports to 3–5 lines between phases. Save verbose output for the final summary.
 
 ## Error handling
 
-- If a component fails, report the failure and stop. Do not retry automatically.
-- If the pipeline is in an inconsistent state (e.g. todo-run.md has entries but todo.md is empty), investigate before proceeding.
-- If files are missing, create them with appropriate headers rather than failing.
-- If an agent fails due to permission errors, capture its analysis output and apply the changes yourself in the orchestrator context. Report that you did this.
+- Component failure → report and stop. Do not retry automatically.
+- Inconsistent state (e.g. `todo-run.md` has entries but `todo.md` is empty) → investigate before proceeding.
+- Missing files → create with appropriate headers rather than failing. (Don't create `.absol/CONTEXT.md` from nothing — the project may genuinely have no terms yet; just note it.)
+- Agent permission failure → capture analysis, apply changes yourself in the orchestrator context, report what you did.

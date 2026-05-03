@@ -1,95 +1,98 @@
 ---
 name: note-taker
-description: Records bugs, tech debt, and planned features into the current project's state.md file using absol's structured schema format. Use this skill whenever the user says things like "note that...", "add a bug...", "log a todo...", "remember this...", "add to tech debt...", "write down...", "make a note...", or describes a bug, limitation, or feature idea they want tracked. Trigger even if the user doesn't say "note-taker" explicitly — if they're describing something to track in a project, this skill is the right one to use.
+description: Routes shower-thought notes to the right durable file in the current absol project — bug → .absol/bugs.md, tech debt → .absol/tech-debt.md, feature idea or anything ambiguous → .absol/inbox.md as status:new. Use this skill whenever the user says things like "note that...", "add a bug...", "log a todo...", "remember this...", "add to tech debt...", "write down...", "make a note...", or describes a bug, limitation, or feature idea they want tracked. Trigger even if the user doesn't say "note-taker" explicitly — if they're describing something to track in a project, this skill is the right one to use.
 ---
 
 ## What this skill does
 
-Appends a structured, machine-readable note to the correct section of the current project's `state.md`. Notes use absol's compact markdown list-block format with typed fields, auto-incrementing IDs, and stable field names.
+Routes a quick note from the user into the correct durable file in the project's `.absol/` folder. Three destinations, one schema.
 
-The three sections you can write to are:
+| Destination | What goes there |
+|---|---|
+| `.absol/bugs.md` | Broken behaviour the user has observed or discovered |
+| `.absol/tech-debt.md` | Code shortcuts, messy areas, things that need a proper fix later |
+| `.absol/inbox.md` (`status: new`) | Feature ideas, anything not clearly a bug or debt, anything ambiguous |
 
-- **Tech Debt** — code shortcuts, messy areas, things that need a proper fix later
-- **Known Bugs** — broken behaviour the user has observed or discovered
-- **Planned Features** — ideas or future functionality to build
+`state.md` is **not** a destination. The finalizer owns `state.md`; it's a truth snapshot, not a notes file.
 
----
+## Layout fallback
+
+If the project is on the legacy flat layout (no `.absol/`, files at root), write to root-level `bugs.md` / `tech-debt.md` / `inbox.md` instead. If those don't exist on the legacy layout (older projects had Tech Debt and Known Bugs *inside* `state.md`), fall back to the matching section in root-level `state.md`. Then surface a one-line recommendation in your confirmation: *"This project is on the legacy layout — run `/absol-migrate` to upgrade."*
 
 ## Note schema
 
-Each note is a markdown list block following this structure:
+Every note is a markdown list block with stable field names:
 
 ```
 - [note]
   - id: BUG-001
-  - title: Short descriptive title
-  - description: Clear, precise explanation of the issue or idea (1-2 sentences)
+  - title: short descriptive title
+  - description: clear, precise explanation (1–2 sentences)
   - type: ARCH | FEATURE | BUG | TWEAK | CHORE
   - priority: critical | high | medium | low
   - subsystem: affected area (e.g. auth, api, ui, db, rendering, networking)
   - status: new
 ```
 
-### ID prefixes by section
+### ID prefixes by destination
 
-| Section | Prefix | Example |
-|---------|--------|---------|
-| Known Bugs | BUG- | BUG-001 |
-| Tech Debt | DEBT- | DEBT-001 |
-| Planned Features | FEAT- | FEAT-001 |
+| File | Prefix | Example |
+|---|---|---|
+| `.absol/bugs.md` | `BUG-` | BUG-001 |
+| `.absol/tech-debt.md` | `DEBT-` | DEBT-001 |
+| `.absol/inbox.md` | `INBOX-` | INBOX-001 |
 
 ### Type mapping
 
-The `type` field uses absol's task classes. Choose the best fit based on the note content, not just the section it's in — a tech debt item might be ARCH (structural refactor) or CHORE (cleanup), and a planned feature might be FEATURE or TWEAK:
+The `type` field uses absol's task classes. Choose by note content, not by destination — a tech-debt entry might be `ARCH` (structural refactor) or `CHORE` (cleanup), and an inbox feature idea might be `FEATURE` or `TWEAK`:
 
 | Type | Use for |
-|------|---------|
+|---|---|
 | ARCH | Architectural changes, refactors that alter system structure |
 | FEATURE | New user-facing functionality |
-| BUG | Broken behavior that needs fixing |
-| TWEAK | Small improvements to existing behavior |
+| BUG | Broken behaviour that needs fixing |
+| TWEAK | Small improvements to existing behaviour |
 | CHORE | Maintenance, deps, config, docs, cleanup |
 
 ### Priority
 
-If the user doesn't indicate urgency, use your judgment:
+If urgency isn't stated, use judgement:
+
 - **critical** — blocks work or causes data loss
-- **high** — significant impact, should be addressed soon
-- **medium** — matters but isn't urgent (this is the default if unclear)
-- **low** — nice to have, no pressure
+- **high** — significant impact, address soon
+- **medium** — matters but isn't urgent (default if unclear)
+- **low** — nice to have
 
 ---
 
-## Step 1: Find the project
+## Step 1 — Find the project
 
-Look at the current working directory. Walk up the directory tree until you find a `state.md` (case-insensitive). If you're in `/mnt/nas/dev/projects/metagross/client`, the state file is at `/mnt/nas/dev/projects/metagross/state.md`.
+Walk up from the current working directory until you find a `state.md` (case-insensitive). That folder is the project root. Resolve `.absol/` relative to it. If neither `state.md` nor `.absol/` is found within 5 levels up, ask the user which project they mean — don't guess.
 
-If you can't find a `state.md` nearby, ask the user which project they're referring to.
+## Step 2 — Classify the note
 
----
+Read what the user said and decide which file to route to:
 
-## Step 2: Understand the note
+1. **Bug** → `.absol/bugs.md`. Signals: "broken", "doesn't work", "crashes", "wrong output", "the X feature is failing", an observed reproducible defect.
+2. **Tech debt** → `.absol/tech-debt.md`. Signals: "hacky", "shortcut", "should clean up", "duplication", "this needs a refactor", an internal-quality issue with no user-visible bug.
+3. **Anything else** → `.absol/inbox.md` with `status: new`. Feature ideas, "we should also build X", future-direction thoughts, or anything that doesn't cleanly fit bug/debt.
 
-Read what the user said and decide:
+**Ambiguity default: `.absol/inbox.md`.** When the note could plausibly be a feature OR a tech-debt item, prefer inbox. The next triage / planner pass will reclassify if needed. Bugs and debt files don't get re-triaged, so under-classifying there silently loses signal.
 
-1. **Which section?** Is this a bug, tech debt, or planned feature? If it's ambiguous, make a reasonable call — don't ask unless it's genuinely unclear.
-2. **Is there enough detail?** If the note is too vague to be useful (e.g. "fix the login thing" with no context about what's wrong), ask one focused follow-up question to get the missing detail. Don't ask multiple questions at once.
+If the note is too vague to be useful (e.g. "fix the login thing" with no context), ask **one** focused follow-up — not a questionnaire. Then re-classify.
 
----
+## Step 3 — Determine the next ID
 
-## Step 3: Determine the next ID
+Read the destination file. Find the highest existing ID with that file's prefix. Increment by 1. If no entries exist, start at 001.
 
-Read the target section in `state.md` and find the highest existing ID with that section's prefix. Increment by 1. If no entries exist yet, start at 001.
+The three counters are independent: `bugs.md` has its own `BUG-NNN` sequence, `tech-debt.md` has `DEBT-NNN`, `inbox.md` has `INBOX-NNN`.
 
-For example, if the last entry in Known Bugs is `BUG-003`, the next one is `BUG-004`.
+## Step 4 — Write the note
 
----
+Append the structured `[note]` block to the destination file. The `title` is short and descriptive. The `description` captures the essential information precisely — write it the way an experienced developer would jot it down, no filler.
 
-## Step 4: Write the note
+**Good:**
 
-Format the note as a structured list block following the schema above. The `title` should be a short, descriptive phrase. The `description` should capture the essential information precisely — write it the way an experienced developer would jot it down, no filler.
-
-**Good example:**
 ```
 - [note]
   - id: BUG-003
@@ -101,7 +104,8 @@ Format the note as a structured list block following the schema above. The `titl
   - status: new
 ```
 
-**Bad example:**
+**Bad:**
+
 ```
 - [note]
   - id: BUG-003
@@ -113,14 +117,24 @@ Format the note as a structured list block following the schema above. The `titl
   - status: new
 ```
 
-Append the list block to the correct section in `state.md`. Find the section header (e.g. `## Known Bugs`) and add the new entry at the end of that section's existing list, before the next `---` or `##` heading.
+If the destination file currently has placeholder text (e.g. `_No known bugs._` or `_None yet._`), replace the placeholder with the new entry. Otherwise append at the end of the entries list.
 
-If the section currently says something like `_All known tech debt resolved_` or is otherwise empty/placeholder text, replace that placeholder line with your new note.
+## Step 5 — Confirm
 
----
+Tell the user what you wrote, where, in one short sentence including the ID:
 
-## Step 5: Confirm
+> Added **BUG-004** to `.absol/bugs.md` (metagross): inventory resets on reconnect due to socket ID keying.
 
-Tell the user what you wrote and where, in one short sentence. Include the ID. For example:
+Or, for an inbox routing:
 
-> Added **BUG-004** to Known Bugs in `projects/metagross/state.md`: inventory resets on reconnect due to socket ID keying.
+> Added **INBOX-012** to `.absol/inbox.md` (metagross) as a new feature idea: per-room sound profiles. The next orchestrate run will triage it.
+
+If you fell back to the legacy layout, append the migrate suggestion on a new line.
+
+## Rules
+
+- **Never write to `state.md`.** State is finalizer territory.
+- **Three destinations, no fourth.** If you're tempted to invent a new file, route to inbox instead and let triage decide.
+- **Default to inbox on ambiguity.** Recoverable bias.
+- **One follow-up question max.** Don't interrogate the user for a quick note.
+- **Don't reformat existing entries.** Append only.

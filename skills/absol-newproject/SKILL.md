@@ -1,6 +1,6 @@
 ---
 name: absol-newproject
-description: "Scaffolds a new project for the absol pipeline with all required MD files (CLAUDE.md, state.md, vision.md, roadmap.md, plan.md, todo.md, todo-run.md, inbox.md), Docker files (Dockerfile, docker-compose.yml, nginx.conf, .dockerignore), .gitignore, and git init. Use this skill whenever the user wants to start a new project, create a project, scaffold a project, init a project, or set up a new project. Trigger on phrases like 'new project', 'start a project', 'scaffold', 'create a project', 'init project', 'set up a new project', or when the user describes a project idea and wants to get started building it. This skill handles ONLY the project skeleton and MD files — it does NOT select languages, frameworks, or create package.json/tsconfig. The absol pipeline handles all actual implementation after scaffolding."
+description: "Scaffolds a new project for the absol pipeline with the .absol/ layout — root holds CLAUDE.md, state.md, vision.md, roadmap.md; .absol/ holds CONTEXT.md, adr/, inbox.md, plan.md, todo.md, todo-run.md, bugs.md, tech-debt.md, archive/. Also writes Docker files (Dockerfile, docker-compose.yml, nginx.conf, .dockerignore), .gitignore, and runs git init. Use this skill whenever the user wants to start a new project, create a project, scaffold a project, init a project, or set up a new project. Trigger on phrases like 'new project', 'start a project', 'scaffold', 'create a project', 'init project', 'set up a new project', or when the user describes a project idea and wants to get started building it. This skill handles ONLY the project skeleton and MD files — it does NOT select languages, frameworks, or create package.json/tsconfig. The absol pipeline handles all actual implementation after scaffolding."
 ---
 
 # absol-newproject
@@ -9,11 +9,18 @@ Scaffold a new project directory with everything the absol pipeline needs to sta
 
 ## What This Skill Does
 
-Creates a project folder under `/mnt/nas/dev/projects/<name>/` with:
-- All absol pipeline MD files (pre-populated where appropriate)
-- Docker deployment files (Dockerfile, docker-compose.yml, nginx.conf, .dockerignore)
-- A .gitignore
-- An initialized git repo
+Creates a project folder under `/mnt/nas/dev/projects/<name>/` with the absol `.absol/` layout:
+
+- **Root** (human-facing, version-controlled): `CLAUDE.md`, `state.md`, `vision.md`, `roadmap.md`
+- **`.absol/`** (pipeline-owned, hidden — convention matches `.git/`, `.github/`):
+  - `CONTEXT.md` — empty domain glossary, lazy-grown by grill-me / architect / note-taker
+  - `adr/0000-template.md` — Architecture Decision Record template
+  - `inbox.md`, `plan.md`, `todo.md`, `todo-run.md` — pipeline state (gitignored)
+  - `bugs.md`, `tech-debt.md` — durable issue/debt logs (tracked)
+  - `archive/` — finalizer's archive folder (gitignored)
+- Docker files (`Dockerfile`, `docker-compose.yml`, `nginx.conf`, `.dockerignore`)
+- `.gitignore` with the absol churn-files ignored
+- An initialised git repo
 
 This skill is the **entry point** before the absol pipeline. After scaffolding, the user runs absol-orchestrate to triage, plan, and execute actual implementation work.
 
@@ -41,7 +48,7 @@ If no ports are found, start at 8180.
 ### Step 3: Create Project Directory
 
 ```bash
-mkdir -p /mnt/nas/dev/projects/<name>
+mkdir -p /mnt/nas/dev/projects/<name>/.absol/adr /mnt/nas/dev/projects/<name>/.absol/archive
 ```
 
 ### Step 4: Write All Files
@@ -50,7 +57,7 @@ Write these files using the Write tool. All templates below use `{name}` for the
 
 ---
 
-### CLAUDE.md
+### CLAUDE.md  (root)
 
 ```markdown
 # {Name} — Project Overview
@@ -95,15 +102,28 @@ src/
 
 ## Project MD Files
 
+Root (human-facing, tracked):
+
 | File | Purpose |
 |---|---|
-| `state.md` | **Current development state.** What was just worked on, what's in progress, context notes, tech debt, planned features, and known bugs. Updated at the end of every session ("wrap up"). |
-| `todo.md` | **Actionable tasks.** Concrete, discrete things to do — bugs to fix, features to implement. |
-| `vision.md` | **High-level vision, design philosophy, and project brief.** |
-| `plan.md` | **Scratchpad for active planning, design decisions, and working notes.** |
-| `roadmap.md` | **Phased roadmap.** Implementation phases, milestones, and long-term direction. |
-| `inbox.md` | **Triaged feature requests.** Incoming work items classified by the absol pipeline. |
-| `todo-run.md` | **Execution run tracking.** Job results from absol pipeline runs. |
+| `CLAUDE.md` | This file. Project meta, stack, run commands. |
+| `state.md` | **Current truth snapshot.** Last session, in progress, parked items. Updated by the finalizer. |
+| `vision.md` | High-level vision, design philosophy, project brief. |
+| `roadmap.md` | Phased roadmap and milestones. |
+
+`.absol/` (pipeline-owned, hidden):
+
+| File | Purpose | Tracked |
+|---|---|---|
+| `CONTEXT.md` | **Domain glossary.** Names of concepts in this project, definitions, naming conventions. Lazy-grown. | yes |
+| `adr/` | **Architecture Decision Records.** One file per load-bearing decision. Only the architect skill writes ADRs. | yes |
+| `bugs.md` | Known bugs. Removed only by fix-and-task or "won't fix" ADR. | yes |
+| `tech-debt.md` | Known debt. Reviewed by `/absol-architect` to promote into tasks or ADR away. | yes |
+| `inbox.md` | Active intake. Items at `status: new`, `needs-shaping`, or `shaped`. | no (gitignored) |
+| `plan.md` | Shaped items with PRD sub-fields (modules, testing, out_of_scope). | no (gitignored) |
+| `todo.md` | Executable tasks. | no (gitignored) |
+| `todo-run.md` | Live execution log. | no (gitignored) |
+| `archive/` | Finalizer-snapshotted history (per-run inbox snapshots, run logs, monthly session summaries). | no (gitignored) |
 
 ## Git
 
@@ -114,12 +134,12 @@ src/
 
 ## Wrap-Up Rule
 
-When asked to **wrap up**, update `state.md` and `todo.md` to reflect all code changes made in the session — what was done, what's in progress, and what actionable tasks remain. Also update `plan.md`: when a phase or task is completed, compact it into a short summary under the **Completed** section at the bottom of the file.
+When asked to **wrap up**, the absol-finalizer skill runs end-of-session: updates `state.md`, snapshots `inbox.md` promoted items into `.absol/archive/`, snapshots `todo-run.md`, compacts old session entries, clears resolved todos. Don't edit pipeline state files by hand — let finalize own them.
 ```
 
 ---
 
-### vision.md
+### vision.md  (root)
 
 ```markdown
 # {Name} — Vision
@@ -145,7 +165,7 @@ TBD — flesh out during planning.
 
 ---
 
-### state.md
+### state.md  (root)
 
 ```markdown
 # {Name} — Current State
@@ -160,22 +180,16 @@ Project scaffolded via absol-newproject. No code written yet.
 
 Nothing — ready for absol pipeline.
 
-## Tech Debt
+## Parked Items
 
-None yet.
-
-## Known Bugs
-
-None yet.
-
-## Planned Features
-
-See vision.md for project goals. Run absol pipeline to triage and plan implementation.
+None.
 ```
+
+Note: `state.md` no longer carries Tech Debt, Known Bugs, or Planned Features sections. Those live in `.absol/tech-debt.md`, `.absol/bugs.md`, and `.absol/inbox.md` respectively. The finalizer keeps `state.md` a clean truth snapshot.
 
 ---
 
-### roadmap.md
+### roadmap.md  (root)
 
 ```markdown
 # {Name} — Roadmap
@@ -185,27 +199,60 @@ No phases completed yet. Run absol pipeline to begin planning.
 
 ---
 
-### plan.md
+### .absol/CONTEXT.md
 
 ```markdown
-# {Name} — Plan
+# {Name} — Context Glossary
 
-No active plans yet. Run absol pipeline to triage work and generate plans.
+Domain terms and naming conventions for this project. Every absol agent reads this file at start of run.
+
+This file is lazy-grown: `/grill-me`, `/absol-architect`, and `note-taker` add terms when new concepts are named or sharpened. Edit by hand any time.
+
+## Domain Terms
+
+<!--
+Format:
+**Term** — definition. Use for X. Don't say Y or Z.
+-->
+
+None yet.
+
+## Naming Conventions
+
+- File names: TBD
+- Component names: TBD
+- Prefixes: TBD
 ```
 
 ---
 
-### todo.md
+### .absol/adr/0000-template.md
 
 ```markdown
-# {Name} — Tasks
+# ADR-0000 — Template
 
-No tasks yet — run absol pipeline to generate.
+**Status:** template — copy this file as `NNNN-short-slug.md` for new decisions.
+
+## Status
+
+proposed | accepted | superseded by ADR-NNNN
+
+## Context
+
+What problem are we facing? What constraints are in play?
+
+## Decision
+
+What did we choose?
+
+## Consequences
+
+What tradeoffs did we accept? What does this make easier? What does this make harder? What are we no longer able to reconsider casually?
 ```
 
 ---
 
-### inbox.md
+### .absol/inbox.md
 
 ```markdown
 # {Name} — Inbox
@@ -215,11 +262,61 @@ No items yet.
 
 ---
 
-### todo-run.md
+### .absol/plan.md
+
+```markdown
+# {Name} — Plan
+
+No active plans yet. Run absol pipeline to triage work and generate plans.
+```
+
+---
+
+### .absol/todo.md
+
+```markdown
+# {Name} — Tasks
+
+No tasks yet — run absol pipeline to generate.
+```
+
+---
+
+### .absol/todo-run.md
 
 ```markdown
 # todo-run.md — cleared after scaffolding on {date}
 ```
+
+---
+
+### .absol/bugs.md
+
+```markdown
+# {Name} — Known Bugs
+
+No known bugs. Add via `note-taker` (e.g. "note that X is broken because Y") or via the pipeline reviewer.
+
+Each entry follows the absol note schema (see absol README). Bugs are removed only when fixed (and a task records the fix) or when an ADR records the decision not to fix.
+```
+
+---
+
+### .absol/tech-debt.md
+
+```markdown
+# {Name} — Tech Debt
+
+No tech debt logged. Add via `note-taker` ("note this as tech debt: …").
+
+Reviewed by `/absol-architect` runs: top items get promoted into `inbox.md` as actionable tasks or get ADR'd as accepted shape.
+```
+
+---
+
+### .absol/archive/.gitkeep
+
+(Empty file — preserves the folder so finalizer doesn't have to mkdir on first run. The folder itself is gitignored so the .gitkeep won't actually be tracked; create it anyway as a marker.)
 
 ---
 
@@ -276,6 +373,7 @@ server {
 node_modules
 dist
 .git
+.absol
 *.md
 ```
 
@@ -291,7 +389,16 @@ dist/
 *.log
 .DS_Store
 @eaDir/
+
+# absol pipeline churn — recovers from finalize, no value in git history
+.absol/inbox.md
+.absol/plan.md
+.absol/todo.md
+.absol/todo-run.md
+.absol/archive/
 ```
+
+Tracked inside `.absol/`: `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`. These are decision-bearing or human-readable artefacts a future contributor needs.
 
 ---
 
@@ -307,7 +414,7 @@ After all files are written, tell the user:
 
 1. Project scaffolded at `/mnt/nas/dev/projects/<name>/`
 2. Docker port allocated: `{port}`
-3. List the files created
+3. List the files created (root + `.absol/`)
 4. Suggest next step: "You can now run the absol pipeline on this project to triage your idea, plan the implementation, and start building."
 
 ## Important Rules
@@ -317,3 +424,4 @@ After all files are written, tell the user:
 - **Normalize project names.** Convert spaces to hyphens, uppercase to lowercase.
 - **Port scanning is required.** Always check existing projects before assigning a port. Don't hardcode ports.
 - **Populate vision.md meaningfully.** The user's project description should flow into vision.md so the absol pipeline has context to work with. Don't just write "TBD" — use what the user gave you.
+- **`.absol/` ownership.** Everything inside `.absol/` is pipeline territory. The user shouldn't edit `inbox.md`, `plan.md`, `todo.md`, or `todo-run.md` directly during normal use — the pipeline owns them. `CONTEXT.md`, `bugs.md`, `tech-debt.md`, and `adr/` are durable and user-editable.
