@@ -64,10 +64,10 @@ User provides work request(s)
 
     +----------------------------------+
     |  TASK 1/N                        |
-    |  Read task -> pick executor tier |
+    |  Read task -> use executor_tier  |
     +----------+-----------------------+
                |
-               +--- Low risk + single file + obvious + TWEAK/CHORE?
+               +--- executor_tier: micro
                |         |
                |         v
                |    +--------------+
@@ -75,15 +75,7 @@ User provides work request(s)
                |    | (inline)     |  No agent spawn
                |    +------+-------+  worker: inline
                |           |
-               +--- Low risk + no deps + simple BUG/TWEAK/CHORE?
-               |         |
-               |         v
-               |    +--------------+
-               |    | FAST-TRACK   |  Spawned agent (sonnet)
-               |    | (agent)      |  Lighter protocol
-               |    +------+-------+  worker: sonnet
-               |           |
-               +--- Everything else
+               +--- executor_tier: full (default)
                          |
                          v
                     +--------------+
@@ -180,21 +172,16 @@ User provides work request(s)
        EXECUTOR TIER CRITERIA
 ========================================
 
-    MICRO-EXEC (inline, no agent spawn)
+    Tier is assigned by the planner via executor_tier field.
+
+    MICRO (inline, no agent spawn)
     +- risk: low
     +- touches 1 file
-    +- type: TWEAK or CHORE
     +- description is unambiguous
     +- no verification beyond build check
 
-    FAST-TRACK (agent, lighter protocol)
-    +- risk: low
-    +- all dependencies satisfied
-    +- type: TWEAK, CHORE, or low-risk BUG
-    +- no design decisions needed
-
-    FULL EXECUTOR (agent, full protocol)
-    +- everything else
+    FULL (agent, full protocol)
+    +- everything else (the default)
 
 
 ========================================
@@ -240,8 +227,7 @@ User provides work request(s)
 |-------|-------|------|
 | `absol-triage` | sonnet | Classifies and routes incoming work requests |
 | `absol-shaper` | (inline) | Interactive — shapes vague requests through conversation with the user |
-| `absol-planner` | opus | Decomposes work into structured, executable tasks with execution order |
-| `absol-fast-track` | sonnet | Lighter executor for simple, low-risk tasks |
+| `absol-planner` | opus | Decomposes work into structured, executable tasks with execution order and executor tier |
 | `absol-executor` | sonnet | Executes a single task with full protocol |
 | `absol-reviewer` | sonnet | Reviews routine flagged work |
 | `absol-reviewer-complex` | opus | Reviews complex, high-risk, or architectural work |
@@ -291,10 +277,10 @@ Or just describe your work and say "run the pipeline", "orchestrate this", or "p
 
 ## Key design decisions
 
-- **Agents are spawned, not inlined.** Every agent component runs as a proper subagent via the Agent tool. This preserves context isolation, enforces tool restrictions, and keeps the orchestrator lean.
+- **Agents self-load.** The orchestrator sends minimal prompts — agents read their own definition files as Step 0. This keeps agent definitions out of the orchestrator's context window.
 - **Checkpoints before major transitions.** The user always gets a decision point after planning (approve task list) and after execution (build/test/finalize).
-- **Planning and execution are separate.** The planner (opus) thinks carefully about decomposition and ordering. The executor (sonnet) follows instructions precisely. Neither crosses into the other's domain.
-- **Serial execution.** One task at a time, always. No parallel writes, no ID races, no merge conflicts. Three executor tiers (micro, fast-track, full) keep overhead proportional to task complexity.
+- **Planning and execution are separate.** The planner (opus) thinks carefully about decomposition, ordering, and executor tier assignment. The executor (sonnet) follows instructions precisely. Neither crosses into the other's domain.
+- **Serial execution.** One task at a time, always. No parallel writes, no ID races, no merge conflicts. Two executor tiers (micro, full) keep overhead proportional to task complexity — the planner assigns the tier.
 - **State is truth, not intent.** The finalizer only records verified outcomes. Failed work is tracked honestly.
 - **Run IDs tie sessions together.** Every job entry carries a run_id, enabling clean resume detection and preventing cross-session contamination.
 

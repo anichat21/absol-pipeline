@@ -45,6 +45,22 @@ For each job in `todo-run.md`, find the matching task in `todo.md` by `task_id` 
 
 This is the ONLY time todo.md statuses get updated post-execution. Without this step, todo.md shows stale `pending` statuses for completed work.
 
+## Step 3b — Purge done tasks from todo.md
+
+After updating statuses, delete all `[task]` entries with `status: done` from `todo.md`. The full task detail for completed work is already captured in `state.md` session logs — there is no need to keep it in the task list as well.
+
+`todo.md` is a working document, not an archive. It should only ever contain actionable items: `status: pending`, `status: blocked`, or `status: failed`. Done tasks just add noise and cause the file to grow without bound.
+
+If `todo.md` has a header (e.g. `# Project — Todo`) or any non-task content before the first `[task]` block, preserve it. Remove only the `[task]` entries themselves.
+
+## Step 3c — Purge done plan items from plan.md
+
+Delete all `[plan-item]` entries with `status: done` from `plan.md`. Done plan items are already referenced in `state.md` via their decomposed TSK IDs — the record of what was planned and built lives there.
+
+`plan.md` should only contain items that haven't been fully executed yet: pending, blocked, or items with open design decisions. If all items are done and `plan.md` becomes empty after purging, leave just the file header.
+
+If `plan.md` has no header and becomes entirely empty, leave it as an empty file rather than deleting it — the file's presence is expected by the pipeline.
+
 ## Step 4 — Update state.md
 
 For each **done** job (without unresolved review flags):
@@ -58,6 +74,24 @@ For **failed** or **blocked** jobs:
 2. Include the blocker description and affected task IDs
 
 `state.md` must reflect reality. If a task was partially completed, say so. If verification failed, say so. Never record work as done that wasn't verified.
+
+## Step 4b — Compact old sessions in state.md
+
+After updating `state.md` with the current run's results, compact all session entries from **previous** runs. The current run keeps its full per-task detail. Everything older gets collapsed to a single summary line per session.
+
+Format for each compacted session:
+```
+Session {run_id} ({date}): {N} tasks completed — {brief one-sentence summary of what was built or fixed}
+```
+
+Example:
+```
+Session RUN-2026-04-27 (2026-04-27): 11 tasks completed — GlbModel runtime layer split, per-frame material policing eliminated, metadata immutability.
+```
+
+Replace each old session's full TSK-by-TSK block with this one line. Keep the overall `state.md` structure intact (headings like `## Last Session`, `## In Progress`, `## Tech Debt`, etc.) — only collapse the verbose session narrative, not the structured notes sections.
+
+The goal is that `state.md` always has full fidelity for the latest session and a compact audit trail of older ones, rather than accumulating unbounded detail across every run.
 
 ## Step 5 — Check higher-level docs
 
@@ -106,7 +140,7 @@ Output the finalization summary to the user. Keep it concise. Flag anything that
 ## Rules
 
 - Never record intent as truth — only record verified outcomes
-- Only modify `todo.md` to update task statuses based on execution results. Never add, remove, or rewrite task entries — that's the planner's job
+- Only modify `todo.md` to update task statuses and purge completed entries (Steps 3 and 3b). Never add new task entries or rewrite existing ones — that's the planner's job
 - Never modify `vision.md` or `roadmap.md` without explicit instruction
 - If `todo-run.md` is empty or missing, report that there's nothing to finalize
 - If `state.md` doesn't exist, create it with the completed work as the initial state
