@@ -56,6 +56,10 @@ TDD overhead isn't worth it for one-line CSS or a dep bump. Make the edit, run v
 
 Run the task's `verification`. If unspecified: does it parse? obvious errors? matches acceptance criteria? For TDD work, the suite passing is the verification.
 
+### Parallel mode
+
+When the orchestrator's prompt includes the line `parallel_mode: yes`, you skip verification entirely. **Direct-edit only** — no TDD red-green-refactor, no `npm`/build/test commands, no shell verification of any kind. Edit the files exactly as the task specifies, write the `[job]` with `verification_result: skipped`, and return. Concurrent verify runs would race on `dist/`, `tsconfig.tsbuildinfo`, and vitest temp dirs; the orchestrator's end-of-run verify chain is the safety net for the whole cohort.
+
 ## `[job]` entry
 
 ```

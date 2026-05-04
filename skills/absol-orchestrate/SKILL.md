@@ -112,9 +112,33 @@ Then `AskUserQuestion`:
   - **Adjust** — describe changes; minor edits land on `todo.md`, significant changes re-run the planner.
   - **Cancel** — stop here; nothing executes.
 
-### Step 5 — Serial execution
+### Step 5 — Execution
 
-Walk `execution_order`. Per task:
+#### 5a — Identify dangling-small tasks
+
+Before walking `execution_order`, compute the **dangling-small** set. A task qualifies if **all** of:
+
+- `dependencies: none`
+- No other task lists it in their dependencies (true DAG leaf)
+- `risk: low`
+- `hitl: no`
+- `files_touched_planned` is disjoint from every other task in the run
+
+Skip this phase if the set is empty or has only one task — single-task parallel buys nothing.
+
+#### 5b — Fan out dangling-small in the background
+
+For each dangling-small task, spawn `absol-executor` (sonnet) using the Agent tool with `run_in_background: true`. The prompt MUST include the line:
+
+> `parallel_mode: yes — direct edit only, skip TDD, skip verification, write [job] with verification_result: skipped.`
+
+When the dangling-small set is non-empty, **parallel mode is active for the whole run** — every executor (background, serial-full, serial-micro) skips per-task verification, since concurrent verify chains race on `dist/`, `tsconfig.tsbuildinfo`, and vitest temp dirs. The Step 7 pre-finalize verify is the only safety net; surface this at the Step 7 checkpoint and recommend Run (do not default to Skip).
+
+Background failures are **quiet** — recorded as `[job]` entries with `status: failed`, surfaced in the finalize summary, do NOT interrupt the serial path.
+
+#### 5c — Walk the serial path
+
+Iterate `execution_order` over the remaining tasks (those NOT in the dangling-small set). Per task:
 
 **HITL pause** (when `hitl: yes`): show the full task entry (id, title, description, files, risk, dependencies, acceptance criteria, verification), then use the **`AskUserQuestion` tool**:
 
@@ -130,8 +154,8 @@ The tool's automatic "Other" free-text option captures arbitrary input.
 
 **Executor selection** (when `hitl: no` or HITL approved):
 
-- `executor_tier: micro` → orchestrator does it inline. Make the edit, run `verification`, write `[job]` with `worker: inline`. No agent spawn. Works for any low-risk single-file task — not restricted to TWEAK/CHORE.
-- `executor_tier: full` → spawn `absol-executor` (sonnet). It runs TDD red-green-refactor for FEAT and medium+ BUG; direct edit for TWEAK / CHORE.
+- `executor_tier: micro` → orchestrator does it inline. Make the edit, write `[job]` with `worker: inline`. Run the task's `verification` only when parallel mode is **not** active for this run; otherwise record `verification_result: skipped`.
+- `executor_tier: full` → spawn `absol-executor` (sonnet). When parallel mode is active for the run, include the same `parallel_mode: yes …` line in the prompt; otherwise the executor runs TDD red-green-refactor for FEAT and medium+ BUG, direct edit for TWEAK / CHORE.
 
 After each task: success → continue. Failed/blocked → stop, report, then `AskUserQuestion`:
 
@@ -141,6 +165,10 @@ After each task: success → continue. Failed/blocked → stop, report, then `As
   - **Retry** — re-run the executor on the same task.
   - **Skip** — mark this task and continue with the next.
   - **Abort** — stop the run; surface what completed and proceed to the finalization checkpoint.
+
+#### 5d — Await background tasks
+
+After the serial path completes (or aborts), wait for any still-running background tasks before proceeding to review/finalize. Their `[job]` entries appear in `todo-run.md` as they land. Do not poll — the runtime delivers a notification when each background Agent completes.
 
 ### Step 6 — Review (if needed)
 
@@ -156,6 +184,17 @@ Fix-required verdicts feed the **next** planning cycle. Do not re-execute immedi
 
 Cannot be skipped. If context is running low, present this before anything else.
 
+**Read pipeline commands first.** Scan `CLAUDE.md` for a `## Pipeline Commands` section with bullet entries:
+
+```
+## Pipeline Commands
+
+- **verify:** `<command>` — fast static checks (typecheck/lint/test/build)
+- **smoke:** `<command>` — full smoke path (e.g. Docker rebuild, integration suite)
+```
+
+Either may be absent. If `verify` is missing, infer a sensible default for the project type (e.g. `npm run typecheck && npm run lint && npm run test && npm run build` for JS) and use it. If `smoke` is absent, omit smoke from the question — don't invent one.
+
 Summary text:
 
 ```
@@ -167,11 +206,21 @@ Files modified: {list}
 
 Then **two** `AskUserQuestion` calls (sequential, not multiselect):
 
-1. question: `Run build & test before finalizing?` — header: `Build & test`
-   - **Run** — execute the project's build/test commands and report.
+1. Pre-finalize check question. Shape depends on what's declared:
+
+   **Both verify and smoke declared** — header: `Pre-finalize`, question: `Run pre-finalize checks?`
+   - **Verify + smoke (Recommended)** — run verify, then smoke, report both.
+   - **Verify only** — run verify command, report.
+   - **Smoke only** — run smoke command, report.
    - **Skip** — go straight to the finalize question.
 
-2. If build/test was run and failed, surface the failure first, then ask:
+   **Only verify declared/inferred** — header: `Build & test`, question: `Run build & test before finalizing?`
+   - **Run** — execute verify and report.
+   - **Skip** — go straight to finalize.
+
+   Smoke commands are typically slow (container rebuilds, full integration suites). Note expected duration if obvious (e.g. *"~2 min container rebuild"*).
+
+2. If any check ran and failed, surface the failure first, then ask:
    question: `Finalize anyway? state.md and the run archive will reflect the failure.` — header: `Finalize`
    options: **Finalize**, **Stop** (warn state may be inconsistent).
 
