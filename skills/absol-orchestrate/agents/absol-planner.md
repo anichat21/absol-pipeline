@@ -46,6 +46,7 @@ For each, integration-analyse: read relevant source, check ADRs in the area, che
   - title: short title (CONTEXT.md vocabulary)
   - description: concrete; reference files/functions/modules by name (no line numbers)
   - subsystem: affected area
+  - files_touched_planned: comma-separated repo-relative paths (best-effort) | unknown
   - dependencies: TSK-xxx, TSK-yyy   (or: none)
   - acceptance_criteria: how to verify the slice is demoable end-to-end
   - verification: command or check
@@ -66,6 +67,8 @@ Forbidden: horizontal tasks like "rewrite all schemas". If a plan item is too co
 
 `hitl: yes` for: ARCH, schema migrations, anything touching auth or data integrity, items the user (or `hitl_hints`) flagged, high-risk tasks on shared interfaces or irreversible operations. Otherwise `hitl: no`.
 
+**Pre-approval override.** When a plan-item has `pre_approved: full`, every task descended from it gets `hitl: no` regardless of the heuristic above — the user already signed off in grill-me. Add `pre_approved_in: PLAN-NNN` to each such task. When `pre_approved: partial`, only set `hitl: yes` for tasks that map to the deferred decisions still listed in `hitl_hints`; the rest go `hitl: no` with the same `pre_approved_in` note.
+
 **Cluster HITL at run start when dependencies allow, else at end.** Never interleave between AFK work.
 
 ### executor_tier
@@ -73,6 +76,12 @@ Forbidden: horizontal tasks like "rewrite all schemas". If a plan item is too co
 `micro` when ALL: `risk: low`, single file, unambiguous description, no verification beyond build/lint, NOT `hitl: yes`. Otherwise `full`.
 
 Trust your tag — orchestrator runs micro inline (no agent), full as the executor agent.
+
+### files_touched_planned
+
+Best-effort comma-separated list of repo-relative paths this task will likely modify. Reference these files in the description anyway — this just makes them parseable. The orchestrator uses these lists to detect parallel-safe (dangling-small) tasks: a task with a disjoint file set against every other task in the run is a candidate to fan out in the background. Overlap with another task's set disqualifies parallelization.
+
+Use `unknown` only when scope is genuinely unbounded (rare; usually means the task should be split). Underestimating is worse than overestimating — if you'd touch a file conditionally, list it.
 
 ### execution_order
 

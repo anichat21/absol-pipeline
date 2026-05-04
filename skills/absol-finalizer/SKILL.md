@@ -87,3 +87,9 @@ Milestones:   {any roadmap milestones reached}   (omit if none)
 ```
 
 Suppress empty subsections. Flag anything needing human attention prominently.
+
+After the summary, append a closing line:
+
+```
+Run logged. Safe to end the session.
+```

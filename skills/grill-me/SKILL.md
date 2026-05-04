@@ -20,6 +20,21 @@ End when the design is shaped enough for the planner: what to build, what it tou
 - **New domain term named** → append to `.absol/CONTEXT.md` as `**Term** — definition. Use for X. Don't say Y.`
 - **User rejects a direction with a load-bearing reason** → offer an ADR per `.absol/adr/0000-template.md`. Skip ephemeral reasons ("not worth it now") and self-evident ones; only offer when a future architect pass would otherwise re-suggest the same thing. Use the **`AskUserQuestion` tool** to confirm before drafting (`Draft ADR-NNNN?` → **Draft** / **Skip**), not plain text.
 
+## Pre-approval pass (before output)
+
+Once the design is shaped, run a sign-off pass on every step that would otherwise become a runtime HITL pause: anything you'd put under `hitl_hints`, plus schema/migration changes, destructive ops, public API surface, new external dependencies, breaking changes. The point is to front-load HITL into grill-me so orchestrate runs unattended.
+
+For each decision, use the **`AskUserQuestion` tool**:
+
+- question: one-sentence description of the decision
+- header: `Pre-approve`
+- options:
+  - **Approve** — sign off now; orchestrate will execute without pausing.
+  - **Defer** — keep it as a runtime HITL pause.
+  - **Drop** — remove from the plan.
+
+Record approved decisions verbatim under `pre_approved_decisions`. Deferred ones stay in `hitl_hints`. Dropped ones are omitted entirely. Set `pre_approved: full` if no `hitl_hints` remain, `partial` if some were deferred, `none` if every decision was deferred or there was nothing to approve.
+
 ## Output
 
 Append one `[plan-item]` to `.absol/plan.md`:
@@ -36,7 +51,10 @@ Append one `[plan-item]` to `.absol/plan.md`:
       - {ModuleName}: {what changes}
   - testing: what gets tested and what doesn't, in plain English
   - out_of_scope: what the planner must not pull in (omit if empty)
-  - hitl_hints: decisions expected to need HITL pause (omit if empty)
+  - pre_approved: full | partial | none
+  - pre_approved_decisions:            (omit if pre_approved: none)
+      - {decision}: signed off YYYY-MM-DD
+  - hitl_hints: decisions still expected to need HITL pause (omit if empty)
   - open_questions:                    (omit if empty)
       - {question}: {parking note}
 ```
