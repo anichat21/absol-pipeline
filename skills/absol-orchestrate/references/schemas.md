@@ -8,7 +8,7 @@ All paths assume the `.absol/` layout. Legacy flat-layout projects use root-leve
 
 ## `.absol/inbox.md`, `.absol/bugs.md`, `.absol/tech-debt.md` — `[note]`
 
-One unified schema across all three intake files. ID prefix is the only difference. Note-taker is the sole writer; planner promotes; finalizer removes when the owning plan completes.
+One unified schema across all three intake files. ID prefix is the only difference. Note-taker is the sole writer of new entries; planner / architect promote; finalizer removes when the owning plan completes.
 
 ```
 - [note]
@@ -19,7 +19,7 @@ One unified schema across all three intake files. ID prefix is the only differen
   - priority: critical | high | medium | low
   - subsystem: affected area
   - status: new | promoted
-  - promoted_to: PLAN-NNN          (optional, set when planner pulls it as a seed)
+  - promoted_to: PLAN-NNN          (optional, set when planner/architect pulls it as a seed)
   - shaper_notes: |                (optional, set when /absol-shaper has refined this note standalone)
       Constraints captured during shaper session:
       - what the user clarified
@@ -27,13 +27,11 @@ One unified schema across all three intake files. ID prefix is the only differen
       - any pre-approved decisions
 ```
 
-ID prefix matches destination. Counters are independent per file. Read the file, find the highest ID with that prefix, increment.
-
 ---
 
 ## `.absol/plan.md` — Plan Queue
 
-A queue of plans authored by `absol-planner`. Each plan is a self-contained unit: title, summary, the seeds it consumes from inbox/bugs/tech-debt, and the actionable tasks the executor will run. Plans are separated by `---`.
+A queue of plans authored by `absol-planner` or `absol-architect`. Each plan is a self-contained unit: title, summary, the seeds it consumes from inbox/bugs/tech-debt, and the actionable tasks the executor will run. Plans are separated by `---`.
 
 Plan.md is **per-run** state. Finalizer archives completed plans into the run log and removes them from plan.md. Plans never accumulate across runs.
 
@@ -48,7 +46,8 @@ Plan.md is **per-run** state. Finalizer archives completed plans into the run lo
   - id: PLAN-001
   - status: ready | in-progress | done
   - created: YYYY-MM-DD
-  - shaper_session: yes | no
+  - author: planner | architect
+  - shaper_session: yes | no       (planner-authored plans only; whether /absol-shaper was invoked)
 
 ### Summary
 
@@ -64,11 +63,8 @@ Plan.md is **per-run** state. Finalizer archives completed plans into the run lo
   - priority: critical | high | medium | low
   - subsystem: <area>
   - shaper_notes: |
-      Constraints captured during /absol-shaper session:
-      - what the user clarified
-      - what they ruled in
-      - what they ruled out
-      (Field is omitted if the planner had no shaper involvement for this seed.)
+      Constraints captured during /absol-shaper session.
+      (Field is omitted if no shaper involvement for this seed.)
 
 ### Execution
 
@@ -77,7 +73,7 @@ Plan.md is **per-run** state. Finalizer archives completed plans into the run lo
   - title: action-oriented short title
   - description: concrete, references files/functions/modules by name
   - subsystem: affected area
-  - files_touched: src/foo.ts, src/bar.ts
+  - files_touched: src/foo.ts, src/bar.ts        (planner's prediction)
   - dependencies: none | TSK-xxx, TSK-yyy
   - acceptance_criteria: how to verify the slice is demoable end-to-end
   - verification: command or check to run after the task
@@ -97,8 +93,7 @@ Plan.md is **per-run** state. Finalizer archives completed plans into the run lo
 …
 ```
 
-Status lifecycle for plan:
-`ready` → (pipeline picks plan) → `in-progress` → (all its tasks complete) → `done` → (finalizer archives and removes)
+Status lifecycle for plan: `ready` → (pipeline picks plan) → `in-progress` → (all tasks complete) → `done` → (finalizer archives + removes)
 
 **Vertical-slice rule** — every `[task]` is a tracer bullet through every layer it touches. Pure horizontal tasks ("rewrite all schemas first") are forbidden.
 
@@ -106,77 +101,152 @@ Status lifecycle for plan:
 
 **`executor_tier`** — `micro` runs inline in the orchestrator (no agent spawn). `full` spawns the executor agent. The planner picks the tier; the orchestrator trusts it.
 
-**`files_touched`** — planner's prediction. Actual files-touched is recorded in `todo-run.md` per task as the executor runs (and may differ).
+**`files_touched`** — planner's prediction. Actual files-touched is recorded per task in run-active.md as the executor runs. Divergence (executor touches files the planner didn't list) auto-sets `review_flag: yes` on the task event — keeps the planner honest over time without paying a cost when prediction was accurate.
 
 ---
 
-## `.absol/todo-run.md` — `[task]` (the execution journal)
+## `.absol/run-active.md` — the live run log
 
-Per-session execution surface. At pipeline launch, orchestrator copies each `[task]` from selected plans into todo-run.md and adds run-time fields as the task progresses. Cleared every finalize.
+The single source of truth during a run (pipeline or scratchpad). Has three sections:
+
+1. **Header** — run metadata; mutated only by orchestrator/scratchpad.
+2. **Tasks (snapshot)** — `[task]` entries copied from plan.md at session start; static planner-emitted fields only. Read-only after creation.
+3. **Events** — append-only `[event]` log. Agents only ever append. Orchestrator appends events too (HITL prompts, retry triggers, pause).
+
+This shape exists for two reasons: **agents save tokens** by not parsing the file (orchestrator passes them their task entry directly in the prompt), and **crash recovery** is trivial (the file's existence + last_event_at timestamp tell `/absol` whether the run is live, paused, or crashed).
 
 ```
+# Active Run
+
+- run_id: RUN-2026-05-06           (or SCR-2026-05-06 for scratchpad)
+- mode: pipeline | scratchpad
+- started_at: 2026-05-06T14:00:00
+- last_event_at: 2026-05-06T14:32:00
+- plans: PLAN-001, PLAN-002        (omit for scratchpad mode)
+
+## Tasks (snapshot)
+
 - [task]
   - id: TSK-001
-  - plan_id: PLAN-NNN              ← FK to the source plan in plan.md
+  - plan_id: PLAN-001
   - run_id: RUN-2026-05-06
-  # static fields copied from plan.md:
-  - type, title, description, subsystem
-  - dependencies, acceptance_criteria, verification
-  - risk, hitl, executor_tier, execution_order
-  # mutates as the task runs:
-  - status: pending | in-progress | done | failed | blocked | needs-review
+  - <all static fields copied verbatim from plan.md execution section>
+
+- [task]
+  - id: TSK-002
+  - …
+
+## Events
+
+- [event] 2026-05-06T14:00:30
+  - type: task-started
+  - task_id: TSK-001
   - worker: sonnet | opus | inline | scratchpad
-  - files_touched_actual: path/a.ts, path/b.ts        (filled in post-execution)
-  - summary: one-line description of what was done
-  - verification_result: pass | fail | skipped
-  - blocker: description (or: none)
-  - review_flag: yes | no
-  - retry_count: 0                                    (incremented on test-fail auto-loop)
+
+- [event] 2026-05-06T14:02:15
+  - type: task-completed
+  - task_id: TSK-001
+  - status: done
+  - files_touched_actual: src/auth.ts, src/auth.test.ts
+  - summary: one line — what was actually done
+  - verification_result: pass
+  - review_flag: no
+
+- [event] 2026-05-06T14:02:30
+  - type: task-failed
+  - task_id: TSK-002
+  - retry_count: 1
+  - blocker: type error in cache.ts:42
+  - files_touched_actual: src/cache.ts
+
+- [event] 2026-05-06T14:02:45
+  - type: task-retry
+  - task_id: TSK-002
+  - retry_count: 2
+  - planner_amendment: <one-line of what planner changed in the task brief>
+
+- [event] 2026-05-06T14:05:00
+  - type: review
+  - task_id: TSK-001
+  - reviewer: sonnet | opus
+  - verdict: approved | fix-required | blocked | human-check
+  - issues: <list, or "none">
+  - fix_request: <text, or "n/a">
+
+- [event] 2026-05-06T14:32:00
+  - type: hitl-prompt
+  - task_id: TSK-005
+  - question: <verbatim>
+  - response: <user's choice + free-text>
+
+- [event] 2026-05-06T14:35:00
+  - type: pause
+  - reason: user-requested
+  - last_completed_task: TSK-004
+  - next_task: TSK-005
 ```
 
-**`worker: inline`** means orchestrator ran a `executor_tier: micro` task directly without spawning an agent.
+### Event types
 
-**`worker: scratchpad`** means a scratchpad-mode session wrote this entry. `task_id` is `SCR-{n}` in that case (see Scratchpad Convention below).
+| `type:` | Written by | Purpose |
+|---|---|---|
+| `task-started` | executor (or orchestrator for inline micro) | Mark task begin |
+| `task-completed` | executor | Success; carries run-time fields |
+| `task-failed` | executor | Verification failed or executor reports failed |
+| `task-blocked` | executor | Task can't proceed; blocker described |
+| `task-retry` | orchestrator | Test-fail loop initiated a retry |
+| `review` | reviewer / reviewer-complex | Verdict on a task |
+| `hitl-prompt` | orchestrator | HITL pause + user response, recorded for archive |
+| `pause` | orchestrator | User paused; pipeline frozen at task boundary |
+| `resume` | orchestrator | Pipeline resumed from pause |
+
+### Static rules
+
+- **Append-only for agents.** Executor and reviewer agents NEVER read or modify run-active.md beyond appending an event block. They get their task entry passed in the prompt by the orchestrator.
+- **Header mutation.** Only orchestrator/scratchpad updates `last_event_at` (after every event append). Other header fields are write-once at session start.
+- **Tasks section is immutable** after orchestrator writes it at session start. Status flips happen via events, not by editing the snapshot. (The snapshot is the static plan; the event stream is the run-time truth.)
+- **Finalizer reconciles.** Walks events, builds the per-task final state, writes the durable `archive/run-{run_id}.md`, then deletes run-active.md.
 
 ---
 
 ## Scratchpad Convention
 
-Scratchpad mode logs adhoc work into todo-run.md using the same `[task]` schema. Synthetic IDs:
+Scratchpad mode uses the same run-active.md shape with `mode: scratchpad`. Synthetic IDs:
 
-- `task_id: SCR-001` (counter resets per scratchpad session)
-- `plan_id: SCRATCHPAD` (sentinel, no plan.md entry exists)
+- task IDs: `SCR-001`, `SCR-002` … (counter resets per scratchpad session)
+- `plan_id: SCRATCHPAD` sentinel (no plan.md entry exists)
 - `run_id: SCR-{YYYY-MM-DD}` (or `-2`, `-3` for same-day reruns)
-- `worker: scratchpad`
+- worker on every task event: `scratchpad`
 
-If the session pulled a `[note]` from inbox/bugs/tech-debt, mark that note `status: promoted` and set `promoted_to: SCR-NNN`. Finalizer removes it on close (same path as plan-completed promotions).
-
----
-
-## Review output — `[review]`
-
-```
-- [review]
-  - task_id: TSK-001
-  - reviewer: sonnet | opus
-  - verdict: approved | fix-required | blocked | human-check
-  - evidence: what was checked (specific files, modules, test results)
-  - issues: list of problems found (or: none)
-  - fix_request: what needs to change (or: n/a)
-  - human_check: yes | no
-```
-
-Reviews are appended to todo-run.md alongside the `[task]` they critique.
+If the session pulled a `[note]` from inbox/bugs/tech-debt, mark that note `status: promoted` and set `promoted_to: SCR-NNN`. Finalizer removes it on close. **If the scratchpad escalates to pipeline before completing the pulled note's work, demote the note back to `status: new` (drop `promoted_to`) before close** — otherwise the note sits flagged-as-resolved-but-isn't.
 
 ---
 
-## Pause state — `state.md`
+## `state.md` — current-truth snapshot + transient run state
 
-When a pipeline is paused mid-run, the finalizer/orchestrator records pause metadata in `state.md` under a `## Pause` section. While present, `/absol` rejects new pipeline starts and blocks scratchpad mode.
+Three persistent sections plus up to two transient sections.
 
 ```
-## Pause
+# {Project} — Current State
 
+*Last updated: {date}*
+
+## Last Session                  (persistent — finalizer-written)
+{1–3 sentence summary of the most recent run.}
+
+## In Progress                   (persistent — finalizer-written)
+{Plans with status: in-progress; one line each. "Nothing." if none.}
+
+## Parked Items                  (persistent — finalizer-written)
+{Notes with shaper_notes but no promoted_to; one line each. "None." if none.}
+
+## Active Run                    (transient — only present while a run is open)
+- run_id: RUN-2026-05-06 | SCR-2026-05-06
+- mode: pipeline | scratchpad
+- started_at: 2026-05-06T14:00:00
+- last_event_at: 2026-05-06T14:32:00
+
+## Pause                         (transient — only present while paused)
 - run_id: RUN-2026-05-06
 - paused_at: 2026-05-06T14:32:00
 - last_completed_task: TSK-004
@@ -184,7 +254,24 @@ When a pipeline is paused mid-run, the finalizer/orchestrator records pause meta
 - reason: user-requested
 ```
 
-The section is removed when the user resumes or finalizes-away the pause.
+`## Active Run` is written by orchestrator/scratchpad at session start, removed by finalizer on close. `last_event_at` is updated by orchestrator/scratchpad whenever they append to run-active.md (so `/absol`'s recovery check has a fresh timestamp without parsing run-active.md).
+
+`## Pause` is written by orchestrator on user-requested pause, removed by finalizer (after Resume → finalize) or by `/absol` (after Finalize-away → finalize).
+
+### Recovery state matrix
+
+`/absol` checks state.md and run-active.md presence at entry to determine the project's run state:
+
+| `## Active Run` | `## Pause` | `run-active.md` | `last_event_at` | Verdict |
+|---|---|---|---|---|
+| absent | absent | absent | — | **Clean** — proceed |
+| present | absent | present | < 15 min ago | **Live elsewhere** — refuse to open second session |
+| present | absent | present | > 15 min ago | **Crashed** — offer Resume / Finalize-away / Discard |
+| present | present | present | any | **Paused** — offer Resume / Finalize-away |
+| present | absent | absent | — | **State drift** — offer Force-clear active run |
+| absent | absent | present | any | **State drift** — offer Force-clear file |
+
+The 15-minute threshold accommodates slow tasks (long builds, full smoke runs). Any active session updates `last_event_at` more frequently than that during normal work.
 
 ---
 
@@ -192,7 +279,7 @@ The section is removed when the user resumes or finalizes-away the pause.
 
 Two file shapes survive a run:
 
-- `archive/run-{RUN-ID}.md` — full snapshot of `todo-run.md` plus the plan(s) that ran. Written by finalizer. Only durable history of the run.
+- `archive/run-{run_id}.md` — finalizer's reconciled record of the run. Written when finalizer processes run-active.md. Contains the run header + the resolved task table (status from event walking) + the consumed plan(s) + a summary section. The only durable history of the run.
 - `archive/sessions-{YYYY-MM}.md` — one-line summaries for older sessions, rolled in by finalizer to keep `state.md` lean.
 
 `state.md` itself is a current-truth snapshot. No historical stacking.
@@ -207,8 +294,8 @@ Two file shapes survive a run:
 | `BUG-` | `.absol/bugs.md` notes |
 | `DEBT-` | `.absol/tech-debt.md` notes |
 | `PLAN-` | `.absol/plan.md` plans |
-| `TSK-` | `[task]` entries (in plan.md and todo-run.md) |
-| `SCR-` | scratchpad task IDs in `todo-run.md` |
+| `TSK-` | `[task]` entries (in plan.md and run-active.md) |
+| `SCR-` | scratchpad task IDs in `run-active.md` |
 | `RUN-` | pipeline run IDs (`RUN-YYYY-MM-DD`, `-2`, `-3` for same-day reruns) |
 | `ADR-` | `.absol/adr/` decision records (file names: `NNNN-short-slug.md`) |
 
@@ -231,12 +318,30 @@ IDs are monotonically increasing within each file. When promoting items between 
 ## Status lifecycles
 
 **`[note]` in inbox.md / bugs.md / tech-debt.md:**
-`new` → (planner picks as seed, OR scratchpad pulls) → `promoted` → (owning plan/scratchpad completes; finalizer removes the entry)
+`new` → (planner/architect picks as seed, OR scratchpad pulls) → `promoted` → (owning plan/scratchpad completes; finalizer removes the entry)
+
+If a scratchpad escalates to pipeline before resolving the pulled note: scratchpad demotes the note back to `new` (drop `promoted_to`) before closing.
 
 **Plan in plan.md:**
 `ready` → (pipeline starts on it) → `in-progress` → (all tasks complete) → `done` → (finalizer archives + removes)
 
-**`[task]` in todo-run.md:**
-`pending` → `in-progress` → `done | failed | blocked | needs-review`
+**`[task]` in run-active.md (state derived from events):**
+`pending` (initial snapshot) → `in-progress` (task-started event) → `done | failed | blocked | needs-review` (terminal events)
 
-A task in `failed` may auto-retry up to 2 times via the planner→executor→tester loop (`retry_count` field). After 2 retries the orchestrator surfaces the failure to the user with three options: solve-now (re-loop), log-and-finalise (record failure, finalize), or discuss (log + finalise + open scratchpad).
+A task in `failed` may auto-retry up to 2 times via the planner→executor→tester loop (`retry_count` field on retry events). After 2 retries the orchestrator surfaces the failure to the user with three options: **Solve now** (re-loop), **Log and finalise** (record failure, finalize), or **Discuss** (log + finalise + open scratchpad).
+
+---
+
+## Verdict shape — when an agent returns to its caller
+
+Every agent that returns control to a caller (orchestrator, /absol) emits a verdict line. Used by the caller to route the next step.
+
+```
+verdict: approved | fix-required | blocked | human-check | human-required
+```
+
+- `approved` — work is good, proceed.
+- `fix-required` — specific issues need addressing; details in `fix_request`.
+- `blocked` — can't proceed; details in `blocker`.
+- `human-check` — agent isn't sure; needs human to verify (UI/UX, ambiguous business logic).
+- `human-required` — agent needs the user to make a decision before proceeding (e.g. planner sees seeds that don't share a fix; emits a recommended regrouping for the user to confirm).

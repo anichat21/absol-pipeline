@@ -46,20 +46,24 @@ Inline the returned notes into the plan-item's `[seed].shaper_notes`. Then desig
 
 This is intent-ambiguity only. Implementation tradeoffs (which library, which pattern) are **your** call — that's the design work.
 
-## Refuse-and-resplit
+## Bad-grouping verdict (no plan written; user decides regrouping)
 
-If, after reading the seeds and the surrounding code, you conclude the seeds don't actually share a fix (different subsystems, no overlapping files, conflicting design pressures), **stop and return**:
+If, after reading the seeds and the surrounding code, you conclude they don't actually share a fix (different subsystems, no overlapping files, conflicting design pressures), **do not write a contorted plan**. Return a `human-required` verdict with your recommended regrouping; `/absol` surfaces it to the user.
 
 ```
-## Refuse-and-resplit
+## verdict: human-required
 
-Seeds: INBOX-042, BUG-017
-Reason: INBOX-042 lives in the auth module; BUG-017 is a UI bug in the contacts panel. No shared fix exists — combining them would inflate scope and force interleaved tasks.
+Seeds received: INBOX-042, BUG-017, INBOX-051
+Reason: <one short paragraph — why these don't share a fix. Be specific about subsystem boundaries, file overlap (or lack of), or design tension that would force unrelated work into one plan.>
 
-Recommendation: split into singletons. Re-invoke planner once per seed.
+Suggested regrouping:
+  - cluster A: INBOX-042 (auth subsystem — token validation)
+  - cluster B: BUG-017, INBOX-051 (UI subsystem — both touch toast component)
+
+Recommendation: re-invoke planner once per cluster, in parallel.
 ```
 
-The orchestrator handles the resplit. Don't try to write a contorted plan that bridges genuinely-unrelated work.
+Do not write any PLAN-NNN entry to plan.md. Do not flip any seed to `status: promoted`. The user picks regrouping at `/absol`'s prompt; planner gets re-invoked with the chosen clusters.
 
 ## Design the build
 

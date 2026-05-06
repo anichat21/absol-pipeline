@@ -16,8 +16,10 @@ Layout written:
 ├── .gitignore
 └── .absol/
     ├── CONTEXT.md  bugs.md  tech-debt.md  adr/0000-template.md   (tracked)
-    ├── inbox.md  plan.md  todo-run.md                            (gitignored)
+    ├── inbox.md  plan.md                                         (gitignored)
     └── archive/                                                  (gitignored)
+
+(`run-active.md` is created on first run, gitignored, deleted by finalizer.)
 ```
 
 ## Inputs
@@ -111,7 +113,7 @@ Root (human-facing, tracked):
 | `tech-debt.md` | Known debt. Removed when their owning plan completes; reviewed by `/absol-architect`. | yes |
 | `inbox.md` | Active intake. Items removed when their owning plan/scratchpad completes. | no |
 | `plan.md` | Plan Queue — PLAN-NNN entries with seeds + execution tasks. Cleared per run by finalizer. | no |
-| `todo-run.md` | Live execution journal. Cleared per run by finalizer. | no |
+| `run-active.md` | Live run log (header + tasks snapshot + append-only events). Created on session start, deleted by finalizer. | no |
 | `archive/` | Finalizer snapshots — `run-{run_id}.md` is the only durable run history. | no |
 
 ## Git
@@ -127,7 +129,7 @@ When the user is brainstorming features, bugs, or improvements in conversation (
 
 ## Wrap-Up
 
-Don't edit pipeline state files by hand. The absol-finalizer skill runs end-of-session: archives `todo-run.md` to `.absol/archive/run-{run_id}.md`, removes done plans from `plan.md`, removes notes whose owning plan completed, updates `state.md` as a current-truth snapshot.
+Don't edit pipeline state files by hand. The absol-finalizer skill runs end-of-session: walks the events in `run-active.md`, writes `archive/run-{run_id}.md` as the durable record, removes done plans from `plan.md`, removes notes whose owning plan completed, updates `state.md` as a current-truth snapshot.
 ```
 
 ---
@@ -249,14 +251,10 @@ No items yet.
 ```markdown
 # {Name} — Plan Queue
 
-No active plans. Run `/absol` and choose pipeline mode to plan from inbox/bugs/tech-debt.
+No active plans. Run `/absol` and choose pipeline mode to plan from inbox/bugs/tech-debt, or `/absol-architect` for a refactor plan.
 ```
 
-### .absol/todo-run.md
-
-```markdown
-# todo-run.md — cleared after scaffolding on {date}
-```
+(`run-active.md` is not scaffolded — it's created by orchestrator/scratchpad on first run.)
 
 ### .absol/bugs.md
 
@@ -345,7 +343,7 @@ dist/
 # absol pipeline churn — recovers from finalize, no value in git history
 .absol/inbox.md
 .absol/plan.md
-.absol/todo-run.md
+.absol/run-active.md
 .absol/archive/
 ```
 
@@ -367,4 +365,4 @@ Tell the user: project path, port allocated, files created (root + `.absol/`), s
 - No language/framework decisions.
 - Always allocate a port via the scan — don't hardcode.
 - Populate `vision.md` meaningfully from the user's description.
-- Pipeline owns `.absol/inbox.md`, `plan.md`, `todo-run.md`, `archive/`. The user can edit `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.
+- Pipeline owns `.absol/inbox.md`, `plan.md`, `run-active.md`, `archive/`. The user can edit `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.
