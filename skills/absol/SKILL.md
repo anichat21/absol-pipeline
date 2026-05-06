@@ -31,37 +31,72 @@ If there's no `.absol/` folder, the project hasn't been migrated. Tell the user 
 
 ## Recovery check (BEFORE the banner)
 
-Read `state.md` and check for `## Active Run` and `## Pause` sections. Check existence of `.absol/run-active.md`. Apply the recovery state matrix:
+Read `state.md` and check for `## Active Run` and `## Pause` sections. Check existence of `.absol/run-active.md`. Apply the recovery state matrix from `references/schemas.md`. Crashes auto-recover (silently, with a banner notice) — only **Paused** asks the user.
 
-| `## Active Run` | `## Pause` | `run-active.md` | `last_event_at` | Verdict |
-|---|---|---|---|---|
-| absent | absent | absent | — | **Clean** — proceed to banner |
-| present | absent | present | < 15 min ago | **Live elsewhere** — refuse |
-| present | absent | present | > 15 min ago | **Crashed** — recover (below) |
-| present | present | present | any | **Paused** — recover (below) |
-| present | absent | absent | — | **State drift** — offer Force-clear active run |
-| absent | absent | present | any | **State drift** — offer Force-clear orphaned run-active.md |
+| State | Detection | Handling |
+|---|---|---|
+| Clean | no Active Run, no Pause, no run-active.md | Proceed to banner |
+| Live elsewhere | Active Run + run-active.md + last_event_at < 15 min | Refuse |
+| **Crashed** | Active Run + run-active.md + last_event_at > 15 min, no Pause | **Auto-recover** (below) |
+| Paused | Active Run + Pause + run-active.md | Ask user |
+| State drift A | Active Run, no run-active.md | Auto-clear `## Active Run` |
+| State drift B | run-active.md, no Active Run | Auto-archive as crashed, delete file |
 
-For the **Live elsewhere** verdict: tell the user another absol session is active in this project (last event {N} minutes ago) and refuse to open a second one. They should either go back to that session or wait for it to crash past the 15-min threshold.
+### Live elsewhere
 
-For **Crashed**: show the active-run details (run_id, mode, last_completed_task, last_event_at) and use `AskUserQuestion`:
+Tell the user another absol session appears active (last event {N} minutes ago); refuse to open a second one. They should go back to that session or wait for it to cross the 15-min threshold.
 
-- question: `Previous run appears to have crashed. How to proceed?`
-- header: `Recovery`
+### Crashed (auto)
+
+No prompt. Run the crash protocol:
+
+1. Walk events in run-active.md. For each task in the snapshot:
+   - Latest event `task-completed` → mark plan.md task `status: needs-review`.
+   - Latest event `task-failed` → mark plan.md task `status: failed`.
+   - Latest event `task-blocked` → mark plan.md task `status: blocked`.
+   - No terminal event → leave plan.md task `status: pending`.
+2. Write `archive/run-{run_id}.md` with `Crashed: yes` in the header. Same archive shape as a clean finalize. (You're effectively running the finalizer's archive step inline; the plan.md update + state cleanup follows the same pattern.)
+3. Delete run-active.md.
+4. Clear `## Active Run` (and `## Pause` if somehow present) from state.md.
+
+Add a one-line notice to the banner:
+
+> Recovered crashed run: RUN-2026-05-06 (2 done → needs-review, 1 pending). Archived.
+
+The next pipeline run picks up the in-progress plan and handles `needs-review` tasks with mandatory reviewer pass (orchestrator's job).
+
+### Paused (asks)
+
+Show the pause record (run_id, last_completed_task, paused_at) and use `AskUserQuestion`:
+
+- question: `Project is paused mid-pipeline. How to proceed?`
+- header: `Pause`
 - options:
-  - **Resume** — re-enter `absol-orchestrate` from the next-task pointer (orchestrator walks events to determine next-task if not explicitly recorded).
+  - **Resume** — re-enter `absol-orchestrate` from the next-task pointer.
   - **Finalize away** — accept what completed; invoke `absol-finalizer` on the partial run; clean up.
-  - **Discard** — delete `run-active.md`, clear `## Active Run` in state.md, lose the in-flight events. Use only when the run was clearly bogus.
 
-For **Paused**: same options minus Discard (pause is intentional — the user shouldn't lose data).
+While paused, **block** scratchpad and **reject** new pipeline activations until the user resolves. note-taker is allowed (capturing thoughts doesn't touch executable state).
 
-For **State drift** verdicts: surface the inconsistency and offer Force-clear with `AskUserQuestion` (Force-clear / Cancel). Don't silently fix.
+### State drift A (Active Run with no file)
 
-Until the user picks a recovery option, **block** scratchpad and **reject** new pipeline activations. note-taker is allowed (capturing thoughts doesn't touch executable state).
+Nothing was actually running. Just clear `## Active Run` from state.md and proceed. Banner notice:
+
+> Cleared stale `## Active Run` (no run-active.md found).
+
+### State drift B (file with no Active Run)
+
+Orchestrator never finished setting up. Treat the file as a crash:
+
+1. Walk events (if any), archive as `crashed-run-{run_id}.md`.
+2. Delete run-active.md.
+
+Banner notice:
+
+> Cleared orphaned run-active.md (archived).
 
 ## Status banner (after recovery is resolved)
 
-Read `state.md`, count entries in `.absol/plan.md`, `.absol/inbox.md`, `.absol/bugs.md`, `.absol/tech-debt.md`. Output a short banner:
+Read `state.md`, count entries in `.absol/plan.md`, `.absol/inbox.md`, `.absol/bugs.md`, `.absol/tech-debt.md`. **Split note counts by status** — promoted notes are linked to a pending plan and aren't actionable from the user's perspective; only `status: new` notes are available to plan or scratchpad.
 
 ```
 absol — <project>
@@ -72,10 +107,12 @@ Plans ready:  N
   - PLAN-001 (created 2026-04-25, 11d old — may need re-planning against current codebase)
   - PLAN-002 (created 2026-05-04)
   - PLAN-003 (created 2026-05-06)
-Inbox:        N notes (M shaped)
-Bugs:         N
-Tech debt:    N
+Inbox:        N new (+ M shaped, K promoted)
+Bugs:         N new (+ K promoted)
+Tech debt:    N new (+ K promoted)
 ```
+
+The "shaped" sub-count on Inbox is the number of `[note]`s with `shaper_notes` populated but `status: new` (ready to plan). "Promoted" is `status: promoted` — already attached to a pending plan. Drop the parenthetical entirely when both are zero (just `Inbox: N`).
 
 The plan staleness flag fires when a plan's `created` date is more than **5 days** old — older plans may need re-planning against the current codebase. It's a soft hint, not a block. Omit the date detail when no plans are stale (just `Plans ready: N (PLAN-001, PLAN-002, …)`).
 

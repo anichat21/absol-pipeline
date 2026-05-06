@@ -123,7 +123,11 @@ If during execution you discover the change touches multiple subsystems, needs d
 User picks. If they push through, continue but flag in the task's `summary`. If they want pipeline:
 
 1. Capture context — invoke `note-taker` to log what was learned (one or more new notes).
-2. **Demote any pulled source [note] back to `status: new`** (drop `promoted_to`). The work isn't done; the note shouldn't be flagged-as-resolved-but-isn't.
+2. **Demote any pulled source [note] back to `status: new`** (drop `promoted_to`). The work isn't done; the note shouldn't be flagged-as-resolved-but-isn't. Also append a `prior_work:` field to the note recording the partial-work archive path:
+   ```
+   - prior_work: SCR-2026-05-06 (partial — see archive/run-SCR-2026-05-06.md)
+   ```
+   The next planner sees this and reads the archive for context — knows what was tried, what worked, what didn't.
 3. If any tasks completed already, leave their events as-is (they're real work; archive should preserve them).
 4. Close the session via finalizer (Step "Close" below). Finalizer archives the partial run.
 5. Tell the user the session closed and to invoke `/absol` for the planner→pipeline path.
@@ -139,7 +143,7 @@ When closing:
    - header: `Discussion log`
    - options:
      - **Log discussion** — append one DISCUSS task with a 1–3 sentence summary of what was talked about; finalize.
-     - **Discard** — close without archiving (skip finalize; just clear `## Active Run` + delete run-active.md).
+     - **Discard** — close without archiving. Demote any pulled `[note]` back to `status: new` (drop `promoted_to`) so it isn't stuck flagged-as-resolved-but-isn't. Then clear `## Active Run` from state.md and delete run-active.md. No archive file is written.
 
    On **Log discussion**, append a `[task]` to the snapshot:
 

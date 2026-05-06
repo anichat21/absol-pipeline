@@ -93,7 +93,9 @@ On Cancel: clear `## Active Run`, delete run-active.md, return.
 For each selected plan:
 
 1. Flip `meta.status: in-progress` in plan.md.
-2. Copy each `[task]` from the plan's Execution section into the `## Tasks (snapshot)` section of run-active.md, preserving every static field. Add `plan_id` and `run_id`.
+2. **Filter by status.** Copy each `[task]` from the plan's Execution section into the `## Tasks (snapshot)` section of run-active.md ONLY if its `status` is `pending` or `needs-review`. Skip `done` / `failed` / `blocked`. (`done` shouldn't normally still be present — finalizer prunes them — but defend against it. `failed` / `blocked` need explicit user attention; user re-plans them via shaper or removes manually before re-running.)
+3. For tasks copied with source `status: needs-review` (carried over from a prior crash), record this in the snapshot as `recovered_from_crash: yes` on the task entry. The execution flow uses this to force the review pass.
+4. Add `plan_id` and `run_id` to every staged task.
 
 Re-number `execution_order` globally across the staged tasks (so you walk one ordered queue). Header gets the `plans:` list.
 
@@ -133,6 +135,8 @@ Append `[event] type: hitl-prompt` with the question and response (verbatim) for
   - `[event] type: task-completed` (or `task-failed`/`task-blocked`) with `files_touched_actual`, `summary`, `verification_result`, `review_flag`.
   - **files_touched divergence rule:** if your `files_touched_actual` contains any file not in the task's static `files_touched`, set `review_flag: yes` automatically.
 - `executor_tier: full` — spawn `absol-executor` (sonnet) via Agent tool. Pass the full task entry inline. Executor appends `task-started` then `task-completed`/`task-failed`/`task-blocked` events directly to run-active.md.
+
+**Crash-recovered tasks force review.** If the staged task has `recovered_from_crash: yes` (it had `status: needs-review` in plan.md from a prior crash), set `review_flag: yes` on the completion event regardless of what the executor reports. The reviewer will verify the work landed correctly given the crashed-context history. Pass the prior crashed-run archive path to the reviewer so it can compare prior work against current.
 
 After every event append (yours or an agent's), update `last_event_at` in the run-active.md header AND the `## Active Run` section in state.md. This is what keeps `/absol`'s liveness check current.
 

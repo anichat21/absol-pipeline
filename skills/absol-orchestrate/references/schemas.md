@@ -25,6 +25,8 @@ One unified schema across all three intake files. ID prefix is the only differen
       - what the user clarified
       - what they ruled in / out
       - any pre-approved decisions
+  - prior_work: SCR-NNN (partial — see archive/run-SCR-NNN.md)
+                                   (optional, set when a scratchpad partially worked on this note then escalated to pipeline. Next planner reads the linked archive for context.)
 ```
 
 ---
@@ -81,6 +83,7 @@ Plan.md is **per-run** state. Finalizer archives completed plans into the run lo
   - hitl: yes | no
   - executor_tier: micro | full
   - execution_order: 1
+  - status: pending                              (optional; default pending; crash recovery may flip to needs-review; finalizer may set failed/blocked)
 
 - [task]
   - id: TSK-002
@@ -260,18 +263,37 @@ Three persistent sections plus up to two transient sections.
 
 ### Recovery state matrix
 
-`/absol` checks state.md and run-active.md presence at entry to determine the project's run state:
+`/absol` checks state.md and run-active.md presence at entry to determine the project's run state. Most states auto-resolve; only Paused requires user input (it was intentional, the user shouldn't lose data without consent).
 
-| `## Active Run` | `## Pause` | `run-active.md` | `last_event_at` | Verdict |
-|---|---|---|---|---|
-| absent | absent | absent | — | **Clean** — proceed |
-| present | absent | present | < 15 min ago | **Live elsewhere** — refuse to open second session |
-| present | absent | present | > 15 min ago | **Crashed** — offer Resume / Finalize-away / Discard |
-| present | present | present | any | **Paused** — offer Resume / Finalize-away |
-| present | absent | absent | — | **State drift** — offer Force-clear active run |
-| absent | absent | present | any | **State drift** — offer Force-clear file |
+| `## Active Run` | `## Pause` | `run-active.md` | `last_event_at` | Verdict | Handling |
+|---|---|---|---|---|---|
+| absent | absent | absent | — | **Clean** | Proceed |
+| present | absent | present | < 15 min ago | **Live elsewhere** | Refuse second session |
+| present | absent | present | > 15 min ago | **Crashed** | **Auto-recover** (see below) |
+| present | present | present | any | **Paused** | Ask user: Resume / Finalize-away |
+| present | absent | absent | — | **State drift A** | Auto-clear `## Active Run` (nothing was active) |
+| absent | absent | present | any | **State drift B** | Auto-archive as crashed-run, delete file |
 
 The 15-minute threshold accommodates slow tasks (long builds, full smoke runs). Any active session updates `last_event_at` more frequently than that during normal work.
+
+### Crash auto-recovery protocol
+
+When `/absol` detects Crashed state (or State drift B), it runs this protocol without asking the user. The user gets a one-line notice in the banner; no AskUserQuestion is required. Crashes are unintentional — the user shouldn't have to decide a recovery flow every time.
+
+1. Walk events in run-active.md (if present). Reconcile each task's state:
+   - Latest event `task-completed` → "was done" → flip plan.md `status: needs-review`.
+   - Latest event `task-failed` / `task-blocked` → terminal; set plan.md `status: failed | blocked`.
+   - No terminal event (started but didn't finish, or never started) → leave plan.md `status: pending`.
+2. Write `archive/run-{run_id}.md` with a `Crashed: yes` marker in the header. Same shape as a normal run archive — same task reconciliation, same HITL log, same files modified summary. The crash marker plus the "needs-review" task statuses tell the next run what's untrusted.
+3. Update plan.md: the in-progress plan(s) get task statuses set per step 1. Plans whose tasks are all done somehow (unlikely on a crash) still get the plan archived, since the archive write covers it.
+4. Delete run-active.md.
+5. Clear `## Active Run` (and `## Pause` if present) from state.md.
+
+Pipeline next run: the orchestrator stages tasks with `status: pending` or `status: needs-review` from in-progress plans (skips `done`/`failed`/`blocked`). `needs-review` tasks execute normally but with `review_flag: yes` forced — the reviewer always sees them, even if the executor wouldn't have flagged otherwise.
+
+State drift A (active run set but no file): the in-flight content was lost — there's nothing to reconcile. Just clear `## Active Run` and proceed.
+
+State drift B (file but no active run): the orchestrator never finished setting up Active Run, or someone edited state.md by hand. Treat the file as a crash, archive what it has, delete.
 
 ---
 
@@ -328,7 +350,12 @@ If a scratchpad escalates to pipeline before resolving the pulled note: scratchp
 **Plan in plan.md:**
 `ready` → (pipeline starts on it) → `in-progress` → (all tasks complete) → `done` → (finalizer archives + removes)
 
-**`[task]` in run-active.md (state derived from events):**
+**`[task]` in plan.md (planner-emitted; per-plan persistent until done):**
+`pending` (default) → executed by pipeline → `done` (finalizer prunes the entry) | `failed` | `blocked`
+`pending` → crash before completion → stays `pending` (next run picks up).
+Crashed run had this task `done` in events → flipped to `needs-review` by /absol's crash recovery; next run re-executes with mandatory reviewer pass.
+
+**`[task]` in run-active.md (per-run; state derived from events):**
 `pending` (initial snapshot) → `in-progress` (task-started event) → `done | failed | blocked | needs-review` (terminal events)
 
 A task in `failed` may auto-retry up to 2 times via the planner→executor→tester loop (`retry_count` field on retry events). After 2 retries the orchestrator surfaces the failure to the user with three options: **Solve now** (re-loop), **Log and finalise** (record failure, finalize), or **Discuss** (log + finalise + open scratchpad).

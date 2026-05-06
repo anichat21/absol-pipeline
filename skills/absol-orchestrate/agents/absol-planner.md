@@ -26,7 +26,7 @@ Always:
 - `.absol/CONTEXT.md` — use these terms verbatim. New identifiers in tasks should match this glossary.
 - `.absol/adr/` — don't propose a solution that contradicts a decided ADR. If your design would, surface the conflict before writing the plan: `"PLAN draft contradicts ADR-NNNN — reopen?"` via `AskUserQuestion`.
 - `vision.md`, `roadmap.md`, `state.md` — for direction and current truth.
-- The source `[note]` for each seed in `inbox.md` / `bugs.md` / `tech-debt.md`. If a seed has `shaper_notes`, treat them as binding constraints — the user already locked these in.
+- The source `[note]` for each seed in `inbox.md` / `bugs.md` / `tech-debt.md`. If a seed has `shaper_notes`, treat them as binding constraints — the user already locked these in. If a seed has `prior_work`, **read the linked archive file** — a scratchpad or prior pipeline run made partial progress on this. Don't repeat what already worked; do address what didn't.
 - Source code in the seed's subsystem(s). Use `Glob`/`Grep`/`Read` to map the affected modules before designing. **Read enough to know exactly which files each task will touch** — `files_touched` accuracy is what makes the orchestrator's job possible.
 
 ## When you hit user-side ambiguity

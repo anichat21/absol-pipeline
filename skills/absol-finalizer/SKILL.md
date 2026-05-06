@@ -32,11 +32,16 @@ Never writes: `vision.md`, `roadmap.md`, `CLAUDE.md`, `CONTEXT.md`, ADRs.
 
 ## Steps
 
-### 1. Read and validate
+### 1. Read and validate (idempotency-aware)
 
 Read `run-active.md`. Verify the header (`run_id`, `mode`) matches state.md's `## Active Run` section. Mismatch → don't reconcile silently; tell the user, exit.
 
-If `run-active.md` is missing or has no events (besides the snapshot), nothing to finalize — clear the active-run sections from state.md and report.
+**Idempotency check.** Look for `archive/run-{run_id}.md`. If it already exists, you're finalizing a partially-completed prior finalize (likely a crash between archive-write and the cleanup steps). In that case:
+- Don't re-write the archive file.
+- Skip directly to Steps 4–9 (delete run-active.md, clear transient state, prune plan.md, etc.).
+- Report this in Step 10 ("Resumed partial finalize of {run_id}").
+
+If `run-active.md` is missing or has no events (besides the snapshot), nothing to reconcile — but still run Steps 5 onward (clear transient state, ensure plan/note hygiene). Don't write an empty archive file.
 
 ### 2. Reconcile per-task final state
 
@@ -111,10 +116,16 @@ Remove both transient sections. The project is now in a clean state.
 
 ### 6. Update plan.md (pipeline runs only)
 
-For each plan that ran this session:
+For each plan that ran this session, derive each of its tasks' final state from the events (Step 2 reconciliation already did this):
 
-- All its tasks resolved successfully (`done` only) → mark `meta.status: done`, then **remove the entire plan entry from `plan.md`** (its definition is preserved in the run archive).
-- Any task `failed` / `blocked` / `needs-review` → mark `meta.status: in-progress` (still has unresolved work). Keep the plan entry. The user can re-run it next pipeline activation.
+- **All tasks `done`** → mark `meta.status: done`, then **remove the entire plan entry from `plan.md`** (its definition is preserved in the run archive).
+- **Mixed states** (some done, some failed/blocked/needs-review/pending) → mark `meta.status: in-progress`. Keep the plan entry, but **prune the `done` tasks from its Execution section**. Update remaining tasks' `status` field per their final state:
+  - `failed` tasks stay with `status: failed` — user re-plans (shaper/architect) or removes them manually.
+  - `blocked` tasks stay with `status: blocked` — same.
+  - `pending` (never executed this run) tasks stay `status: pending` — next pipeline run picks them up.
+  - (No `needs-review` should appear here — those came in from a prior crash and were either resolved this run or stayed in some other terminal state.)
+
+The pruning matters because next pipeline activation re-stages the in-progress plan; without pruning, completed tasks would re-execute. The done work lives in the run archive — that's the source of truth for "what was done."
 
 Plans the run did **not** touch are unchanged.
 
