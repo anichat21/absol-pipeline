@@ -16,7 +16,7 @@ Layout written:
 ├── .gitignore
 └── .absol/
     ├── CONTEXT.md  bugs.md  tech-debt.md  adr/0000-template.md   (tracked)
-    ├── inbox.md  plan.md  todo.md  todo-run.md                   (gitignored)
+    ├── inbox.md  plan.md  todo-run.md                            (gitignored)
     └── archive/                                                  (gitignored)
 ```
 
@@ -107,13 +107,12 @@ Root (human-facing, tracked):
 |---|---|---|
 | `CONTEXT.md` | Domain glossary. Lazy-grown. | yes |
 | `adr/` | Architecture Decision Records. Architect-only writes. | yes |
-| `bugs.md` | Known bugs. Removed by fix-and-task or "won't fix" ADR. | yes |
-| `tech-debt.md` | Known debt. Reviewed by `/absol-architect`. | yes |
-| `inbox.md` | Active intake. | no |
-| `plan.md` | Shaped items with `modules` / `testing` / `out_of_scope`. | no |
-| `todo.md` | Executable tasks. | no |
-| `todo-run.md` | Live execution log. | no |
-| `archive/` | Finalizer snapshots. | no |
+| `bugs.md` | Known bugs. Removed when their owning plan completes (or via "won't fix" ADR). | yes |
+| `tech-debt.md` | Known debt. Removed when their owning plan completes; reviewed by `/absol-architect`. | yes |
+| `inbox.md` | Active intake. Items removed when their owning plan/scratchpad completes. | no |
+| `plan.md` | Plan Queue — PLAN-NNN entries with seeds + execution tasks. Cleared per run by finalizer. | no |
+| `todo-run.md` | Live execution journal. Cleared per run by finalizer. | no |
+| `archive/` | Finalizer snapshots — `run-{run_id}.md` is the only durable run history. | no |
 
 ## Git
 
@@ -128,7 +127,7 @@ When the user is brainstorming features, bugs, or improvements in conversation (
 
 ## Wrap-Up
 
-Don't edit pipeline state files by hand. The absol-finalizer skill runs end-of-session: updates `state.md`, snapshots `inbox.md` promoted items + `todo-run.md` into `.absol/archive/`, compacts old sessions, clears resolved todos.
+Don't edit pipeline state files by hand. The absol-finalizer skill runs end-of-session: archives `todo-run.md` to `.absol/archive/run-{run_id}.md`, removes done plans from `plan.md`, removes notes whose owning plan completed, updates `state.md` as a current-truth snapshot.
 ```
 
 ---
@@ -198,7 +197,7 @@ No phases completed yet. Run absol pipeline to begin planning.
 ```markdown
 # {Name} — Context Glossary
 
-Domain terms and naming conventions. Every absol agent reads this at start of run. Lazy-grown by `/grill-me`, `/absol-architect`, `note-taker`. Edit by hand any time.
+Domain terms and naming conventions. Every absol agent reads this at start of run. Lazy-grown by `/absol-shaper`, `/absol-architect`, `note-taker`. Edit by hand any time.
 
 ## Domain Terms
 
@@ -248,17 +247,9 @@ No items yet.
 ### .absol/plan.md
 
 ```markdown
-# {Name} — Plan
+# {Name} — Plan Queue
 
-No active plans yet. Run absol pipeline to triage work and generate plans.
-```
-
-### .absol/todo.md
-
-```markdown
-# {Name} — Tasks
-
-No tasks yet — run absol pipeline to generate.
+No active plans. Run `/absol` and choose pipeline mode to plan from inbox/bugs/tech-debt.
 ```
 
 ### .absol/todo-run.md
@@ -272,7 +263,7 @@ No tasks yet — run absol pipeline to generate.
 ```markdown
 # {Name} — Known Bugs
 
-No known bugs. Add via `note-taker`. Bugs are removed only when fixed (a task records the fix) or when an ADR records the decision not to fix.
+No known bugs. Add via `note-taker`. Bugs are removed when their owning plan/scratchpad completes (a fix-task lands), or when an ADR records the decision not to fix.
 ```
 
 ### .absol/tech-debt.md
@@ -280,7 +271,7 @@ No known bugs. Add via `note-taker`. Bugs are removed only when fixed (a task re
 ```markdown
 # {Name} — Tech Debt
 
-No tech debt logged. Add via `note-taker`. Reviewed by `/absol-architect`: top items get promoted to `inbox.md` as actionable or get ADR'd as accepted shape.
+No tech debt logged. Add via `note-taker`. Removed when their owning plan completes. Reviewed by `/absol-architect`: top items get promoted to `inbox.md` as actionable or get ADR'd as accepted shape.
 ```
 
 ### .absol/archive/.gitkeep
@@ -354,7 +345,6 @@ dist/
 # absol pipeline churn — recovers from finalize, no value in git history
 .absol/inbox.md
 .absol/plan.md
-.absol/todo.md
 .absol/todo-run.md
 .absol/archive/
 ```
@@ -369,7 +359,7 @@ Tracked inside `.absol/`: `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.
 cd /mnt/nas/dev/projects/<name> && git init
 ```
 
-Tell the user: project path, port allocated, files created (root + `.absol/`), suggest *"Run /absol-orchestrate on this project to triage your idea and start building."*
+Tell the user: project path, port allocated, files created (root + `.absol/`), suggest *"Run /absol on this project to open a session and start capturing notes or planning."*
 
 ## Rules
 
@@ -377,4 +367,4 @@ Tell the user: project path, port allocated, files created (root + `.absol/`), s
 - No language/framework decisions.
 - Always allocate a port via the scan — don't hardcode.
 - Populate `vision.md` meaningfully from the user's description.
-- Pipeline owns `.absol/inbox.md`, `plan.md`, `todo.md`, `todo-run.md`. The user can edit `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.
+- Pipeline owns `.absol/inbox.md`, `plan.md`, `todo-run.md`, `archive/`. The user can edit `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.

@@ -1,0 +1,40 @@
+user invokes absol command with proj name
+/Absol snowowl
+then the discussed flow happens
+tasks get put in bugs techdebt and inbox. 
+
+BUG-XXX
+DEBT-XXX
+INBOX-XXX
+
+  inbox.md — [item] (richer) and [note] (note-taker output)                                                                                                                          
+  - [item]                                                                                                                                                                           
+    - id: INBOX-001                                                                                                                                                                  
+    - title, raw_request, type, priority, subsystem                                                                                                                                  
+    - route: inbox | plan  //This isnt needed anymore. inbox will move to plan.                                                                                                                                                          
+    - batchable: yes | no   //to soon to decide.                                                                                                                                                         
+    - needs_arch_review: yes | no               //always yes so not needed too.                                                                                                                                      
+    - status: new | needs-shaping | shaped | promoted | rejected                                                                                                                     
+    - shaped_into: PLAN-NNN          (optional)                                                                                                                                      
+    - parking_note: …                (optional)    
+	Match format for Bugs and DEBT sutff
+	
+Complexity of the 3 is the same. tasks can be direct or vague. 
+Now planner spawn:
+Absol sees that theres tons of inbox and less plans so absol suggests planner
+User asks to run pipeline and absol may suggest inbox items if plans are less. in that case invoke planner
+Planner is the brains. he takes the input request and starts a full session /grillmeing the user to make a clear plan. He writes the final plan to planmd.
+at this point the plan is an actionable format, ready for sonnet executor to grab em and do em. 
+
+Now pipeline. 
+Orchestrate (is orchestrate needed or does the /absol handle it all. hmm) will run, read plan md, ask user which plan(s) and start serial exec
+now serial exec will happen by spawning agents. orchestrator or /absol will take the actionable tasks out of plan md and put them into the todo for that session. 
+todo is cleared every run. so orchestrate after filling todo then calls the agents and gives them 1 task at a time.
+once execution is done then we should run tests and log results. this will include a smoke test if neccessary by user. once user and tests are clean you finalise the session with absol-finaliser
+if tests fail then user or tester agent will give feedback. this feedback will be returned to a new planner loop. new planner will again solve this then executor fixes then tester goes again. till everything is good. 
+in the middle of the pipeline the user should be able to interrupt and say pause. pause protocol will be to freeze project at that state and finish current todo. note somewhere its paused. /absol will not allow project modification like scratchpad etc until the last pipeline interruption is either allowed to be kept or finalised away. 
+
+Whats logged: todo as tasks get cleared. once finaliser happens, finaliser logs the run to a new run.md in the absol archives folder. thats the only history of the pipeline.
+Plan md should be cleared when full plan is done. finaliser will do it. same for bugs and tech debt. 
+
+state md doesnt need historical runs or any stacking logs. that all goes in the run log in archives. 

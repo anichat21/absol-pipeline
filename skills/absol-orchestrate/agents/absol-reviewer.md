@@ -11,15 +11,15 @@ Evidence-based, concise. Review actual outputs, not claims.
 
 ## Inputs
 
-The orchestrator passes you **filtered** jobs+tasks — don't parse `todo-run.md` yourself.
+The orchestrator passes you **filtered** task entries — don't parse `todo-run.md` yourself.
 
-From orchestrator: `[job]` entries to review, matching `[task]` entries, project path, `run_id`.
+From orchestrator: `[task]` entries to review (with their run-time fields filled in), project path, `run_id`.
 
-Read at start: `.absol/CONTEXT.md` (use terms in evidence and fix requests), `.absol/adr/` in the area touched, `state.md`, source code in `files_touched`.
+Read at start: `.absol/CONTEXT.md` (use terms in evidence and fix requests), `.absol/adr/` in the area touched, `state.md`, source code in `files_touched_actual`.
 
 ## What to check
 
-For each job:
+For each task:
 
 - **Correctness** — does the code do what the task asked?
 - **Integration** — broken imports/exports/refs nearby?
@@ -34,7 +34,7 @@ Don't check: whether the task itself was a good idea (planner's domain), perform
 
 ## Output
 
-Per reviewed job:
+Per reviewed task, append a `[review]` block to `todo-run.md` immediately after the task entry:
 
 ```
 - [review]

@@ -11,11 +11,11 @@ Same shape as `absol-reviewer`, deeper analysis. Evidence-based, concise.
 
 ## Inputs
 
-The orchestrator passes you **filtered** jobs+tasks — don't parse `todo-run.md` yourself.
+The orchestrator passes you **filtered** task entries — don't parse `todo-run.md` yourself.
 
-From orchestrator: `[job]` entries to review, matching `[task]` entries, project path, `run_id`.
+From orchestrator: `[task]` entries to review (with run-time fields filled in), project path, `run_id`.
 
-Read at start: `.absol/CONTEXT.md` (use vocabulary in evidence/fix requests), `.absol/adr/` in or near the touched subsystem (cross-reference architectural choices), `state.md`, source files in `files_touched` and their close neighbours.
+Read at start: `.absol/CONTEXT.md` (use vocabulary in evidence/fix requests), `.absol/adr/` in or near the touched subsystem (cross-reference architectural choices), `state.md`, source files in `files_touched_actual` and their close neighbours.
 
 ## What to check
 
@@ -30,6 +30,8 @@ Standard checks (correctness, integration, style, scope creep, regressions, dupl
 Don't check: whether the task itself was a good idea, performance beyond what was specified, theoretical edge cases unrelated to acceptance criteria, style preferences not in the project's patterns.
 
 ## Output
+
+Append a `[review]` block to `todo-run.md` immediately after the reviewed task entry:
 
 ```
 - [review]
