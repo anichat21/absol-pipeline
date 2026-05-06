@@ -1,6 +1,6 @@
 ---
 name: absol-scratchpad
-description: Adhoc execution mode for absol projects. Use when the user wants something fixed or explored *now* without going through the formal pipeline (planner → executor → reviewer → finalizer). Can pull a single [note] from inbox/bugs/tech-debt to work on, or take a free-form task the user describes. Uses the same run-active.md event model as pipeline runs (synthetic SCR-NNN ids, mode:scratchpad), so finalizer processes it identically. Invoked by the /absol entry skill when conversation looks like adhoc work, or directly when the user says "scratchpad", "fix this real quick", "just patch X", or pulls a specific bug/inbox item to handle now.
+description: Adhoc execution and ideation mode for absol projects. Use when the user wants something fixed, explored, or discussed *now* without going through the formal pipeline (planner → executor → reviewer → finalizer). Three flavours — handle a free-form task the user describes, pull a single [note] from inbox/bugs/tech-debt to work on, OR run a pure ideation session (auth flow tradeoffs, exploring how a module works, sketching design) where no code changes happen but a light discussion log gets archived. Uses the same run-active.md event model as pipeline runs (synthetic SCR-NNN ids, mode:scratchpad), so finalizer processes it identically. Invoked by the /absol entry skill when conversation looks like adhoc work or discussion, or directly when the user says "scratchpad", "fix this real quick", "just patch X", "let's discuss X", or pulls a specific bug/inbox item to handle now.
 ---
 
 # absol-scratchpad
@@ -134,8 +134,39 @@ The user signals close: *"that's it"*, *"done for now"*, *"thanks, close it"*, o
 
 When closing:
 
-1. Make sure every `[task]` in this session has its terminal event (`task-completed` / `task-failed` / `task-blocked`).
-2. **Invoke `absol-finalizer`** with the scratchpad run_id. The finalizer:
+1. **Ideation-only check.** If no `[task]` entries got created during the session (the conversation was pure discussion — exploring how something works, considering tradeoffs, sketching design without committing), use `AskUserQuestion`:
+   - question: `No edits this session — log it as a discussion?`
+   - header: `Discussion log`
+   - options:
+     - **Log discussion** — append one DISCUSS task with a 1–3 sentence summary of what was talked about; finalize.
+     - **Discard** — close without archiving (skip finalize; just clear `## Active Run` + delete run-active.md).
+
+   On **Log discussion**, append a `[task]` to the snapshot:
+
+   ```
+   - [task]
+     - id: SCR-001
+     - plan_id: SCRATCHPAD
+     - run_id: SCR-2026-05-06
+     - type: DISCUSS
+     - title: <one-line topic, e.g. "Auth flow tradeoffs">
+     - description: <1–3 sentence summary of what was discussed>
+     - subsystem: <area, or "n/a" if cross-cutting>
+     - files_touched: none
+     - dependencies: none
+     - acceptance_criteria: n/a — discussion only
+     - verification: n/a
+     - risk: low
+     - hitl: no
+     - executor_tier: inline
+     - execution_order: 1
+   ```
+
+   Then append `task-started` and `task-completed` events with `worker: scratchpad`, `files_touched_actual: none`, `verification_result: skipped`, `summary` matching the description.
+
+2. Make sure every other `[task]` in this session has its terminal event (`task-completed` / `task-failed` / `task-blocked`).
+
+3. **Invoke `absol-finalizer`** with the scratchpad run_id. The finalizer:
    - Reconciles events into the archive
    - Writes `archive/run-{SCR-id}.md`
    - Deletes run-active.md
@@ -153,6 +184,7 @@ If a `[task]` failed or got blocked and the user hasn't decided what to do, don'
 ## Rules
 
 - One scratchpad session at a time per project. If `state.md` has `## Active Run` for a scratchpad already, resume that session instead of starting a new one.
+- Ideation sessions are first-class — a scratchpad with zero edits is a valid run. Log it as a single DISCUSS task at close (or discard if the user says it was idle chat). Don't force a fake CHORE/TWEAK shape.
 - Append-only on run-active.md events (same contract as pipeline executor). You DO write to the snapshot section because you incrementally add tasks as work emerges — but each task entry is write-once: don't mutate after writing.
 - Never spawn the executor or planner agents. Scratchpad work is inline by definition. Escalate to pipeline if the work is too big.
 - Same `[task]` schema as pipeline tasks. The finalizer reads `worker:` and `mode:` to distinguish, not the schema shape.

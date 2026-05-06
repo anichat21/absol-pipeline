@@ -305,13 +305,16 @@ IDs are monotonically increasing within each file. When promoting items between 
 
 ## Task Classes
 
-| Class | Use for |
-|---|---|
-| ARCH | Architectural changes, refactors that alter system structure |
-| FEATURE | New user-facing functionality |
-| BUG | Broken behaviour that needs fixing |
-| TWEAK | Small improvements to existing behaviour |
-| CHORE | Maintenance, deps, config, docs, cleanup |
+| Class | Use for | Where allowed |
+|---|---|---|
+| ARCH | Architectural changes, refactors that alter system structure | plan.md, run-active.md |
+| FEATURE | New user-facing functionality | plan.md, run-active.md |
+| BUG | Broken behaviour that needs fixing | plan.md, run-active.md |
+| TWEAK | Small improvements to existing behaviour | plan.md, run-active.md |
+| CHORE | Maintenance, deps, config, docs, cleanup | plan.md, run-active.md |
+| DISCUSS | Ideation-only scratchpad sessions — no code changes, just a summary of what was discussed | run-active.md only (scratchpad mode) |
+
+`DISCUSS` tasks have `files_touched: none`, `files_touched_actual: none`, `verification: n/a`, `executor_tier: inline`. They never appear in plan.md; the planner doesn't emit them. Scratchpad emits one at session close when no other tasks were created — preserves a light record of the conversation without forcing a fake "execution" shape.
 
 ---
 
