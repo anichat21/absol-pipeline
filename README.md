@@ -25,7 +25,7 @@ Pipeline is the default for any action request; scratchpad needs an explicit sig
 - **Plan** (`absol-planner`, opus agent) — reads inbox/bugs/tech-debt + state + CONTEXT.md + ADRs + source, decomposes into **self-contained, actionable** vertical-slice tasks (the description carries the approach + entry points + constraints so the executor doesn't re-research), tags each with `executor_tier` / `execution_order`, writes one `PLAN-NNN` to `plan.md`.
 - **Execute** (`absol-orchestrate`, internal) — copies the plan's tasks into `run-active.md` and runs them serially, **unattended** — no mid-run pauses; decisions were settled in shaping. Verification failures enter a test-fail auto-loop (re-plan → re-execute, capped); only a post-retry failure or a manual pause interrupts. Each task appends `[event]` blocks to `run-active.md`.
 - **Review** (`absol-reviewer` sonnet / `absol-reviewer-complex` opus) — only on flagged/failed tasks. Verdicts feed the next planning cycle.
-- **Finalize** (`absol-finalizer`, internal, mandatory) — runs verify/smoke, snapshots `run-active.md` into `archive/run-{run_id}.md`, updates `state.md` as a truth snapshot, prunes done plans/notes.
+- **Finalize** (`absol-finalizer`, internal, mandatory) — runs verify/smoke, writes a lean **outcome-only** `archive/run-{run_id}.md` (one line per task), updates `state.md` as a truth snapshot, prunes done plans/notes, and rolls run archives older than the current month into `archive/runs-{YYYY-MM}.md`.
 
 ## Project layout
 
@@ -40,13 +40,13 @@ my-app/
     ├── adr/             ← Architecture Decision Records             (tracked)
     ├── bugs.md          ← known bugs, BUG-NNN [note]s               (tracked)
     ├── tech-debt.md     ← known debt, DEBT-NNN [note]s              (tracked)
+    ├── archive/         ← finalizer run history (lean, rolled up)   (tracked)
     ├── inbox.md         ← feature/idea intake, INBOX-NNN [note]s    (gitignored)
     ├── plan.md          ← active PLAN-NNN queue, per-run            (gitignored)
-    ├── run-active.md    ← live run event log (created per run)      (gitignored)
-    └── archive/         ← finalizer run/session snapshots           (gitignored)
+    └── run-active.md    ← live run event log (created per run)      (gitignored)
 ```
 
-`.gitignore` tracks the durable / decision-bearing files (`CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`) and ignores the churn (`inbox.md`, `plan.md`, `run-active.md`, `archive/`) that the pipeline regenerates.
+`.gitignore` tracks the durable files — `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`, and `archive/` (the run history, so it has a git safety net) — and ignores only the per-run churn the pipeline regenerates (`inbox.md`, `plan.md`, `run-active.md`).
 
 ## Files
 
@@ -59,7 +59,7 @@ my-app/
 | `.absol/inbox.md` `bugs.md` `tech-debt.md` | Unified `[note]` intake (`status: new` → `promoted`). | note-taker (writes), planner/architect (promote), finalizer (prune) |
 | `.absol/plan.md` | `PLAN-NNN` queue with seeds + execution tasks. Per-run; never accumulates. | planner, architect |
 | `.absol/run-active.md` | Live run: header + task snapshot (orchestrator-owned) + appended `[event]`s (agents). | orchestrator (header/snapshot), executor/reviewer (append) |
-| `.absol/archive/` | Finalizer snapshots: `run-{run_id}.md`, `sessions-{YYYY-MM}.md`. | finalizer |
+| `.absol/archive/` | Lean run history: `run-{run_id}.md` (current month), `runs-{YYYY-MM}.md` + `sessions-{YYYY-MM}.md` (older, rolled up). Tracked. | finalizer |
 
 Schemas for every file format live in `skills/absol-orchestrate/references/schemas.md`.
 
