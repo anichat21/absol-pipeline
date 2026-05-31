@@ -96,12 +96,14 @@ Default is your session model (sonnet). The planner and complex-reviewer agents 
 
 ## Installation
 
-The deployed copy in `~/.claude/skills/` (and `~/.claude/agents/`) is what Claude Code reads at runtime; this repo is the source of truth. Re-copy after every change:
+`~/.claude/skills/` and `~/.claude/agents/` are **symlinked** to this repo, so edits here are live immediately — there is no copy/sync step. To set up on a fresh machine, symlink each skill directory plus the planner agent:
 
 ```bash
-cp -r skills/* ~/.claude/skills/
-cp agents/*  ~/.claude/agents/
+for d in skills/*/; do ln -sfn "$PWD/$d" ~/.claude/skills/"$(basename "$d")"; done
+ln -sfn "$PWD/agents/absol-planner.md" ~/.claude/agents/absol-planner.md
 ```
+
+(The executor/reviewer agent definitions live under `skills/absol-orchestrate/agents/` and resolve through the orchestrate symlink — they don't need their own top-level link.)
 
 ## Usage
 
