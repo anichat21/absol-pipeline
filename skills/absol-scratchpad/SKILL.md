@@ -68,7 +68,6 @@ Before executing each piece of work, append a new `[task]` block to the `## Task
   - acceptance_criteria: how the user will know this worked
   - verification: command run (or "user-eyes" if visual change)
   - risk: low | medium | high
-  - hitl: no                                 ← user is right here; no async pause needed
   - executor_tier: n/a                       ← scratchpad runs inline (worker: scratchpad); never spawns the executor agent
   - execution_order: 1                       ← incrementing per session
 ```
@@ -161,7 +160,6 @@ When closing:
      - acceptance_criteria: n/a — discussion only
      - verification: n/a
      - risk: low
-     - hitl: no
      - executor_tier: n/a
      - execution_order: 1
    ```

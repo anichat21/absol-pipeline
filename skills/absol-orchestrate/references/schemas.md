@@ -80,7 +80,6 @@ Plan.md is **per-run** state. Finalizer archives completed plans into the run lo
   - acceptance_criteria: how to verify the slice is demoable end-to-end
   - verification: command or check to run after the task
   - risk: low | medium | high
-  - hitl: yes | no
   - executor_tier: micro | full
   - execution_order: 1
   - status: pending                              (optional; default pending; crash recovery may flip to needs-review; finalizer may set failed/blocked)
@@ -100,7 +99,7 @@ Status lifecycle for plan: `ready` → (pipeline picks plan) → `in-progress` �
 
 **Vertical-slice rule** — every `[task]` is a tracer bullet through every layer it touches. Pure horizontal tasks ("rewrite all schemas first") are forbidden.
 
-**HITL flagging** — `hitl: yes` tasks pause the executor for user input. The planner clusters HITL tasks at the start of a plan when dependencies allow, otherwise at the end. Never interleave HITL with AFK runs of work.
+**No runtime HITL.** Tasks never pause for user input. Every consequential decision (schema/migration, destructive ops, API surface, new deps, breaking changes) is locked in during shaping and carried as binding constraints in the seed's `shaper_notes`. Once a plan runs, it runs unattended to completion. The only things that surface to the user are a task that *fails* after its retries, a reviewer `human-check` verdict (in the finalize report), or a manual user "pause".
 
 **`executor_tier`** — `micro` runs inline in the orchestrator (no agent spawn). `full` spawns the executor agent. The planner picks the tier; the orchestrator trusts it.
 
@@ -114,7 +113,7 @@ The single source of truth during a run (pipeline or scratchpad). Has three sect
 
 1. **Header** — run metadata; mutated only by orchestrator/scratchpad.
 2. **Tasks (snapshot)** — `[task]` entries copied from plan.md at session start; static planner-emitted fields only. Read-only after creation.
-3. **Events** — append-only `[event]` log. Agents only ever append. Orchestrator appends events too (HITL prompts, retry triggers, pause).
+3. **Events** — append-only `[event]` log. Agents only ever append. Orchestrator appends events too (retry triggers, pause).
 
 This shape exists for two reasons: **agents save tokens** by not parsing the file (orchestrator passes them their task entry directly in the prompt), and **crash recovery** is trivial (the file's existence + last_event_at timestamp tell `/absol` whether the run is live, paused, or crashed).
 
@@ -176,12 +175,6 @@ This shape exists for two reasons: **agents save tokens** by not parsing the fil
   - issues: <list, or "none">
   - fix_request: <text, or "n/a">
 
-- [event] 2026-05-06T14:32:00
-  - type: hitl-prompt
-  - task_id: TSK-005
-  - question: <verbatim>
-  - response: <user's choice + free-text>
-
 - [event] 2026-05-06T14:35:00
   - type: pause
   - reason: user-requested
@@ -199,8 +192,7 @@ This shape exists for two reasons: **agents save tokens** by not parsing the fil
 | `task-blocked` | executor | Task can't proceed; blocker described |
 | `task-retry` | orchestrator | Test-fail loop initiated a retry |
 | `review` | reviewer / reviewer-complex | Verdict on a task |
-| `hitl-prompt` | orchestrator | HITL pause + user response, recorded for archive |
-| `pause` | orchestrator | User paused; pipeline frozen at task boundary |
+| `pause` | orchestrator | User manually paused; pipeline frozen at task boundary |
 | `resume` | orchestrator | Pipeline resumed from pause |
 
 ### Static rules
@@ -271,7 +263,7 @@ Three persistent sections plus up to two transient sections.
 
 Finalizer's records. All **outcome-only** — no plan-time specs (those die with plan.md):
 
-- `archive/run-{run_id}.md` — the reconciled record of a run: counts line, plans line, one line per task (`id status — summary. files: …. verify/review …`), optional HITL + Notable sections. The only durable run history. See `absol-finalizer` Step 3 for the exact shape; the crash path in `absol/SKILL.md` writes the same shape with `Crashed: yes`.
+- `archive/run-{run_id}.md` — the reconciled record of a run: counts line, plans line, one line per task (`id status — summary. files: …. verify/review …`), optional Notable section. The only durable run history. See `absol-finalizer` Step 3 for the exact shape; the crash path in `absol/SKILL.md` writes the same shape with `Crashed: yes`.
 - `archive/runs-{YYYY-MM}.md` — run archives from before the current month, rolled together by finalizer (then the individual `run-*.md` files are deleted). Keeps file count bounded.
 - `archive/sessions-{YYYY-MM}.md` — one-line summaries for older sessions, rolled in to keep `state.md` lean.
 

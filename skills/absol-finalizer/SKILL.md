@@ -59,7 +59,7 @@ Build the reconciled task table for the archive — each task entry gets the sta
 
 ### 3. Archive the run
 
-Write `.absol/archive/run-{run_id}.md` — the definitive, **outcome-only** record. Do NOT copy plan-time specs (description, acceptance_criteria, verification command, risk, hitl, predicted files_touched); those died with plan.md and aren't needed to know what happened. One line per task. Omit default-value fields (`review_flag: no`, `retries: 0`, `hitl: no`).
+Write `.absol/archive/run-{run_id}.md` — the definitive, **outcome-only** record. Do NOT copy plan-time specs (description, acceptance_criteria, verification command, risk, predicted files_touched); those died with plan.md and aren't needed to know what happened. One line per task. Omit default-value fields (`review_flag: no`, `retries: 0`).
 
 ```
 # {run_id} — {date}  ({pipeline | scratchpad}{, Crashed: yes})
@@ -72,9 +72,6 @@ Plans: PLAN-001 "title" (done), PLAN-002 "title" (in-progress)    (omit for scra
 - TSK-001 done — {one-line summary}. files: src/a.ts, src/a.test.ts. verify: pass.
 - TSK-002 failed (×2) — {blocker}. files: src/cache.ts.
 - TSK-003 needs-review — {fix_request}. files: src/x.ts. review(opus): fix-required.
-
-## HITL                                  (omit if none)
-- TSK-005: {user decision} — {one-line amendment, if any}
 
 ## Notable                               (omit if none)
 - {divergence, superseded plan, succeeded-after-retry, or anything the next run must know}

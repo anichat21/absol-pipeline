@@ -152,7 +152,7 @@ One PLAN per architect session. Append (preserving any existing plans), separate
 - [task]
   - id: TSK-{next}
   - title, description, subsystem, files_touched, dependencies,
-    acceptance_criteria, verification, risk, hitl, executor_tier, execution_order
+    acceptance_criteria, verification, risk, executor_tier, execution_order
 ```
 
 The `shaper_notes` block on each seed is the architect's equivalent of a /absol-shaper output — it captures the constraints you grilled out of the user. The planner uses shaper_notes during normal pipeline runs; the executor reads them during execution. Same field name, same purpose, different author.
@@ -166,9 +166,9 @@ For each task, fill every field per the standard schema (see `~/.claude/skills/a
 - `files_touched`: be accurate. Refactors touch many files; predict carefully.
 - `dependencies`: refactor tasks often depend on earlier slices landing first.
 - `risk`: refactors are usually `medium` or `high` (touching shared code).
-- `hitl`: yes for ARCH-grade decisions or shared-interface changes; no for mechanical follow-ups.
 - `executor_tier`: usually `full` (refactors rarely qualify as `micro`).
-- `execution_order`: HITL clusters at start when deps allow.
+- `execution_order`: by dependency — earlier slices land first.
+- `description`: actionable — name the seams/functions and the order of operations so the executor doesn't re-derive the refactor. ARCH decisions are settled here (in the grill), not at runtime.
 - `acceptance_criteria`: how to verify this slice works end-to-end (compiles, tests pass, behaviour preserved).
 
 If a deepening candidate is too coarse to slice vertically (e.g. *"rewrite the auth module"*), break it into 3+ slices each delivering working incremental progress. Refuse to write a single mega-task.
@@ -183,7 +183,7 @@ Tech-debt:     {n_reviewed} reviewed — {n_promoted} added to PLAN, {n_adr} ADR
 
 PLAN written:  PLAN-{NNN} — {title}
   Seeds: {list of DEBT-NNN ids}
-  Tasks: {n} total ({n_hitl} HITL, {n_afk} AFK)
+  Tasks: {n} total
 
 CONTEXT.md:    {n} term(s) added/sharpened
 ADRs drafted:  ADR-NNNN, ADR-MMMM           (omit if none)

@@ -1,6 +1,6 @@
 # absol-pipeline
 
-A multi-agent workflow pipeline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that handles the full lifecycle of a software task — intake → shape → plan → execute (with HITL pauses) → review → finalize. Each agent has one job; a central orchestrator coordinates them.
+A multi-agent workflow pipeline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that handles the full lifecycle of a software task — intake → shape → plan → execute → review → finalize. The human decides during **shaping**; the pipeline then runs **unattended**. Each agent has one job; a central orchestrator coordinates them.
 
 ## Front door
 
@@ -18,12 +18,12 @@ Pipeline is the default for any action request; scratchpad needs an explicit sig
 
 ```
 /absol → shape (light, optional) → plan → checkpoint
-       → serial execution loop (pauses at HITL tasks) → review (if needed) → finalize
+       → serial execution loop (unattended) → review (if needed) → finalize
 ```
 
-- **Shape** (`absol-shaper`, inline) — 1–3 intent questions, recommended answers, reads code instead of asking when it can. Front-loads HITL decisions so execution runs unattended. Invoked by the planner when intent is ambiguous, or standalone.
-- **Plan** (`absol-planner`, opus agent) — reads inbox/bugs/tech-debt + state + CONTEXT.md + ADRs + source, decomposes into vertical-slice tasks, tags each with `hitl` / `executor_tier` / `execution_order`, writes one `PLAN-NNN` to `plan.md`.
-- **Execute** (`absol-orchestrate`, internal) — copies the plan's tasks into `run-active.md`, runs them serially. HITL tasks pause for approve/amend/pivot/reject; the rest run unattended. Verification failures enter a test-fail auto-loop (re-plan → re-execute, capped). Each task appends `[event]` blocks to `run-active.md`.
+- **Shape** (`absol-shaper`, inline) — 1–3 intent questions, recommended answers, reads code instead of asking when it can. This is the sole decision point: every consequential call is settled here so execution runs unattended. Invoked by the planner when intent is ambiguous, or standalone.
+- **Plan** (`absol-planner`, opus agent) — reads inbox/bugs/tech-debt + state + CONTEXT.md + ADRs + source, decomposes into **self-contained, actionable** vertical-slice tasks (the description carries the approach + entry points + constraints so the executor doesn't re-research), tags each with `executor_tier` / `execution_order`, writes one `PLAN-NNN` to `plan.md`.
+- **Execute** (`absol-orchestrate`, internal) — copies the plan's tasks into `run-active.md` and runs them serially, **unattended** — no mid-run pauses; decisions were settled in shaping. Verification failures enter a test-fail auto-loop (re-plan → re-execute, capped); only a post-retry failure or a manual pause interrupts. Each task appends `[event]` blocks to `run-active.md`.
 - **Review** (`absol-reviewer` sonnet / `absol-reviewer-complex` opus) — only on flagged/failed tasks. Verdicts feed the next planning cycle.
 - **Finalize** (`absol-finalizer`, internal, mandatory) — runs verify/smoke, snapshots `run-active.md` into `archive/run-{run_id}.md`, updates `state.md` as a truth snapshot, prunes done plans/notes.
 
@@ -70,7 +70,7 @@ Schemas for every file format live in `skills/absol-orchestrate/references/schem
 | Skill | Role |
 |---|---|
 | `absol` | **Front door.** Recovery, status banner, mode routing. The only supported entry point. |
-| `absol-orchestrate` | *(internal)* Execution engine. Runs the plan's tasks serially, manages HITL / test-fail loop / review, hands off to finalizer. |
+| `absol-orchestrate` | *(internal)* Execution engine. Runs the plan's tasks serially and unattended, manages the test-fail loop / review, hands off to finalizer. |
 | `absol-finalizer` | *(internal)* Closes a run: state.md, archive snapshots, plan/note pruning. |
 | `absol-scratchpad` | Adhoc execution or pure-discussion mode outside the formal pipeline. |
 | `absol-shaper` | Light interactive shaping (intent only). Inline in the pipeline or standalone. |
@@ -120,7 +120,7 @@ cp agents/*  ~/.claude/agents/
 - **`run-active.md` is append-only.** The orchestrator owns the header + task snapshot; agents only append `[event]`s. Crash recovery is trivial — the file's existence plus `last_event_at` tell `/absol` whether a run is live, paused, or crashed.
 - **CONTEXT.md is the cheapest consistency lever.** Every agent reads it at start of run, so everyone uses the same word for the same thing.
 - **ADRs close the loop on rejections.** Only `absol-architect` writes them; the next architect run reads them first and doesn't re-suggest. The more ADRs, the cheaper each run.
-- **HITL clusters at run boundaries.** Decisions get front-loaded (in shaping or up front), then the AFK tail runs unattended.
+- **Decisions front-load into shaping; the pipeline runs unattended.** There are no mid-run human gates — every consequential call is settled while the user is engaged in shaping. Only a genuine failure (after retries) or a reviewer's `human-check` surfaces afterward.
 - **Vertical-slice rule in the planner.** Every task is a tracer bullet through every layer it touches. No "rewrite all schemas first" tasks that fail late.
 - **State is truth, not intent.** The finalizer records only verified outcomes; failed work is tracked honestly. Old session detail compacts to one line; full history goes to monthly archive files.
 - **Pipeline owns one folder end-to-end.** `.absol/` is hidden, gitignored where it churns, tracked where it's durable.

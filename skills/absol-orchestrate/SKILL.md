@@ -1,6 +1,6 @@
 ---
 name: absol-orchestrate
-description: "[INTERNAL] Execution engine for the absol pipeline. Reads plan.md, opens run-active.md, copies the selected plans' tasks into the snapshot section, executes them serially (with HITL pauses, test-fail auto-loop, review pass), and hands off to absol-finalizer. Does NOT plan, shape, or classify — those happen upstream in note-taker / absol-shaper / absol-planner before this skill runs. Invoked by the /absol entry skill; do NOT trigger directly except when the user explicitly says '/absol-orchestrate'. /absol is the supported front door for all session activity."
+description: "[INTERNAL] Execution engine for the absol pipeline. Reads plan.md, opens run-active.md, copies the selected plans' tasks into the snapshot section, executes them serially and unattended (test-fail auto-loop, review pass; no HITL pauses), and hands off to absol-finalizer. Does NOT plan, shape, or classify — those happen upstream in note-taker / absol-shaper / absol-planner before this skill runs. Invoked by the /absol entry skill; do NOT trigger directly except when the user explicitly says '/absol-orchestrate'. /absol is the supported front door for all session activity."
 ---
 
 # absol-orchestrate
@@ -70,23 +70,17 @@ If `state.md` has `## Active Run` but no `## Pause` and no recent activity → `
 
 Otherwise (clean state): write `## Active Run` to state.md and create run-active.md with the header section. `last_event_at` starts equal to `started_at`.
 
-### Step 2 — Confirm plan selection
+### Step 2 — Pre-launch
 
-Even though `/absol` passed `selected_plans`, briefly summarise and confirm via `AskUserQuestion`:
+`/absol` already confirmed the plan selection with the user, so don't re-prompt — print a one-line banner and go straight to staging. The pipeline runs unattended from here.
 
 ```
-## Pipeline Pre-launch — {run_id}
-
-Will execute:
-  PLAN-001: <title> — 4 tasks (1 HITL, 3 AFK), <subsystem>
-  PLAN-002: <title> — 7 tasks (2 HITL, 5 AFK), <subsystem>
+## Pipeline launch — {run_id}
+  PLAN-001: <title> — 4 tasks, <subsystem>
+  PLAN-002: <title> — 7 tasks, <subsystem>
 ```
 
-- question: `Confirm execution?`
-- header: `Pre-launch`
-- options: **Proceed** / **Adjust selection** (free-text via "Other") / **Cancel**.
-
-On Cancel: clear `## Active Run`, delete run-active.md, return.
+Only if you were invoked **directly** (`/absol-orchestrate`, no prior confirmation): ask once via `AskUserQuestion` (`Run these plans?` → **Proceed** / **Cancel**). On Cancel: clear `## Active Run`, delete run-active.md, return.
 
 ### Step 3 — Stage run-active.md
 
@@ -114,21 +108,7 @@ If the user signalled pause in chat (*"pause"*, *"hold on"*) since the last task
 3. Update `last_event_at` in both run-active.md header and `## Active Run`.
 4. Stop. The user resumes via `/absol`.
 
-#### 4b — HITL pause (when `hitl: yes`)
-
-Show the full task entry. Then `AskUserQuestion`:
-
-- question: `HITL: how should I handle TSK-{id}?`
-- header: `HITL`
-- options:
-  - **Approve** — run the executor as-is.
-  - **Amend** — describe changes; you update the in-prompt task description for the executor (don't mutate run-active.md task snapshot — append an `hitl-prompt` event recording the amendment).
-  - **Pivot** — re-plan: spawn `absol-planner` with the user's redirect. Replace this task's planner-side definition in your local copy (the snapshot stays original; the event log records the pivot).
-  - **Reject** — append `[event] type: task-failed` with reason `user-rejected`; continue.
-
-Append `[event] type: hitl-prompt` with the question and response (verbatim) for the archive.
-
-#### 4c — Execute
+#### 4b — Execute
 
 - `executor_tier: micro` — you do it inline. Make the edit. Run the task's `verification`. Append:
   - `[event] type: task-started` with `worker: inline`.
@@ -140,14 +120,14 @@ Append `[event] type: hitl-prompt` with the question and response (verbatim) for
 
 After every event append (yours or an agent's), update `last_event_at` in the run-active.md header AND the `## Active Run` section in state.md. This is what keeps `/absol`'s liveness check current.
 
-#### 4d — Verification + test-fail loop
+#### 4c — Verification + test-fail loop
 
 Read the latest event for this task to determine outcome:
 
 - `task-completed` with `verification_result: pass` → continue to next task.
 - `task-completed` with `verification_result: fail` OR `task-failed` → enter the **test-fail auto-loop**:
   1. Read the task's `retry_count` from prior `task-retry` events (start at 0).
-  2. If `retry_count < 2`: spawn `absol-planner` with the failing task entry + most recent failure event as input. Planner returns an amended task brief. Append `[event] type: task-retry` with the new `retry_count` and `planner_amendment` (one-line summary of what changed). Re-execute (back to 4c). Re-verify.
+  2. If `retry_count < 2`: spawn `absol-planner` with the failing task entry + most recent failure event as input. Planner returns an amended task brief. Append `[event] type: task-retry` with the new `retry_count` and `planner_amendment` (one-line summary of what changed). Re-execute (back to 4b). Re-verify.
   3. If `retry_count >= 2`: stop the loop. Surface to user via `AskUserQuestion`:
      - question: `TSK-{id} failed after 2 retries. How should we resolve?`
      - header: `Test failure`
@@ -158,7 +138,7 @@ Read the latest event for this task to determine outcome:
 
 - `task-blocked` → continue to next task. Surface in finalize summary.
 
-#### 4e — Mid-task observations
+#### 4d — Mid-task observations
 
 If an executor reports an unrelated bug or a stray observation in its `task-completed` summary, do **not** fix it — leave the summary as-is and recommend in the finalize report that the user run `note-taker` after the session.
 
@@ -230,7 +210,7 @@ On **Finalize**: invoke `absol-finalizer`. On **Stop**: leave run-active.md as-i
 - Serial execution. One task at a time. No parallel mode, no dangling-small fanout.
 - Snapshot is immutable after Step 3. Status mutates via events, not by editing the snapshot.
 - Update `last_event_at` (in both run-active.md header and state.md `## Active Run`) on every event append. This is non-negotiable — it's how `/absol` distinguishes "live elsewhere" from "crashed."
-- HITL pauses; AFK doesn't. HITL clustering happened at planning — trust the order.
+- No runtime HITL. The pipeline runs unattended once launched; decisions were settled in shaping. Only a post-retry failure, a `human-check` review verdict, or a manual user "pause" interrupts.
 - Review selectively. Clean passes skip Step 5.
 - Finalize is mandatory. Even on Stop, the unfinalized run is a known recovery state.
 - Component agent failure → append `task-failed`, continue. Don't auto-retry blindly at the agent-call level (the test-fail loop is at the verification level, which is different).
