@@ -261,48 +261,19 @@ Three persistent sections plus up to two transient sections.
 
 `## Pause` is written by orchestrator on user-requested pause, removed by finalizer (after Resume → finalize) or by `/absol` (after Finalize-away → finalize).
 
-### Recovery state matrix
+### Recovery
 
-`/absol` checks state.md and run-active.md presence at entry to determine the project's run state. Most states auto-resolve; only Paused requires user input (it was intentional, the user shouldn't lose data without consent).
-
-| `## Active Run` | `## Pause` | `run-active.md` | `last_event_at` | Verdict | Handling |
-|---|---|---|---|---|---|
-| absent | absent | absent | — | **Clean** | Proceed |
-| present | absent | present | < 15 min ago | **Live elsewhere** | Refuse second session |
-| present | absent | present | > 15 min ago | **Crashed** | **Auto-recover** (see below) |
-| present | present | present | any | **Paused** | Ask user: Resume / Finalize-away |
-| present | absent | absent | — | **State drift A** | Auto-clear `## Active Run` (nothing was active) |
-| absent | absent | present | any | **State drift B** | Auto-archive as crashed-run, delete file |
-
-The 15-minute threshold accommodates slow tasks (long builds, full smoke runs). Any active session updates `last_event_at` more frequently than that during normal work.
-
-### Crash auto-recovery protocol
-
-When `/absol` detects Crashed state (or State drift B), it runs this protocol without asking the user. The user gets a one-line notice in the banner; no AskUserQuestion is required. Crashes are unintentional — the user shouldn't have to decide a recovery flow every time.
-
-1. Walk events in run-active.md (if present). Reconcile each task's state:
-   - Latest event `task-completed` → "was done" → flip plan.md `status: needs-review`.
-   - Latest event `task-failed` / `task-blocked` → terminal; set plan.md `status: failed | blocked`.
-   - No terminal event (started but didn't finish, or never started) → leave plan.md `status: pending`.
-2. Write `archive/run-{run_id}.md` with a `Crashed: yes` marker in the header. Same shape as a normal run archive — same task reconciliation, same HITL log, same files modified summary. The crash marker plus the "needs-review" task statuses tell the next run what's untrusted.
-3. Update plan.md: the in-progress plan(s) get task statuses set per step 1. Plans whose tasks are all done somehow (unlikely on a crash) still get the plan archived, since the archive write covers it.
-4. Delete run-active.md.
-5. Clear `## Active Run` (and `## Pause` if present) from state.md.
-
-Pipeline next run: the orchestrator stages tasks with `status: pending` or `status: needs-review` from in-progress plans (skips `done`/`failed`/`blocked`). `needs-review` tasks execute normally but with `review_flag: yes` forced — the reviewer always sees them, even if the executor wouldn't have flagged otherwise.
-
-State drift A (active run set but no file): the in-flight content was lost — there's nothing to reconcile. Just clear `## Active Run` and proceed.
-
-State drift B (file but no active run): the orchestrator never finished setting up Active Run, or someone edited state.md by hand. Treat the file as a crash, archive what it has, delete.
+`## Active Run` / `## Pause` / `run-active.md` presence + `last_event_at` determine the run state at `/absol` entry (Clean, Live-elsewhere, Crashed, Paused, two drift states). The recovery state matrix and the crash auto-recovery protocol live in **`absol/SKILL.md`** (the only actor) — not duplicated here. Crash recovery writes the same archive shape as a finalize with `Crashed: yes`; the 15-min `last_event_at` threshold distinguishes a live slow task from a crash.
 
 ---
 
 ## `.absol/archive/`
 
-Two file shapes survive a run:
+Finalizer's records. All **outcome-only** — no plan-time specs (those die with plan.md):
 
-- `archive/run-{run_id}.md` — finalizer's reconciled record of the run. Written when finalizer processes run-active.md. Contains the run header + the resolved task table (status from event walking) + the consumed plan(s) + a summary section. The only durable history of the run.
-- `archive/sessions-{YYYY-MM}.md` — one-line summaries for older sessions, rolled in by finalizer to keep `state.md` lean.
+- `archive/run-{run_id}.md` — the reconciled record of a run: counts line, plans line, one line per task (`id status — summary. files: …. verify/review …`), optional HITL + Notable sections. The only durable run history. See `absol-finalizer` Step 3 for the exact shape; the crash path in `absol/SKILL.md` writes the same shape with `Crashed: yes`.
+- `archive/runs-{YYYY-MM}.md` — run archives from before the current month, rolled together by finalizer (then the individual `run-*.md` files are deleted). Keeps file count bounded.
+- `archive/sessions-{YYYY-MM}.md` — one-line summaries for older sessions, rolled in to keep `state.md` lean.
 
 `state.md` itself is a current-truth snapshot. No historical stacking.
 
@@ -336,7 +307,7 @@ IDs are monotonically increasing within each file. When promoting items between 
 | CHORE | Maintenance, deps, config, docs, cleanup | plan.md, run-active.md |
 | DISCUSS | Ideation-only scratchpad sessions — no code changes, just a summary of what was discussed | run-active.md only (scratchpad mode) |
 
-`DISCUSS` tasks have `files_touched: none`, `files_touched_actual: none`, `verification: n/a`, `executor_tier: inline`. They never appear in plan.md; the planner doesn't emit them. Scratchpad emits one at session close when no other tasks were created — preserves a light record of the conversation without forcing a fake "execution" shape.
+`DISCUSS` tasks have `files_touched: none`, `files_touched_actual: none`, `verification: n/a`, `executor_tier: n/a`. They never appear in plan.md; the planner doesn't emit them. Scratchpad emits one at session close when no other tasks were created — preserves a light record of the conversation without forcing a fake "execution" shape. (`executor_tier` is `micro | full` only for pipeline tasks that the orchestrator routes; scratchpad tasks always run inline as `worker: scratchpad`, so they carry `executor_tier: n/a`.)
 
 ---
 

@@ -69,7 +69,7 @@ Before executing each piece of work, append a new `[task]` block to the `## Task
   - verification: command run (or "user-eyes" if visual change)
   - risk: low | medium | high
   - hitl: no                                 ← user is right here; no async pause needed
-  - executor_tier: inline                    ← scratchpad never spawns the executor agent
+  - executor_tier: n/a                       ← scratchpad runs inline (worker: scratchpad); never spawns the executor agent
   - execution_order: 1                       ← incrementing per session
 ```
 
@@ -162,7 +162,7 @@ When closing:
      - verification: n/a
      - risk: low
      - hitl: no
-     - executor_tier: inline
+     - executor_tier: n/a
      - execution_order: 1
    ```
 

@@ -49,8 +49,8 @@ Walk the `## Events` section in chronological order. For each task in the snapsh
 
 | Latest event for task | Resulting status | Fields harvested |
 |---|---|---|
-| `task-completed` `status: done` | done | files_touched_actual, summary, verification_result, review_flag |
-| `task-completed` followed by `review` `verdict: fix-required` | needs-review | + review issues, fix_request |
+| `task-completed` `status: done` (no review, or `review` `verdict: approved`) | done | files_touched_actual, summary, verification_result, review_flag |
+| `task-completed` followed by `review` `verdict: fix-required` \| `human-check` \| `blocked` | needs-review | + review verdict, issues, fix_request — never silently mark done when a review is unresolved |
 | `task-failed` (after >2 `task-retry`) | failed | files_touched_actual, blocker, retry_count |
 | `task-blocked` | blocked | files_touched_actual, blocker |
 | no terminal event | pending (ran out of run mid-task) | flag in summary |
@@ -59,52 +59,28 @@ Build the reconciled task table for the archive — each task entry gets the sta
 
 ### 3. Archive the run
 
-Write `.absol/archive/run-{run_id}.md`. This is the **definitive record** of the run.
+Write `.absol/archive/run-{run_id}.md` — the definitive, **outcome-only** record. Do NOT copy plan-time specs (description, acceptance_criteria, verification command, risk, hitl, predicted files_touched); those died with plan.md and aren't needed to know what happened. One line per task. Omit default-value fields (`review_flag: no`, `retries: 0`, `hitl: no`).
 
 ```
-# {run_id} — {date}
+# {run_id} — {date}  ({pipeline | scratchpad}{, Crashed: yes})
 
-Closed by absol-finalizer on {ISO timestamp}.
-Mode: {pipeline | scratchpad}
-Started: {started_at} → Ended: {now}
-Duration: {…}
+{n} done · {n} failed · {n} blocked · {n} needs-review · {duration}
+Plans: PLAN-001 "title" (done), PLAN-002 "title" (in-progress)    (omit for scratchpad)
 
-## Plans consumed                       (omit for scratchpad)
+## Tasks
 
-<verbatim copy of each consumed PLAN-NNN entry from plan.md>
+- TSK-001 done — {one-line summary}. files: src/a.ts, src/a.test.ts. verify: pass.
+- TSK-002 failed (×2) — {blocker}. files: src/cache.ts.
+- TSK-003 needs-review — {fix_request}. files: src/x.ts. review(opus): fix-required.
 
-## Reconciled tasks
+## HITL                                  (omit if none)
+- TSK-005: {user decision} — {one-line amendment, if any}
 
-- [task]
-  - id: TSK-001
-  - <static fields>
-  - status: done
-  - files_touched_actual: …
-  - summary: …
-  - verification_result: pass
-  - reviews: <list of [review] events for this task, if any>
-  - retries: <retry_count>
-
-- [task]
-  - id: TSK-002
-  - …
-
-## HITL log
-
-<verbatim copy of all type:hitl-prompt events with their responses>
-
-## Pause / resume log                   (omit if no pauses)
-
-<verbatim copy of pause + resume events>
-
-## Summary
-
-Tasks: {n_done} done, {n_failed} failed, {n_blocked} blocked, {n_needs_review} needs review
-Files modified: {union of files_touched_actual}
-Notable: {any review fix-required, divergence flags, retries that succeeded}
+## Notable                               (omit if none)
+- {divergence, superseded plan, succeeded-after-retry, or anything the next run must know}
 ```
 
-This is the only durable run history.
+Per-task line: `id status[ (×retries)] — summary. files: <actual>.[ verify: <result>.][ review(<model>): <verdict>.]` — append `verify`/`review` only when present. No "Files modified" union; the per-task `files:` lists are enough. This is the only durable run history — keep it scannable, not a transcript.
 
 ### 4. Delete run-active.md
 
@@ -176,17 +152,14 @@ This is the "items removed once their work completed" rule. Notes never accumula
 
 The transient `## Active Run` and `## Pause` sections were cleared in Step 5. Don't write them back.
 
-### 9. Compact older sessions
+### 9. Roll up old history
 
-Keep just the most recent run summary in `state.md` Last Session. Roll older Last Session content into `archive/sessions-{YYYY-MM}.md`:
+Two monthly rollups keep the archive from growing unbounded:
 
-```
-## Session {prior_run_id} ({prior_date})
+- **Sessions.** Keep only the most-recent Last Session summary in `state.md`. Roll older summaries into `archive/sessions-{YYYY-MM}.md`, one `## {prior_run_id} ({prior_date})` block each (verbatim).
+- **Runs.** Append every run archive dated **before the current month** into `archive/runs-{YYYY-MM}.md` (the lean per-run block verbatim under its `# {run_id}` header), then delete those individual `run-*.md` files. Current-month run archives stay as their own files. This is idempotent — once rolled and deleted, a run isn't seen again.
 
-{prior summary, verbatim from when it was Last Session.}
-```
-
-If you're the first finalize of the month, create the file with a `# Sessions — {YYYY-MM}` header.
+Create either monthly file with a `# {Sessions | Runs} — {YYYY-MM}` header on the first write of the month.
 
 ### 10. Report
 

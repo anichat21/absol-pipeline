@@ -16,8 +16,8 @@ Layout written:
 ├── .gitignore
 └── .absol/
     ├── CONTEXT.md  bugs.md  tech-debt.md  adr/0000-template.md   (tracked)
-    ├── inbox.md  plan.md                                         (gitignored)
-    └── archive/                                                  (gitignored)
+    ├── archive/                                                  (tracked — durable run history)
+    └── inbox.md  plan.md                                         (gitignored — per-run churn)
 
 (`run-active.md` is created on first run, gitignored, deleted by finalizer.)
 ```
@@ -274,7 +274,7 @@ No tech debt logged. Add via `note-taker`. Removed when their owning plan comple
 
 ### .absol/archive/.gitkeep
 
-Empty file. Marks the folder so the finalizer doesn't have to mkdir on first run. (The folder is gitignored, so the .gitkeep won't track — create it anyway as a marker.)
+Empty file. Tracks the (otherwise empty) folder so the finalizer doesn't have to mkdir on first run, and so `archive/` exists in git from the start.
 
 ---
 
@@ -340,14 +340,13 @@ dist/
 .DS_Store
 @eaDir/
 
-# absol pipeline churn — recovers from finalize, no value in git history
+# absol pipeline churn — regenerated each run, no value in git history
 .absol/inbox.md
 .absol/plan.md
 .absol/run-active.md
-.absol/archive/
 ```
 
-Tracked inside `.absol/`: `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.
+Tracked inside `.absol/`: `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`, and `archive/` (the durable run history — tracked so it has a git safety net).
 
 ---
 
@@ -365,4 +364,4 @@ Tell the user: project path, port allocated, files created (root + `.absol/`), s
 - No language/framework decisions.
 - Always allocate a port via the scan — don't hardcode.
 - Populate `vision.md` meaningfully from the user's description.
-- Pipeline owns `.absol/inbox.md`, `plan.md`, `run-active.md`, `archive/`. The user can edit `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.
+- Pipeline owns `.absol/inbox.md`, `plan.md`, `run-active.md` (gitignored churn) and `archive/` (tracked). The user can edit `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.

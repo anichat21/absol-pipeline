@@ -24,7 +24,7 @@ From the orchestrator (`/absol`):
 Always:
 
 - `.absol/CONTEXT.md` — use these terms verbatim. New identifiers in tasks should match this glossary.
-- `.absol/adr/` — don't propose a solution that contradicts a decided ADR. If your design would, surface the conflict before writing the plan: `"PLAN draft contradicts ADR-NNNN — reopen?"` via `AskUserQuestion`.
+- `.absol/adr/` — don't propose a solution that contradicts a decided ADR. If your design would, don't write the plan: return a `human-required` verdict recommending the ADR be reopened (`"PLAN draft contradicts ADR-NNNN — reopen?"`). `/absol` surfaces it to the user. (You're a spawned agent — you can't prompt the user yourself; route every user decision through the verdict, not `AskUserQuestion`.)
 - `vision.md`, `roadmap.md`, `state.md` — for direction and current truth.
 - The source `[note]` for each seed in `inbox.md` / `bugs.md` / `tech-debt.md`. If a seed has `shaper_notes`, treat them as binding constraints — the user already locked these in. If a seed has `prior_work`, **read the linked archive file** — a scratchpad or prior pipeline run made partial progress on this. Don't repeat what already worked; do address what didn't.
 - Source code in the seed's subsystem(s). Use `Glob`/`Grep`/`Read` to map the affected modules before designing. **Read enough to know exactly which files each task will touch** — `files_touched` accuracy is what makes the orchestrator's job possible.
