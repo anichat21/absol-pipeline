@@ -159,7 +159,7 @@ The `shaper_notes` block on each seed is the architect's equivalent of a /absol-
 
 Refactors are particularly tempting to slice horizontally ("first move all the code, then update all callers, then delete the old"). **Don't.** Each task must be a tracer bullet — one small piece of the refactor end-to-end-working before the next.
 
-For each task, fill every field per the standard schema (see `absol-orchestrate/references/schemas.md`):
+For each task, fill every field per the standard schema (see `~/.claude/skills/absol-orchestrate/references/schemas.md`):
 
 - `files_touched`: be accurate. Refactors touch many files; predict carefully.
 - `dependencies`: refactor tasks often depend on earlier slices landing first.

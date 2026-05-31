@@ -31,7 +31,7 @@ If there's no `.absol/` folder, the project hasn't been migrated. Tell the user 
 
 ## Recovery check (BEFORE the banner)
 
-Read `state.md` and check for `## Active Run` and `## Pause` sections. Check existence of `.absol/run-active.md`. Apply the recovery state matrix from `references/schemas.md`. Crashes auto-recover (silently, with a banner notice) — only **Paused** asks the user.
+Read `state.md` and check for `## Active Run` and `## Pause` sections. Check existence of `.absol/run-active.md`. Apply the recovery state matrix below. Crashes auto-recover (silently, with a banner notice) — only **Paused** asks the user.
 
 | State | Detection | Handling |
 |---|---|---|
@@ -87,7 +87,7 @@ Nothing was actually running. Just clear `## Active Run` from state.md and proce
 
 Orchestrator never finished setting up. Treat the file as a crash:
 
-1. Walk events (if any), archive as `crashed-run-{run_id}.md`.
+1. Walk events (if any), archive as `run-{run_id}.md` (with `Crashed: yes` in the header, same as the crash-auto path).
 2. Delete run-active.md.
 
 Banner notice:

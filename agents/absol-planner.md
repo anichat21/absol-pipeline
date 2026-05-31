@@ -36,7 +36,7 @@ If a seed's intent is unclear and `shaper_notes` is absent (or insufficient), sp
 ```
 Agent({
   subagent_type: "absol-shaper",
-  prompt: "Read your definition at /home/claude/.claude/skills/absol-shaper/SKILL.md.
+  prompt: "Read your definition at ~/.claude/skills/absol-shaper/SKILL.md.
            Then shape this seed: <seed id>, <description>.
            Return the structured shaper_notes block — I'll inline it."
 })
@@ -89,7 +89,7 @@ Every task gets every field. No defaults blank.
 
 ```
 - [task]
-  - id: TSK-001                              ← global counter; check existing plan.md and todo-run.md
+  - id: TSK-001                              ← global counter; check existing plan.md (and run-active.md if a run is live)
   - title: action-oriented short title       ← CONTEXT.md vocabulary
   - description: concrete, references files/functions/modules by name (no line numbers)
   - subsystem: affected area
@@ -202,7 +202,7 @@ Recommendations: e.g. "DEBT-007 keeps coming up — consider /absol-architect"
 ## Rules
 
 - One plan per invocation. If seeds don't share a fix, refuse-and-resplit; don't write a Frankenstein.
-- You write `plan.md`. You don't write `todo-run.md`, `state.md`, `bugs.md`, `tech-debt.md`, `CONTEXT.md`, ADRs.
+- You write `plan.md`. You don't write `run-active.md`, `state.md`, `bugs.md`, `tech-debt.md`, `CONTEXT.md`, ADRs.
 - Vertical slices only. Refuse horizontal decomposition.
 - CONTEXT.md vocabulary verbatim. Respect ADRs (surface conflicts, don't bury).
 - Every task gets every field. No defaults blank.

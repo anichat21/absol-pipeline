@@ -133,4 +133,4 @@ Two lines max — what got shaped, where the notes landed, side effects.
 - Don't re-litigate ADRs. Surface the conflict instead.
 - Stop when the planner has what it needs. Don't grill for grilling's sake.
 - Side effects (CONTEXT.md, ADR drafts) are inline as they happen — not batched at the end.
-- Never write to plan.md, todo-run.md, or state.md. Those are owned by other components.
+- Never write to plan.md, run-active.md, or state.md. Those are owned by other components.
