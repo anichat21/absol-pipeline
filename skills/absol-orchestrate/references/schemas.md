@@ -49,7 +49,6 @@ Plan.md is **per-run** state. Finalizer archives completed plans into the run lo
   - status: ready | in-progress | done
   - created: YYYY-MM-DD
   - author: planner | architect
-  - shaper_session: yes | no       (planner-authored plans only; whether /absol-shaper was invoked)
 
 ### Summary
 
@@ -99,7 +98,7 @@ Status lifecycle for plan: `ready` → (pipeline picks plan) → `in-progress` �
 
 **Vertical-slice rule** — every `[task]` is a tracer bullet through every layer it touches. Pure horizontal tasks ("rewrite all schemas first") are forbidden.
 
-**No runtime HITL.** Tasks never pause for user input. Every consequential decision (schema/migration, destructive ops, API surface, new deps, breaking changes) is locked in during shaping and carried as binding constraints in the seed's `shaper_notes`. Once a plan runs, it runs unattended to completion. The only things that surface to the user are a task that *fails* after its retries, a reviewer `human-check` verdict (in the finalize report), or a manual user "pause".
+**Execution is unattended.** Every consequential decision (schema/migration, destructive ops, API surface, new deps, breaking changes) is settled during shaping and carried as binding constraints in the seed's `shaper_notes`; tasks don't pause for input. (Interrupt mechanics — failure, `human-check`, manual pause — live in `absol-orchestrate`.)
 
 **`executor_tier`** — `micro` runs inline in the orchestrator (no agent spawn). `full` spawns the executor agent. The planner picks the tier; the orchestrator trusts it.
 

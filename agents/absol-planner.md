@@ -140,7 +140,6 @@ One PLAN-NNN entry. Append to plan.md (preserving existing plans), separated by 
   - id: PLAN-001                            ← check existing plan.md, increment
   - status: ready
   - created: YYYY-MM-DD
-  - shaper_session: yes | no                ← yes if you invoked /absol-shaper during this planning
 
 ### Summary
 
@@ -190,7 +189,6 @@ Tasks ({total}):
   ...
 
 Execution order: TSK-001 → TSK-003 → …
-Shaper invoked: yes/no
 ADRs referenced: ADR-NNNN, ADR-MMMM           (omit if none)
 ADR conflicts: TSK-XXX would contradict ADR-NNNN  (omit if none — must surface, not bury)
 Recommendations: e.g. "DEBT-007 keeps coming up — consider /absol-architect"

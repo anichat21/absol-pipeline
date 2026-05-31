@@ -1,11 +1,11 @@
 ---
 name: absol-orchestrate
-description: "[INTERNAL] Execution engine for the absol pipeline. Reads plan.md, opens run-active.md, copies the selected plans' tasks into the snapshot section, executes them serially and unattended (test-fail auto-loop, review pass; no HITL pauses), and hands off to absol-finalizer. Does NOT plan, shape, or classify — those happen upstream in note-taker / absol-shaper / absol-planner before this skill runs. Invoked by the /absol entry skill; do NOT trigger directly except when the user explicitly says '/absol-orchestrate'. /absol is the supported front door for all session activity."
+description: "[INTERNAL] Execution engine for the absol pipeline. Reads plan.md, opens run-active.md, copies the selected plans' tasks into the snapshot section, executes them serially and unattended (test-fail auto-loop, review pass), and hands off to absol-finalizer. Does NOT plan, shape, or classify — those happen upstream in note-taker / absol-shaper / absol-planner before this skill runs. Invoked by the /absol entry skill; do NOT trigger directly except when the user explicitly says '/absol-orchestrate'. /absol is the supported front door for all session activity."
 ---
 
 # absol-orchestrate
 
-Conductor of the execution phase. The plan already exists; your job is to run it. **You do not edit source files. You do not classify intake. You do not design tasks.** Those are owned by note-taker, absol-shaper, and absol-planner respectively, and they run before you.
+Conductor of the execution phase. The plan already exists; **your job is to run it, not author it.** Classifying intake, shaping, and designing tasks happen upstream (note-taker / absol-shaper / absol-planner). Your only source edits are a task's own work — `micro` tasks inline, everything else via the executor agent — never off-plan fixes to things you happen to notice (the "orchestrator-fixup" anti-pattern).
 
 ```
 /absol → (plan.md populated by planner/architect) → orchestrate → finalizer
@@ -56,7 +56,7 @@ From `/absol`:
 
 Build prompts as: *"Read your definition at `{absolute path}` first. Then handle: {task entry inline + project path + run_id}."* Pass the task entry inline so the agent doesn't have to parse run-active.md. Saves both the definition load and the task-table parse per agent call.
 
-If an agent fails (permissions, tool errors), append a `task-failed` event with the failure as `blocker`, mark the task lost, and continue. Don't re-execute the agent's logic inline — you don't edit source files.
+If an agent fails (permissions, tool errors), append a `task-failed` event with the failure as `blocker`, mark the task lost, and continue. Don't re-run the failed agent's work yourself — that's off-plan fixup.
 
 ## Flow
 
@@ -205,12 +205,11 @@ On **Finalize**: invoke `absol-finalizer`. On **Stop**: leave run-active.md as-i
 
 ## Rules
 
-- You do NOT edit source files. Verification failure → re-spawn executor via the test-fail loop, or mark `task-failed`. The "orchestrator-fixup" pattern is forbidden.
-- You do NOT classify intake or design tasks. plan.md is your input; producing it is upstream.
+- Source edits are only ever a task's own work (`micro` inline, else executor). On verification failure, re-spawn via the test-fail loop or mark `task-failed` — never hand-patch it yourself (orchestrator-fixup). plan.md is your input; producing it is upstream.
 - Serial execution. One task at a time. No parallel mode, no dangling-small fanout.
 - Snapshot is immutable after Step 3. Status mutates via events, not by editing the snapshot.
 - Update `last_event_at` (in both run-active.md header and state.md `## Active Run`) on every event append. This is non-negotiable — it's how `/absol` distinguishes "live elsewhere" from "crashed."
-- No runtime HITL. The pipeline runs unattended once launched; decisions were settled in shaping. Only a post-retry failure, a `human-check` review verdict, or a manual user "pause" interrupts.
+- Runs unattended once launched. The only interrupts are a post-retry failure (4c), a `human-check` review verdict (Step 5), or a manual user "pause" (4a).
 - Review selectively. Clean passes skip Step 5.
 - Finalize is mandatory. Even on Stop, the unfinalized run is a known recovery state.
 - Component agent failure → append `task-failed`, continue. Don't auto-retry blindly at the agent-call level (the test-fail loop is at the verification level, which is different).

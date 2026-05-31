@@ -119,7 +119,6 @@ One PLAN per architect session. Append (preserving any existing plans), separate
   - status: ready
   - created: YYYY-MM-DD
   - author: architect
-  - shaper_session: no         ← architect doesn't invoke /absol-shaper
 
 ### Summary
 

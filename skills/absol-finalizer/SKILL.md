@@ -189,6 +189,5 @@ Suppress empty subsections. If anything failed or stayed blocked or has fix-requ
 - Notes are removed when their owning plan/scratchpad completes. Their content lives in the run archive (carried into the plan's seed section).
 - `state.md` is a snapshot, not a ledger. Three persistent sections; the transient sections are cleared by you on close.
 - Never write to `bugs.md` / `tech-debt.md` content — only remove `[note]` entries that are `status: promoted` and whose owning work completed.
-- Never write to `CONTEXT.md`, ADRs, `vision.md`, `roadmap.md`, `CLAUDE.md`. Other components own those.
 - Only delete `run-active.md` AFTER the archive write succeeds. If the archive write fails (disk full, permissions), don't delete — leave the file for retry.
 - If something looks wrong (run-active.md references a plan that doesn't exist, snapshot disagrees with events) → don't repair silently. Surface in the report and let the user fix.
