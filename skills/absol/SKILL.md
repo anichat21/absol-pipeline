@@ -14,10 +14,10 @@ Front door for an absol project session. Three jobs:
 | Mode | Trigger | What happens |
 |---|---|---|
 | **note-taker** | User dumps observations / "I noticed X" / "feature idea: Y" | Invoke `note-taker` skill; routes to inbox/bugs/tech-debt |
-| **scratchpad** | "Let's fix X" / "how does Y work" / specific adhoc work | Invoke `absol-scratchpad` skill |
-| **pipeline** | "Run the pipeline" / "let's churn" / "execute the plan" | Activate planner (if plan.md is light) then `absol-orchestrate` |
+| **scratchpad** | User explicitly says "scratchpad", "quick fix", "real quick", or "adhoc" | Invoke `absol-scratchpad` skill |
+| **pipeline** | Everything else — fixing bugs, doing features, "I wanna do X" | Activate planner (if plan.md is light) then `absol-orchestrate` |
 
-The pipeline is **opt-in** — adhoc work never silently triggers it. That's what scratchpad exists for. The user picks the mode by what they say; you don't need to ask unless intent is ambiguous.
+**Pipeline is the default.** Scratchpad requires an explicit signal — the user must say "scratchpad", "quick fix", "real quick", or otherwise make it unambiguous they want inline adhoc work. "I wanna do X", "let's fix X", "do the bugs" — all of these go pipeline.
 
 ## Entry
 
@@ -130,21 +130,25 @@ You are watching the conversation; the user is not picking modes by name. Match 
 
 Invoke the `note-taker` skill. Continue the conversation after — note-taker confirms with one line and returns control.
 
-**scratchpad mode** — the user wants something *done now*, but it's discrete adhoc work, not a formal plan:
-- "let's fix the typo in src/auth.ts"
-- "how does the cache invalidation work"
-- "pull BUG-017 and fix it real quick"
+**scratchpad mode** — only when the user explicitly signals they want inline adhoc work:
+- "scratchpad this"
+- "fix it real quick"
+- "quick fix on src/auth.ts"
+- "pull BUG-017 real quick"
+
+The word "scratchpad" or a clear "quick/adhoc" qualifier must be present. Without it, go pipeline.
 
 Invoke `absol-scratchpad`.
 
-**pipeline mode** — the user wants the full machinery:
+**pipeline mode** — the default for any action request that isn't note-taking or explicitly scratchpad:
 - "run the pipeline"
 - "let's churn through inbox"
 - "execute the next plan"
+- "fix the bugs" / "do the blender plugin stuff" / "I wanna work on X"
 
 See **Pipeline activation** below. Don't jump straight to `absol-orchestrate` — there may be a planning step first if plans are thin.
 
-When the user's intent isn't clear, ask. *"Want me to log that as a note, or fix it now in scratchpad?"* Don't silently pick.
+When genuinely unclear between note-taker and pipeline, ask. **Never ask whether to use scratchpad vs pipeline — if it's not explicitly scratchpad, it's pipeline.**
 
 ## Pipeline activation
 
@@ -248,7 +252,7 @@ If the user says *"pause"*, *"hold on"*, *"stop the pipeline"* mid-run, signal `
 
 - Three modes; you pick one per turn based on user intent. Never run two simultaneously.
 - Recovery check is non-negotiable. Run it before the banner, every time.
-- Don't silently jump into pipeline mode. The user must explicitly want it.
+- Pipeline is the default for action requests. Don't silently jump into scratchpad — the user must explicitly say "scratchpad", "quick fix", "real quick", or equivalent. "Do X", "fix X", "I wanna do X" → pipeline.
 - You don't write to `state.md` or any `.absol/` data file directly — you delegate to note-taker, scratchpad, planner, orchestrate, finalizer. The recovery flow's Force-clear and Discard options are exceptions; in those cases write only the cleanup needed (remove transient sections, delete orphan files).
 - Don't re-invoke a mode that's already running.
 - Status banner is six-to-ten lines, scannable. The user asked for a session, not a project audit.

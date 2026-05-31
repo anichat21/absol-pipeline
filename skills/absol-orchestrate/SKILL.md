@@ -45,7 +45,7 @@ From `/absol`:
 
 | Component | Mode | Model | Definition path | When |
 |---|---|---|---|---|
-| `absol-planner` | Agent tool | opus | `agents/absol-planner.md` | Test-fail auto-loop only — re-plans the fix. (Planning before pipeline is `/absol`'s job.) |
+| `absol-planner` | Agent tool | opus | `~/.claude/agents/absol-planner.md` (top-level — shared with `/absol`, scratchpad escalations, etc.) | Test-fail auto-loop only — re-plans the fix. (Planning before pipeline is `/absol`'s job.) |
 | `absol-executor` (full) | Agent tool | sonnet | `agents/absol-executor.md` | Task `executor_tier: full`. |
 | `absol-executor` (micro) | inline | n/a | `agents/absol-executor.md` | Task `executor_tier: micro`. You make the edit, run verification, append events directly. |
 | `absol-reviewer` | Agent tool | sonnet | `agents/absol-reviewer.md` | Routine reviews. |

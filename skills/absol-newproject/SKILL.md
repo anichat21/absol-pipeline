@@ -1,6 +1,6 @@
 ---
 name: absol-newproject
-description: "Scaffolds a new project for the absol pipeline with the .absol/ layout — root holds CLAUDE.md, state.md, vision.md, roadmap.md; .absol/ holds CONTEXT.md, adr/, inbox.md, plan.md, todo.md, todo-run.md, bugs.md, tech-debt.md, archive/. Also writes Docker files, .gitignore, and runs git init. Use whenever the user wants to start, create, scaffold, init, or set up a new project. Trigger on phrases like 'new project', 'start a project', 'scaffold', 'create a project', 'init project', 'set up a new project', or when the user describes a project idea and wants to get started building it. Handles ONLY skeleton + MD files — no language/framework choices. The absol pipeline handles implementation."
+description: "Scaffolds a new project for the absol pipeline with the .absol/ layout — root holds CLAUDE.md, state.md, vision.md, roadmap.md; .absol/ holds CONTEXT.md, adr/, inbox.md, plan.md, bugs.md, tech-debt.md, archive/ (and run-active.md is created on first pipeline run). Also writes Docker files, .gitignore, and runs git init. Use whenever the user wants to start, create, scaffold, init, or set up a new project. Trigger on phrases like 'new project', 'start a project', 'scaffold', 'create a project', 'init project', 'set up a new project', or when the user describes a project idea and wants to get started building it. Handles ONLY skeleton + MD files — no language/framework choices. The absol pipeline handles implementation."
 ---
 
 # absol-newproject
