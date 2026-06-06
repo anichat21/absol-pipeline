@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation · NAS Home Lab</title>
+  <link rel="stylesheet" href="/docs/_assets/css/base.css">
+  <link rel="stylesheet" href="/docs/_assets/css/index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <main class="hub">
+    <a class="hub-back" href="/">← Dashboard</a>
+
+    <header class="hub-header">
+      <p class="hub-eyebrow">Documentation</p>
+      <h1>Project documentation</h1>
+      <p class="hub-subtitle">Every project that ships docs is listed below. Expand a card to see its pages.</p>
+    </header>
+
+    <section id="hub-grid" class="hub-grid" aria-live="polite"></section>
+  </main>
+
+  <template id="card-template">
+    <details class="project-card">
+      <summary>
+        <span class="project-icon"><i></i></span>
+        <span class="project-meta">
+          <p class="project-name"></p>
+          <p class="project-desc"></p>
+        </span>
+        <span class="project-toggle">›</span>
+      </summary>
+      <ul class="project-docs"></ul>
+    </details>
+  </template>
+
+  <script>
+    (async () => {
+      const grid = document.getElementById("hub-grid");
+      const tpl  = document.getElementById("card-template");
+
+      let registry;
+      try {
+        const res = await fetch("/docs/_assets/docs-registry.json", { cache: "no-cache" });
+        if (!res.ok) throw new Error(`registry fetch ${res.status}`);
+        registry = await res.json();
+      } catch (err) {
+        grid.innerHTML = `
+          <div class="hub-empty">
+            <p><strong>Couldn't load the docs registry.</strong></p>
+            <p>Expected at <code>/docs/_assets/docs-registry.json</code>.</p>
+            <p><small>${String(err)}</small></p>
+          </div>`;
+        return;
+      }
+
+      const projects = (registry && registry.projects) || [];
+      if (projects.length === 0) {
+        grid.innerHTML = `
+          <div class="hub-empty">
+            <p><strong>No projects registered yet.</strong></p>
+            <p>Run <code>/absol-docs add &lt;project&gt;</code> to add one.</p>
+          </div>`;
+        return;
+      }
+
+      const pad = n => String(n).padStart(2, "0");
+
+      for (const p of projects) {
+        const card = tpl.content.firstElementChild.cloneNode(true);
+        card.querySelector(".project-icon i").className = p.icon || "fas fa-file-code";
+        card.querySelector(".project-name").textContent = p.name || p.slug;
+        card.querySelector(".project-desc").textContent = p.description || "";
+
+        const ul = card.querySelector(".project-docs");
+        const docs = p.docs || [];
+        if (docs.length === 0) {
+          const li = document.createElement("li");
+          li.innerHTML = `<a><span class="doc-title" style="color:var(--text-muted)">No pages yet.</span></a>`;
+          ul.appendChild(li);
+        } else {
+          docs.forEach((d, i) => {
+            const li = document.createElement("li");
+            const a  = document.createElement("a");
+            a.href = `/docs/${p.slug}/${d.path}`;
+            a.innerHTML = `
+              <span class="doc-num">${pad(i + 1)}</span>
+              <span class="doc-title"></span>
+              <span class="doc-arrow">→</span>`;
+            a.querySelector(".doc-title").textContent = d.title;
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+        }
+
+        grid.appendChild(card);
+      }
+    })();
+  </script>
+</body>
+</html>

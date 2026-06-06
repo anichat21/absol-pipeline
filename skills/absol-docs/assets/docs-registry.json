@@ -1,0 +1,52 @@
+{
+  "projects": [
+    {
+      "slug": "metagross",
+      "name": "Metagross",
+      "icon": "fas fa-gamepad",
+      "description": "Multiplayer browser game — design corpus, systems, guidelines, deployment plan.",
+      "theme": "metagross.css",
+      "docs": [
+        { "title": "Index", "path": "index.html" },
+        { "title": "Game design", "path": "game-design.html" },
+        { "title": "Systems", "path": "systems.html" },
+        { "title": "Design guidelines", "path": "design-guidelines.html" },
+        { "title": "Social & economy notes", "path": "social-economy-notes.html" },
+        { "title": "Dev tooling", "path": "dev-tooling.html" },
+        { "title": "Deployment plan", "path": "deployment-plan.html" }
+      ]
+    },
+    {
+      "slug": "snowowl",
+      "name": "SnowOwl",
+      "icon": "fas fa-cube",
+      "description": "3D product configurator — GLB + sidecar import format spec and authoring guide.",
+      "theme": "snowowl.css",
+      "docs": [
+        { "title": "Index", "path": "index.html" },
+        { "title": "Import format", "path": "import-format.html" },
+        { "title": "Authoring guide", "path": "authoring-guide.html" }
+      ]
+    },
+    {
+      "slug": "cadtool-alpha",
+      "name": "Cadtool",
+      "icon": "fas fa-car",
+      "description": "Research brief — mid-2026 technical path for agentic NURBS surface generation.",
+      "docs": [
+        { "title": "Research brief", "path": "index.html" }
+      ]
+    },
+    {
+      "slug": "pc-clean",
+      "name": "pc-clean",
+      "icon": "fas fa-broom",
+      "description": "Windows PC scan + cleanup pass — persistent context for the winpc host.",
+      "docs": [
+        { "title": "Index", "path": "index.html" },
+        { "title": "Pass 1 — dev toolchain", "path": "dev-toolchain.html" },
+        { "title": "Pass 2 — software & caches", "path": "software-and-caches.html" }
+      ]
+    }
+  ]
+}

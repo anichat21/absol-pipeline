@@ -1,0 +1,153 @@
+/* snowowl.css — theme override for the SnowOwl docs.
+   Cool-blueprint aesthetic: deep cool charcoal stage, near-white type, icy blue
+   accent, neutral gray secondary. Chunky soft serif headings, typewriter labels.
+   Dithered noise + cool radial gradient backdrop. Force-dark. */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* Stage — cool charcoal */
+  --bg:            #14171c;
+  --bg-subtle:     #1d2128;
+  --text:          #E6EAF0;
+  --text-muted:    #8a8f97;
+  --border:        #353a44;
+  --border-subtle: #232730;
+  --heading:       #FFFFFF;
+  --code-bg:       #1d2128;
+  --code-text:     #E6EAF0;
+
+  /* Primary — icy light blue (replaces gold) */
+  --accent:        #8EC5E8;
+  --accent-hover:  #B3D8F0;
+  --accent-soft:   rgba(142, 197, 232, 0.18);
+
+  /* Secondary — neutral cool gray (replaces sage / moss) */
+  --moss:          #B5BCC4;
+  --moss-soft:     rgba(181, 188, 196, 0.16);
+
+  /* Typography */
+  --font-display: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans:    'Inter', -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* Body — dithered noise (cool white tint) + cool radial highlight + base color */
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(110% 70% at 50% -10%, rgba(142, 197, 232, 0.09), transparent 55%),
+    radial-gradient(70% 60% at 100% 100%, rgba(200, 210, 222, 0.04), transparent 70%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.92  0 0 0 0 0.95  0 0 0 0 1.00  0 0 0 0.07 0'/></filter><rect width='280' height='280' filter='url(%23n)'/></svg>");
+  background-repeat: no-repeat, no-repeat, repeat;
+  background-attachment: fixed, fixed, fixed;
+}
+
+/* h1 — Fraunces variable serif, the artsy display moment */
+.doc h1 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+/* h2-h4 — Inter, readable sans. Keep the dashed h2 underline rule. */
+.doc h2,
+.doc h3,
+.doc h4 {
+  font-family: 'Inter', -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+}
+.doc h2 { font-weight: 700; border-bottom-style: dashed; }
+.doc h3 { font-weight: 600; }
+.doc h4 { font-weight: 600; }
+
+/* Decorative leading dash before .doc-eyebrow */
+.doc-eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 1.8rem;
+  height: 1px;
+  background: var(--accent);
+  margin-right: 0.75rem;
+  vertical-align: middle;
+}
+
+/* Ghost section number — right side, Fraunces serif, neutral-gray tone */
+.doc h2 { z-index: 0; }
+.doc h2::after {
+  content: counter(section, decimal-leading-zero);
+  position: absolute;
+  right: -1.25rem;
+  top: -3.5rem;
+  font-family: 'Fraunces', serif;
+  font-variation-settings: "opsz" 144, "SOFT" 100;
+  font-size: 10rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--moss);
+  opacity: 0.12;
+  letter-spacing: -0.03em;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Callouts — solid panels in cool grays with semantic left borders */
+.callout-info   { background: rgba(56, 139, 253, 0.10);  border-left: 4px solid #54aeff; }
+.callout-tip    { background: rgba(181, 188, 196, 0.08); border-left: 4px solid var(--moss); }
+.callout-warn   { background: rgba(142, 197, 232, 0.10); border-left: 4px solid var(--accent); }
+.callout-danger { background: rgba(248, 81, 73, 0.10);   border-left: 4px solid #f85149; }
+.callout-note   { background: var(--bg-subtle);          border-left: 4px solid var(--border); }
+
+/* TOC — gold dashed underline replaced by icy-blue dashed underline */
+.toc-title {
+  color: var(--accent);
+  border-bottom: 1px dashed var(--accent);
+  padding-bottom: 0.35rem;
+  display: inline-block;
+  margin-bottom: 0.65rem;
+}
+
+/* Titlecard — blueprint corner brackets */
+.titlecard {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--moss);
+  border-radius: 0;
+  position: relative;
+  font-style: italic;
+}
+.titlecard::before,
+.titlecard::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--accent);
+  pointer-events: none;
+}
+.titlecard::before {
+  top: -1px;
+  right: -1px;
+  border-bottom: none;
+  border-left: none;
+}
+.titlecard::after {
+  bottom: -1px;
+  left: -1px;
+  border-top: none;
+  border-right: none;
+}
+
+/* Selection in soft icy blue */
+::selection {
+  background: var(--accent-soft);
+  color: var(--heading);
+}
+
+/* Doc-header — thin top rule for that blueprint top-band feel */
+.doc-header {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1.25rem;
+}

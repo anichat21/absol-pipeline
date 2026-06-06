@@ -1,0 +1,47 @@
+/* themes/ — per-project theme overrides.
+   One file per theme. A theme redefines DESIGN TOKENS only — colors and fonts —
+   on :root, so the existing layout / utility classes in base.css + doc.css
+   automatically pick up the new look.
+
+   Project pages opt in by adding a third stylesheet link AFTER doc.css:
+
+     <link rel="stylesheet" href="/docs/_assets/css/base.css">
+     <link rel="stylesheet" href="/docs/_assets/css/doc.css">
+     <link rel="stylesheet" href="/docs/_assets/css/themes/<slug>.css">
+
+   The skill writes that third <link> when a project's registry entry has a
+   "theme" field. Projects without a theme inherit the default look from base.css.
+
+   What a theme SHOULD redefine:
+   - --accent, --accent-hover, --accent-soft   (primary brand color)
+   - --moss, --moss-soft                       (secondary accent)
+   - --font-display, --font-sans, --font-mono  (typography)
+   - dark-mode counterparts inside @media (prefers-color-scheme: dark)
+
+   What a theme SHOULD NOT touch:
+   - Layout, spacing, utility classes, callout structure — those live in
+     base.css / doc.css and apply to every doc regardless of theme.
+   - The bg/text/border tokens unless you're going for a fully custom skin —
+     changing these without re-checking callouts and code blocks gets messy.
+
+   Example skeleton — copy into <slug>.css and customize:
+
+     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=IBM+Plex+Sans&display=swap');
+
+     :root {
+       --accent: #6b3aa1;
+       --accent-hover: #4f2778;
+       --accent-soft: rgba(107, 58, 161, 0.1);
+       --moss: #b8956a;
+       --moss-soft: rgba(184, 149, 106, 0.22);
+       --font-display: 'Cinzel', serif;
+       --font-sans: 'IBM Plex Sans', sans-serif;
+     }
+
+     @media (prefers-color-scheme: dark) {
+       :root {
+         --accent: #9b6dd1;
+         --accent-hover: #b78ce0;
+       }
+     }
+*/

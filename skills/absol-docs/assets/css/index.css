@@ -1,0 +1,211 @@
+/* index.css — docs hub landing page only.
+   The hub is one page with an expandable card per project. Pair with base.css. */
+
+.hub {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.hub-header {
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.hub-eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+
+.hub-subtitle {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.55;
+  max-width: 56ch;
+}
+
+.hub-back {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  text-decoration: none;
+}
+.hub-back:hover { color: var(--accent); }
+
+/* Card grid */
+.hub-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  counter-reset: card;
+}
+
+.project-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--bg);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  counter-increment: card;
+}
+.project-card:hover {
+  border-color: var(--border);
+}
+.project-card[open] {
+  border-color: var(--accent);
+  box-shadow: 0 1px 3px var(--accent-soft);
+}
+
+/* Card header (summary) */
+.project-card > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 1rem 1.25rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  user-select: none;
+  position: relative;
+}
+
+/* Ghost card number — outlined, vertically centered on the right edge,
+   behind the toggle. Different visual from the solid-fill h2 watermark
+   in project docs, so the two contexts stay readable as distinct. */
+.project-card > summary::before {
+  content: counter(card, decimal-leading-zero);
+  position: absolute;
+  right: 2.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-display);
+  font-size: 3.75rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--accent);
+  opacity: 0.22;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  transition: opacity 0.18s ease, color 0.18s ease, -webkit-text-stroke-color 0.18s ease;
+}
+.project-card[open] > summary::before {
+  opacity: 0.35;
+  -webkit-text-stroke-color: var(--accent);
+}
+.project-card > summary::-webkit-details-marker { display: none; }
+
+.project-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.project-meta { min-width: 0; }
+.project-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--heading);
+  margin: 0;
+  line-height: 1.25;
+}
+.project-desc {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  margin: 0.15rem 0 0;
+  line-height: 1.45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-toggle {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: transform 0.18s ease;
+}
+.project-card[open] .project-toggle {
+  transform: rotate(90deg);
+  color: var(--accent);
+}
+
+/* Card body (doc list) */
+.project-docs {
+  border-top: 1px solid var(--border-subtle);
+  padding: 0.5rem 1.25rem 1rem;
+  margin: 0;
+  list-style: none;
+}
+.project-docs li { margin: 0; }
+
+.project-docs a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.55rem 0.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+.project-docs li:last-child a { border-bottom: none; }
+.project-docs a:hover { color: var(--accent); text-decoration: none; background: var(--bg-subtle); }
+
+.doc-num {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--moss);
+  flex-shrink: 0;
+  min-width: 2ch;
+}
+
+.doc-title {
+  flex: 1;
+}
+
+.doc-arrow {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.project-docs a:hover .doc-arrow { color: var(--accent); }
+
+/* Empty state when registry has no projects */
+.hub-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+.hub-empty p { margin: 0.25rem 0; }
+.hub-empty code {
+  background: var(--bg-subtle);
+  padding: 0.15em 0.45em;
+  border-radius: 4px;
+}
+
+/* Wider grid on big screens */
+@media (min-width: 720px) {
+  .project-name { font-size: 1.15rem; }
+}

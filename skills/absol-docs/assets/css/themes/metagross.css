@@ -1,0 +1,89 @@
+/* metagross.css — theme override for the Metagross docs.
+   Dark stage, azure primary, mint secondary, geometric display type.
+   Force-dark: same look regardless of the viewer's prefers-color-scheme. */
+
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=supreme@400,500,600,700&f[]=jetbrains-mono@400,500&display=swap');
+
+:root {
+  /* Stage */
+  --bg:            #0a0a0a;
+  --bg-subtle:     #141414;
+  --text:          #f5f5f5;
+  --text-muted:    #8a8a8a;
+  --border:        #2a2a2a;
+  --border-subtle: #1c1c1c;
+  --heading:       #ffffff;
+  --code-bg:       #141414;
+  --code-text:     #f5f5f5;
+
+  /* Primary signal — azure (was orange) */
+  --accent:        #00A0FF;
+  --accent-hover:  #33B5FF;
+  --accent-soft:   rgba(0, 160, 255, 0.18);
+
+  /* Secondary — mint (was moss) */
+  --moss:          #09EDC5;
+  --moss-soft:     rgba(9, 237, 197, 0.18);
+
+  /* Typography — Fontshare for display + body, JetBrains Mono for technical labels */
+  --font-display: 'Clash Display', 'Space Grotesk', -apple-system, sans-serif;
+  --font-sans:    'Supreme', 'Inter', -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Ghost section number behind each h2.
+   Renders the same counter as h2::before but at display scale, low opacity,
+   sitting slightly above-and-left of the heading. Negative z-index inside
+   h2's own stacking context keeps it from leaking behind sibling content. */
+.doc h2 {
+  z-index: 0;
+}
+.doc h2::after {
+  content: counter(section, decimal-leading-zero);
+  position: absolute;
+  left: -2rem;
+  top: -4rem;
+  font-family: var(--font-display);
+  font-size: 11rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+  opacity: 0.07;
+  letter-spacing: -0.04em;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Ghost card number on .doc-card grids (metagross/docs/index.html sub-page cards).
+   Outlined treatment on the right edge — sibling visual language to the hub cards,
+   distinct from the solid-fill h2 watermark above. */
+.doc-grid { counter-reset: card; }
+.doc-card {
+  counter-increment: card;
+  position: relative;
+  overflow: hidden;
+}
+.doc-card::after {
+  content: counter(card, decimal-leading-zero);
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-display);
+  font-size: 5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--accent);
+  opacity: 0.22;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  transition: opacity 0.18s ease, -webkit-text-stroke-color 0.18s ease;
+}
+.doc-card:hover::after {
+  opacity: 0.4;
+  -webkit-text-stroke-color: var(--moss);
+}
