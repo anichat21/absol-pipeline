@@ -94,6 +94,21 @@ Banner notice:
 
 > Cleared orphaned run-active.md (archived).
 
+## Note hygiene (after recovery, before the banner)
+
+A self-healing pass for **orphaned promoted notes** — a `[note]` with `status: promoted` whose owning work no longer exists. This happens when a plan is removed out of band (manual edit) or, more commonly, when a **scratchpad that pulled a note crashed** — crash recovery archives the run but doesn't demote the note, so it's stuck: invisible to the planner (not `new`) and shown to you as already-handled.
+
+After recovery resolves, scan `inbox.md` / `bugs.md` / `tech-debt.md` for `status: promoted` notes. For each, check `promoted_to`:
+
+- `PLAN-NNN` still present in `plan.md` → leave it (legitimately mid-flight, possibly across runs).
+- `SCR-NNN` or `PLAN-NNN` **not** present in `plan.md`, and no Active Run is staging it → **orphan.** Demote: set `status: new`, drop `promoted_to`. If the orphan came from a partial scratchpad and an `archive/run-{id}.md` exists for it, add a `prior_work:` line pointing at that archive so the next planner has the context.
+
+Add a one-line banner notice when anything was demoted:
+
+> Recovered 1 orphaned note: BUG-017 (scratchpad SCR-2026-06-08 crashed) → back to inbox.
+
+This is the only out-of-band note reconciler; without it, orphaned notes accumulate silently.
+
 ## Status banner (after recovery is resolved)
 
 Read `state.md`, count entries in `.absol/plan.md`, `.absol/inbox.md`, `.absol/bugs.md`, `.absol/tech-debt.md`. **Split note counts by status** — promoted notes are linked to a pending plan and aren't actionable from the user's perspective; only `status: new` notes are available to plan or scratchpad.
@@ -107,12 +122,12 @@ Plans ready:  N
   - PLAN-001 (created 2026-04-25, 11d old — may need re-planning against current codebase)
   - PLAN-002 (created 2026-05-04)
   - PLAN-003 (created 2026-05-06)
-Inbox:        N new (+ M shaped, K promoted)
+Inbox:        N new (+ M shaped, R researched, K promoted)
 Bugs:         N new (+ K promoted)
 Tech debt:    N new (+ K promoted)
 ```
 
-The "shaped" sub-count on Inbox is the number of `[note]`s with `shaper_notes` populated but `status: new` (ready to plan). "Promoted" is `status: promoted` — already attached to a pending plan. Drop the parenthetical entirely when both are zero (just `Inbox: N`).
+The Inbox sub-counts annotate `status: new` notes by enrichment: **shaped** = `shaper_notes` populated (intent locked, ready to plan), **researched** = `research_notes` populated (blast radius mapped). They can co-occur — a note that's both shaped and researched counts in both; that's fine, they're independent enrichments, not a pipeline of states. **Promoted** is `status: promoted` — already attached to a pending plan. Include only the non-zero sub-counts; drop the parenthetical entirely when all are zero (just `Inbox: N`).
 
 The plan staleness flag fires when a plan's `created` date is more than **5 days** old — older plans may need re-planning against the current codebase. It's a soft hint, not a block. Omit the date detail when no plans are stale (just `Plans ready: N (PLAN-001, PLAN-002, …)`).
 
