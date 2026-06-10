@@ -8,7 +8,7 @@ All paths assume the `.absol/` layout. Legacy flat-layout projects use root-leve
 
 ## `.absol/inbox.md`, `.absol/bugs.md`, `.absol/tech-debt.md` — `[note]`
 
-One unified schema across all three intake files. ID prefix is the only difference. Note-taker is the sole writer of new entries; planner / architect promote; finalizer removes when the owning plan completes.
+One unified schema across all three intake files. ID prefix is the only difference. Note-taker is the sole writer of new entries; shaper/research annotate (`shaper_notes` / `research_notes`); planner / architect promote; finalizer removes when the owning plan completes.
 
 ```
 - [note]
@@ -25,9 +25,15 @@ One unified schema across all three intake files. ID prefix is the only differen
       - what the user clarified
       - what they ruled in / out
       - any pre-approved decisions
+  - research_notes: |              (optional, set when /absol-research mapped this seed before planning)
+      Codebase map (researched YYYY-MM-DD):
+      - entry points, blast radius (files that must change), consumers
+      - sync hazards, patterns to mirror, gotchas
   - prior_work: SCR-NNN (partial — see archive/run-SCR-NNN.md)
                                    (optional, set when a scratchpad partially worked on this note then escalated to pipeline. Next planner reads the linked archive for context.)
 ```
+
+**`shaper_notes` vs `research_notes`.** Both annotate a seed before planning, but they differ in author, content, and lifecycle. `shaper_notes` = user intent (binding decisions) — copied into the plan's `[seed]` block because the *executor* must honour them at runtime. `research_notes` = codebase facts (coverage) — consumed by the *planner* to produce accurate `files_touched` and task descriptions, then **spent**; it is NOT copied into the plan seed, so `plan.md` and the archive stay lean. Both die with the note when the finalizer prunes it.
 
 ---
 

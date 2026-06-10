@@ -1,15 +1,17 @@
 ---
 name: absol-scratchpad
-description: Adhoc execution and ideation mode for absol projects. Use when the user wants something fixed, explored, or discussed *now* without going through the formal pipeline (planner → executor → reviewer → finalizer). Three flavours — handle a free-form task the user describes, pull a single [note] from inbox/bugs/tech-debt to work on, OR run a pure ideation session (auth flow tradeoffs, exploring how a module works, sketching design) where no code changes happen but a light discussion log gets archived. Uses the same run-active.md event model as pipeline runs (synthetic SCR-NNN ids, mode:scratchpad), so finalizer processes it identically. Invoked by the /absol entry skill when conversation looks like adhoc work or discussion, or directly when the user says "scratchpad", "fix this real quick", "just patch X", "let's discuss X", or pulls a specific bug/inbox item to handle now.
+description: Interactive freestyle mode for absol projects — you and the user building, fixing, exploring, or discussing live, with absol's documentation tracking underneath. Use when the user wants to work directly with you *now* instead of through the formal unattended pipeline (planner → executor → reviewer → finalizer). The boundary is interactivity, not size — a whole feature is fine here if the user wants to drive it live (including dispatching a dynamic workflow for the heavy lifting); escalate to pipeline only when the work wants the pipeline's properties (unattended, front-loaded decisions, a durable plan). Flavours — handle a free-form task, pull a single [note] from inbox/bugs/tech-debt to build interactively, OR run a pure ideation session where no code changes happen but a light discussion log gets archived. Uses the same run-active.md event model as pipeline runs (synthetic SCR-NNN ids, mode:scratchpad), so finalizer processes it identically. Invoked by the /absol entry skill when conversation looks like interactive work or discussion, or directly when the user says "scratchpad", "fix this real quick", "just patch X", "let's build X here", "let's discuss X", or pulls a specific bug/inbox item to handle now.
 ---
 
 # absol-scratchpad
 
-Adhoc work mode. The user has something specific in mind and doesn't want the formal pipeline overhead — no planning session, no checkpoint, no review gate. You execute, log, and move on.
+Interactive freestyle mode. You and the user work directly — build, fix, explore, discuss — with absol's documentation tracking running underneath. No planning session, no checkpoint, no review gate; decisions get made live, as you go.
 
-This exists because the pipeline is heavy by design (it has to be, for unattended runs). When the user is sitting right there and the work is small, the heaviness is friction. Scratchpad is the relief valve.
+This exists because the pipeline is heavy *by design* — it front-loads every decision into shaping so it can then run unattended. When the user is sitting right there, that heaviness is friction: they can just tell you the next call instead of locking it into `shaper_notes` first. **Scratchpad is where the human stays in the loop.**
 
-But scratchpad still **logs everything** through `run-active.md` in the same shape as a pipeline run, so:
+The boundary between scratchpad and pipeline is **interactivity, not size.** A whole feature is fair game here if the user wants to drive it live — and for the heavy lifting you can dispatch a dynamic workflow (see below), which is *safe in scratchpad precisely because the user is present*: a background workflow can't stop to ask questions, but here the human is already in the chat to answer them. You escalate to the pipeline only when the work wants the pipeline's *properties* — unattended execution, front-loaded decisions, a durable archived plan — not merely because it's large.
+
+Scratchpad **logs everything** through `run-active.md` in the same shape as a pipeline run, so:
 
 - `state.md` reflects what changed
 - The session is archived after close (one `archive/run-{SCR-id}.md` file)
@@ -68,7 +70,7 @@ Before executing each piece of work, append a new `[task]` block to the `## Task
   - acceptance_criteria: how the user will know this worked
   - verification: command run (or "user-eyes" if visual change)
   - risk: low | medium | high
-  - executor_tier: n/a                       ← scratchpad runs inline (worker: scratchpad); never spawns the executor agent
+  - executor_tier: n/a                       ← worker: scratchpad; never spawns the pipeline executor agent (a dispatched workflow is fine)
   - execution_order: 1                       ← incrementing per session
 ```
 
@@ -76,7 +78,7 @@ Then execute (next section). Append events as you go.
 
 ## Execute
 
-Same execution rules as the executor agent — same TDD/direct-edit split:
+Same execution rules as the executor agent for direct work — the TDD/direct-edit split below — plus a workflow path for large interactive builds:
 
 ### TDD path (FEATURE, medium-or-higher BUG)
 
@@ -85,6 +87,20 @@ Red → green → refactor, vertically. One behaviour at a time. **Reject horizo
 ### Direct-edit path (TWEAK, CHORE, low-risk BUG, exploratory)
 
 Make the edit, run verification, record. TDD overhead isn't worth it for one-line CSS or a typo fix.
+
+### Dynamic workflow path (large interactive builds)
+
+When the user wants to build something big *here* rather than route it through the pipeline — a whole feature, a multi-file change, a parallel research-then-build — dispatch a **dynamic workflow** (the Workflow tool — this skill's instructions are your opt-in) to do the heavy lifting while you stay in the conversation. This is the scratchpad-native way to take on pipeline-sized work without the pipeline's unattended contract: the workflow runs the fan-out, and *you* are still here to answer the design questions a background workflow can't ask.
+
+Use it only when the build genuinely benefits — multiple files, work that parallelises, or a research+build sweep. For anything a couple of edits can do, stay on the TDD/direct-edit paths; firing a fleet at small work is waste.
+
+Before dispatching: tell the user in one line what the workflow will do (roughly how many agents, what it'll touch), so they can redirect first — same courtesy as restating a free-form task. Then:
+
+1. Append the `[task]` entry(ies) to the snapshot as usual (one per coherent slice of the build).
+2. Dispatch the workflow. Code-writing workflow agents that touch the same files in parallel need `isolation: 'worktree'`; a sequential build or a read-only research sweep doesn't.
+3. When it returns, record the outcome as `task-completed` events — `files_touched_actual` is the union the workflow reports, and the `summary` notes it was built via workflow (e.g. *"built via dynamic workflow, 6 agents"*). `worker:` stays `scratchpad` — you orchestrated it.
+
+Everything downstream (finalizer, archive, note resolution) is unchanged: a workflow-built feature is just a scratchpad task with a bigger blast radius.
 
 ## Append events
 
@@ -113,13 +129,19 @@ Update `last_event_at` in run-active.md header AND state.md `## Active Run` afte
 
 If during scratchpad work the user mentions a separate idea or you spot another bug, **invoke `note-taker`** to capture it cleanly. Don't try to handle it in the same session — that's how scratchpad turns into accidental pipeline work.
 
-## When the work is bigger than scratchpad-shaped
+## When the work wants the pipeline
 
-If during execution you discover the change touches multiple subsystems, needs design discussion, or has irreversible effects, **stop and tell the user**:
+Size is **not** the trigger — a big build can live here (dispatch a workflow). Escalate when the work wants the pipeline's *properties*, which scratchpad deliberately doesn't provide:
 
-> *"This is bigger than scratchpad-shaped — touches X, Y, Z. Want me to capture what we've learned as inbox notes and run the pipeline on it via `/absol`? Or push through here?"*
+- **Unattended** — the user wants to walk away while it runs (scratchpad needs them present).
+- **Front-loaded decisions** — there's a cluster of consequential, interdependent calls (schema/migration, public API, breaking changes) better settled up front in a shaper session than improvised live.
+- **A durable plan** — the work deserves a tracked `PLAN-NNN` and a review gate, not a one-session SCR record.
 
-User picks. If they push through, continue but flag in the task's `summary`. If they want pipeline:
+When you hit one of those, **stop and tell the user**:
+
+> *"This wants the pipeline — it needs {unattended execution / decisions pinned up front / a tracked plan}. Want me to capture what we've learned as inbox notes and run it via `/absol`? Or keep driving it here?"*
+
+User picks. If they keep driving here, continue but flag the reason in the task's `summary`. If they want pipeline:
 
 1. Capture context — invoke `note-taker` to log what was learned (one or more new notes).
 2. **Demote any pulled source [note] back to `status: new`** (drop `promoted_to`). The work isn't done; the note shouldn't be flagged-as-resolved-but-isn't. Also append a `prior_work:` field to the note recording the partial-work archive path:
@@ -188,7 +210,7 @@ If a `[task]` failed or got blocked and the user hasn't decided what to do, don'
 - One scratchpad session at a time per project. If `state.md` has `## Active Run` for a scratchpad already, resume that session instead of starting a new one.
 - Ideation sessions are first-class — a scratchpad with zero edits is a valid run. Log it as a single DISCUSS task at close (or discard if the user says it was idle chat). Don't force a fake CHORE/TWEAK shape.
 - Append-only on run-active.md events (same contract as pipeline executor). You DO write to the snapshot section because you incrementally add tasks as work emerges — but each task entry is write-once: don't mutate after writing.
-- Never spawn the executor or planner agents. Scratchpad work is inline by definition. Escalate to pipeline if the work is too big.
+- Never spawn the **pipeline's** executor or planner agents — they belong to the unattended pipeline and operate on `plan.md` tasks. You MAY dispatch a dynamic workflow for a large interactive build (see the workflow path) — that's a scratchpad tool, used while the user is present. Escalate to pipeline when the work wants the pipeline's *properties*, not when it's merely big.
 - Same `[task]` schema as pipeline tasks. The finalizer reads `worker:` and `mode:` to distinguish, not the schema shape.
 - Pulled `[note]` gets `promoted_to: SCR-NNN` immediately (not at session close), so we never lose the link if the session is interrupted. **On escalation to pipeline, demote it back** (remove `promoted_to`, restore `status: new`).
 - Honor the pause/active-run lock — refuse to open if either is set in state.md.

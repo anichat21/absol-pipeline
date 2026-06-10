@@ -17,12 +17,13 @@ Pipeline is the default for any action request; scratchpad needs an explicit sig
 ## Pipeline flow
 
 ```
-/absol → shape (light, optional) → plan → checkpoint
+/absol → shape (light, optional) → research → plan → checkpoint
        → serial execution loop (unattended) → review (if needed) → finalize
 ```
 
 - **Shape** (`absol-shaper`, inline) — 1–3 intent questions, recommended answers, reads code instead of asking when it can. This is the sole decision point: every consequential call is settled here so execution runs unattended. Invoked by the planner when intent is ambiguous, or standalone.
-- **Plan** (`absol-planner`, opus agent) — reads inbox/bugs/tech-debt + state + CONTEXT.md + ADRs + source, decomposes into **self-contained, actionable** vertical-slice tasks (the description carries the approach + entry points + constraints so the executor doesn't re-research), tags each with `executor_tier` / `execution_order`, writes one `PLAN-NNN` to `plan.md`.
+- **Research** (`absol-research`, inline, before planning) — fans out a read-only workflow to map the codebase blast radius for the selected seeds (entry points, consumers, sync hazards) and writes `research_notes` onto each. Coverage the planner can't get from one serial context; scales itself to the work (skips trivial seeds).
+- **Plan** (`absol-planner`, opus agent) — reads inbox/bugs/tech-debt + state + CONTEXT.md + ADRs + source + the seeds' `research_notes`, decomposes into **self-contained, actionable** vertical-slice tasks (the description carries the approach + entry points + constraints so the executor doesn't re-research), tags each with `executor_tier` / `execution_order`, writes one `PLAN-NNN` to `plan.md`.
 - **Execute** (`absol-orchestrate`, internal) — copies the plan's tasks into `run-active.md` and runs them serially, **unattended** — no mid-run pauses; decisions were settled in shaping. Verification failures enter a test-fail auto-loop (re-plan → re-execute, capped); only a post-retry failure or a manual pause interrupts. Each task appends `[event]` blocks to `run-active.md`.
 - **Review** (`absol-reviewer` sonnet / `absol-reviewer-complex` opus) — only on flagged/failed tasks. Verdicts feed the next planning cycle.
 - **Finalize** (`absol-finalizer`, internal, mandatory) — runs verify/smoke, writes a lean **outcome-only** `archive/run-{run_id}.md` (one line per task), updates `state.md` as a truth snapshot, prunes done plans/notes, and rolls run archives older than the current month into `archive/runs-{YYYY-MM}.md`.
@@ -72,8 +73,9 @@ Schemas for every file format live in `skills/absol-orchestrate/references/schem
 | `absol` | **Front door.** Recovery, status banner, mode routing. The only supported entry point. |
 | `absol-orchestrate` | *(internal)* Execution engine. Runs the plan's tasks serially and unattended, manages the test-fail loop / review, hands off to finalizer. |
 | `absol-finalizer` | *(internal)* Closes a run: state.md, archive snapshots, plan/note pruning. |
-| `absol-scratchpad` | Adhoc execution or pure-discussion mode outside the formal pipeline. |
+| `absol-scratchpad` | Interactive freestyle mode — build/fix/explore/discuss live, with doc-tracking underneath. Can dispatch a dynamic workflow for big interactive builds. |
 | `absol-shaper` | Light interactive shaping (intent only). Inline in the pipeline or standalone. |
+| `absol-research` | Read-only pre-planning pass. Fans out a workflow to map the codebase blast radius, annotates seeds with `research_notes` so the planner stops under-predicting `files_touched`. Inline before planning or standalone. |
 | `absol-architect` | Standalone architecture review. Surfaces deepening candidates, drafts ADRs, writes refactor `PLAN-NNN`s. |
 | `absol-newproject` | Scaffolds a new project with the `.absol/` layout, Docker, gitignore, git init. |
 | `absol-migrate` | Reusable shell to migrate a project to the current schema after a release that changes file shapes. |
@@ -108,10 +110,11 @@ ln -sfn "$PWD/agents/absol-planner.md" ~/.claude/agents/absol-planner.md
 ## Usage
 
 ```
-/absol [project]   # the front door — describe your work, or say "continue"
-/absol-architect   # architecture review; writes ADRs + refactor plans
-/absol-newproject  # scaffold a new project
-/absol-migrate     # upgrade a project's schema after a release
+/absol [project]      # the front door — describe your work, or say "continue"
+/absol-research [ids] # map the codebase blast radius for seeds before planning
+/absol-architect      # architecture review; writes ADRs + refactor plans
+/absol-newproject     # scaffold a new project
+/absol-migrate        # upgrade a project's schema after a release
 ```
 
 `note-taker`, `absol-shaper`, `absol-orchestrate`, and `absol-finalizer` are invoked through `/absol` rather than directly.

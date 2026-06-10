@@ -168,12 +168,19 @@ When pipeline mode is requested:
        - **Cancel** — abort.
    - **No plans ready** → must plan first. Ask user which seeds to plan from inbox/bugs/tech-debt (offer multiselect). If no seeds either, tell the user the project has nothing to do; stop.
 
-3. **Plan if asked.** This is where seed grouping happens:
+3. **Plan if asked.** This is where seed grouping, blast-radius research, and design happen, in that order:
 
-   - **Selected seeds all share `subsystem`** → spawn one `absol-planner` agent with all seeds.
-   - **Selected seeds span multiple subsystems** → spawn the **triage subagent** (see below) for grouping. Then spawn one `absol-planner` per resulting group, in parallel (clusters are subsystem-disjoint, no cross-contamination).
+   **a. Group.**
+   - **Selected seeds all share `subsystem`** → one group, no triage.
+   - **Selected seeds span multiple subsystems** → spawn the **triage subagent** (see below) for grouping (clusters are subsystem-disjoint, no cross-contamination).
 
-   Each planner appends a PLAN-NNN entry to `plan.md` and flips its consumed seeds to `status: promoted`. **If a planner returns `verdict: human-required`** (it sees seeds that don't share a fix), see **Bad-grouping handling** below before continuing.
+   **b. Research (before the planner).** Invoke the `absol-research` skill on the grouped seeds to map the codebase blast radius and annotate each seed with `research_notes`. This is the lever against the planner's #1 failure — plans that under-predict `files_touched` because one planner context can't see the whole consumer graph. Research scales itself to the work (it skips trivial single-file seeds and fans out only on cross-cutting ones), so always offer it through; the only time to skip entirely is when *every* selected seed is a trivial one-file edit. Research writes `research_notes` in place and returns — no plan, no code.
+
+   **c. Plan.**
+   - One group → spawn one `absol-planner` with its seeds.
+   - Multiple groups → spawn one `absol-planner` per group, in parallel.
+
+   Each planner reads the seeds' `research_notes` (and `shaper_notes`, if any), appends a PLAN-NNN entry to `plan.md`, and flips its consumed seeds to `status: promoted`. **If a planner returns `verdict: human-required`** (it sees seeds that don't share a fix), see **Bad-grouping handling** below before continuing.
 
 4. **Hand off to `absol-orchestrate`.** Pass the project path + the list of selected PLAN-NNN to execute. Orchestrate's pre-launch checkpoint shows them and confirms before staging.
 
