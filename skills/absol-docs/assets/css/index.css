@@ -42,6 +42,21 @@
 }
 .hub-back:hover { color: var(--accent); }
 
+/* Section heading (Projects / Knowledge base) */
+.hub-section + .hub-section { margin-top: 2.5rem; }
+
+.hub-section-title {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
 /* Card grid */
 .hub-grid {
   display: grid;

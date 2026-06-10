@@ -29,9 +29,21 @@ absol-docs/assets/
     └── doc.html            → starter for a new project doc
 ```
 
-Per-project doc files still live in `<project>/docs/` and are bind-mounted into homer at `/www/docs/<project>/`, one mount per project. Only the hub index and shared assets live in the skill.
+Per-project doc files live under one of two workspace roots:
 
-**The registry is the source of truth.** `docs-registry.json` is what the hub reads at load to render cards — edit a file but skip the registry and the hub won't show it. Always update both.
+- **`projects/<slug>/docs/`** — entries with `"category": "project"` (default). For projects that have a working codebase alongside docs.
+- **`knowledge_base/<slug>/docs/`** — entries with `"category": "kb"`. For doc-only entries (reference material describing systems that live elsewhere, e.g. network maps, inventories, runbooks).
+
+Both are bind-mounted into homer at `/www/docs/<slug>/`, one mount per entry — only the path on the host side differs. Only the hub index and shared assets live in the skill.
+
+**The registry is the source of truth.** `docs-registry.json` is what the hub reads at load to render cards — edit a file but skip the registry and the hub won't show it. Always update both. The hub renders entries in two sections (Projects first, Knowledge Base second), keyed off the `category` field.
+
+**Back-link and footer are injected at runtime by `docs.js`** — every doc page just needs an empty `<a class="back-link"></a>` near the top and an empty `<footer class="doc-footer"></footer>` near the bottom of `<article class="doc">`. The script reads the current URL (`/docs/<slug>/<page>`), looks up the slug in the registry, and fills both:
+
+- **Back-link**: index pages → `← All docs` to `/docs/`; non-index pages → `← <Project name>` to `/docs/<slug>/`.
+- **Footer**: `<Project name> · project ↗ (if projectUrl) · index (if not on index) · all docs · dashboard`.
+
+The doc template includes hardcoded fallback content for both so no-JS readers still get useful links. Don't hand-write footer nav in individual pages — leave the placeholders empty (or with the template fallback) and let JS handle it. The registry field `"projectUrl": "<url>"` is optional; include it for entries that have a live URL (deployed app, dashboard) and omit for pure reference docs.
 
 **Themes are optional per-project token overrides.** A project entry can carry `"theme": "<slug>.css"`; when set, every doc page for that project loads `themes/<slug>.css` as a third stylesheet after `doc.css`, redefining colors and fonts on `:root`. Without a theme, the project inherits the default look. Themes should mostly stick to design tokens — layout and utility classes stay shared so the structure feels familiar across projects. See `themes/README.css` for the convention and an example skeleton.
 
@@ -41,11 +53,13 @@ The user invokes `/absol-docs` with one of the intents below. If which one is un
 
 ## add — register a brand-new project
 
-The project exists at `/mnt/nas/dev/projects/<project>/` but has no `docs/` folder yet, or has one that isn't wired into homer.
+The entry lives at either `/mnt/nas/dev/projects/<slug>/` (code project) or `/mnt/nas/dev/knowledge_base/<slug>/` (doc-only). Pick the category first, since it decides the root directory and the bind-mount path.
 
-Confirm the project directory exists. If it doesn't, use **`AskUserQuestion`** for the correct path or slug — don't guess.
+If category is unclear, use **`AskUserQuestion`** — `project` for entries with a working codebase, `kb` for entries that are purely reference material describing something elsewhere. Default to `project` for ambiguous cases; pure-docs entries (no source folder, no build step) belong in `kb`.
 
-Ask the user for display name (default: slug title-cased), one-line description, and a Font Awesome icon class (default `fas fa-file-code`). Recommend defaults; don't grill.
+Confirm the directory exists at the chosen root. If it doesn't, use **`AskUserQuestion`** for the correct path or slug — don't guess.
+
+Ask the user for display name (default: slug title-cased), one-line description, and a Font Awesome icon class (default `fas fa-file-code` for project, `fas fa-book` for kb). Recommend defaults; don't grill.
 
 Check `themes/`. If theme files exist beyond `README.css`, use **`AskUserQuestion`** to pick one, scaffold a new empty theme from the README skeleton, or stick with the default look. Surface this at scaffold time because applying a theme later means rewriting every page's `<link>` tags — cheaper to decide now.
 
@@ -55,24 +69,29 @@ If `<project>/docs/index.html` doesn't exist, copy the doc template into it and 
 <link rel="stylesheet" href="/docs/_assets/css/themes/<theme>.css">
 ```
 
-Append the project to the registry. Include `"theme"` only if one was chosen:
+Append the entry to the registry. `category` is required; include `"theme"` and `"projectUrl"` only if applicable:
 
 ```json
 {
-  "slug": "<project>",
+  "slug": "<slug>",
   "name": "<display name>",
   "icon": "<fa class>",
+  "category": "project",
+  "projectUrl": "http://aidev:PORT",
   "description": "<one-liner>",
   "theme": "<theme>.css",
   "docs": [{ "title": "Index", "path": "index.html" }]
 }
 ```
 
-Add a bind mount under the homer service's `volumes:` in `homer/docker-compose.yml`. Insert alongside the existing project mounts; preserve YAML indentation exactly:
+`projectUrl` powers the footer's `project ↗` link. Include it for entries that have a live URL (deployed app, dashboard); omit for pure reference docs. If unsure, ask the user — homer's `config.yml` is the canonical source for project URLs.
 
-```yaml
-- ../<project>/docs:/www/docs/<project>:ro
-```
+Add a bind mount under the homer service's `volumes:` in `homer/docker-compose.yml`. Insert alongside the existing mounts in the matching block (Projects vs Knowledge base); preserve YAML indentation exactly.
+
+- For `category: "project"`: `- ../<slug>/docs:/www/docs/<slug>:ro`
+- For `category: "kb"`: `- ../../knowledge_base/<slug>/docs:/www/docs/<slug>:ro`
+
+(Homer's compose lives at `projects/homer/`, so KB items need an extra `../` to climb out of `projects/` into the workspace root.)
 
 Then tell the user: *"Mount added — run `docker compose up -d` in `homer/` to pick up the new volume."*
 
@@ -82,7 +101,7 @@ Verify the project is in the registry. If not, suggest `/absol-docs add <project
 
 Derive a filename: lowercase the title, hyphenate, append `.html` (e.g. *"Build runbook"* → `build-runbook.html`). If the title is ambiguous, confirm via **`AskUserQuestion`**.
 
-Copy the doc template into `<project>/docs/<filename>`, substitute placeholders. If the project's registry entry has a `theme` field, insert the same theme `<link>` line that already exists on its other pages — match exactly so the project stays visually consistent.
+Resolve the entry's root from its `category` field — `projects/<slug>/docs/` for project, `knowledge_base/<slug>/docs/` for kb. Copy the doc template into `<root>/<slug>/docs/<filename>`, substitute placeholders. If the entry has a `theme` field, insert the same theme `<link>` line that already exists on its other pages — match exactly so the project stays visually consistent.
 
 Append `{ "title": "<title>", "path": "<filename>" }` to the project's `docs:` list.
 
@@ -94,7 +113,7 @@ Verify the project is in the registry. If not, suggest `add` first.
 
 List the available themes in `themes/` (skip `README.css`). If a theme name was supplied, validate it exists; if not, use **`AskUserQuestion`** to pick one, scaffold a fresh empty theme from the README skeleton, or remove the theme entirely.
 
-Update every `<project>/docs/*.html`:
+Resolve the entry's root from its `category` (`projects/` or `knowledge_base/`). Update every `<root>/<slug>/docs/*.html`:
 
 - Switching to a theme: ensure exactly one theme `<link>` exists after `doc.css`. Replace it if a different theme is already there; insert it if none.
 - Removing: delete any existing `themes/*.css` link.

@@ -10,7 +10,7 @@
 <body>
   <article class="doc">
 
-    <a class="back-link" href="/docs/">← All docs</a>
+    <a class="back-link" href="/docs/">← All docs</a><!-- rewritten by docs.js to ← {project} on non-index pages -->
 
     <header class="doc-header">
       <p class="doc-eyebrow">{{PROJECT_NAME}}</p>
@@ -40,8 +40,8 @@
     <h3>Subheading</h3>
     <p>h3 doesn't get auto-numbered — only h2. Add an <code>id</code> to any heading to get a hover anchor link injected by <code>docs.js</code>.</p>
 
-    <footer class="doc-footer">
-      <p>{{PROJECT_NAME}} · <a href="/docs/">docs hub</a> · <a href="/">dashboard</a></p>
+    <footer class="doc-footer"><!-- rewritten by docs.js from the docs registry; default content is a no-JS fallback -->
+      <p><strong>{{PROJECT_NAME}}</strong> · <a href="/docs/">all docs</a> · <a href="/">dashboard</a></p>
     </footer>
 
   </article>

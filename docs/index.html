@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow &amp; skills · Absol</title>
+  <link rel="stylesheet" href="/docs/_assets/css/base.css">
+  <link rel="stylesheet" href="/docs/_assets/css/doc.css">
+</head>
+<body>
+  <article class="doc">
+
+    <a class="back-link" href="/docs/">← All docs</a><!-- rewritten by docs.js -->
+
+    <header class="doc-header">
+      <p class="doc-eyebrow">Absol</p>
+      <h1>Workflow &amp; skills</h1>
+      <p class="doc-subtitle">A multi-agent pipeline for Claude Code — intake → shape → research → plan → execute → review → finalize. The human decides during shaping; the pipeline then runs unattended.</p>
+    </header>
+
+    <nav class="toc" aria-label="On this page">
+      <p class="toc-title">On this page</p>
+      <ul>
+        <li><a href="#workflow">Workflow</a></li>
+        <li><a href="#skills">Skills &amp; agents</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="workflow">Workflow</h2>
+    <p><code>/absol</code> is the only front door. It opens a session, runs crash/pause recovery, prints a status banner, then watches the conversation and routes each turn to one of three modes — <strong>note-taker</strong> (capture), <strong>scratchpad</strong> (interactive freestyle), or <strong>pipeline</strong> (the formal, unattended flow). Pipeline is the default; scratchpad needs an explicit signal.</p>
+
+    <pre class="mermaid">
+flowchart TD
+    user(["You"]) --> absol["/absol<br/>front door"]
+
+    absol -->|"capture a thought"| notetaker["note-taker"]
+    absol -->|"'scratchpad' / quick"| scratch["absol-scratchpad<br/>interactive freestyle"]
+    absol -->|"action request (default)"| shape
+
+    notetaker --> intake[("inbox · bugs<br/>tech-debt")]
+    intake -. "seeds" .-> shape
+
+    subgraph PIPE["pipeline · unattended once launched"]
+      direction TB
+      shape["absol-shaper<br/>lock intent (optional)"] --> research["absol-research<br/>map blast radius"]
+      research --> planner["absol-planner<br/>vertical-slice tasks"]
+      planner --> plan[("plan.md")]
+      plan --> orch["absol-orchestrate<br/>serial execution loop"]
+      orch --> exec["absol-executor"]
+      exec -. "verify fail ×2" .-> orch
+      orch --> review["absol-reviewer<br/>/ -complex"]
+    end
+
+    architect["absol-architect<br/>refactor plans + ADRs"] -. "refactor PLAN" .-> plan
+    orch --> finalizer["absol-finalizer<br/>archive · prune · state"]
+    review --> finalizer
+    scratch --> finalizer
+    finalizer --> archive[("archive · state.md")]
+    </pre>
+
+    <div class="callout callout-note">
+      <p class="callout-title">Reading the diagram</p>
+      <p>Solid arrows are control flow; dashed arrows are data (seeds feeding the pipeline, a refactor plan landing in <code>plan.md</code>, the executor's verify-fail loop). Everything inside <em>pipeline</em> runs without human input — every consequential decision is settled earlier, in shaping. <code>absol-newproject</code> (scaffold) and <code>absol-migrate</code> (schema upgrade) sit outside a run; <code>absol-docs</code> manages this very page.</p>
+    </div>
+
+    <h2 id="skills">Skills &amp; agents</h2>
+    <p>Each component has one job. <span class="chip">skill</span> are invoked through <code>/absol</code> or directly; <span class="chip">agent</span> are spawned by the orchestrator or planner; <span class="chip">internal</span> run only as part of a flow.</p>
+
+    <table>
+      <thead>
+        <tr><th>Component</th><th>Type</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>absol</code></td>
+          <td><span class="chip">skill</span></td>
+          <td><strong>Front door.</strong> Opens a session, runs crash/pause recovery, prints a status banner, and routes each turn to note-taker, scratchpad, or pipeline. The only supported entry point.</td>
+        </tr>
+        <tr>
+          <td><code>note-taker</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Classifies a dropped thought into a durable <code>[note]</code> — bug → <code>bugs.md</code>, tech debt → <code>tech-debt.md</code>, idea/ambiguous → <code>inbox.md</code>.</td>
+        </tr>
+        <tr>
+          <td><code>absol-shaper</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Removes user-intent ambiguity before planning, one question at a time. Logs the locked-in decisions as <code>shaper_notes</code>. Interactive.</td>
+        </tr>
+        <tr>
+          <td><code>absol-research</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Read-only pre-planning pass. Fans out a dynamic workflow to map each seed's blast radius (consumers, sync hazards) and writes <code>research_notes</code> so plans respect the whole codebase.</td>
+        </tr>
+        <tr>
+          <td><code>absol-planner</code></td>
+          <td><span class="chip">agent</span></td>
+          <td>The brains. Turns a cohesive seed group into one <code>PLAN</code> of self-contained, vertical-slice tasks tagged with tier and order. Runs on opus.</td>
+        </tr>
+        <tr>
+          <td><code>absol-architect</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Standalone architecture review. Applies the deletion test, surfaces deepening candidates, drafts ADRs, and writes refactor <code>PLAN</code>s. Does not change code.</td>
+        </tr>
+        <tr>
+          <td><code>absol-orchestrate</code></td>
+          <td><span class="chip">internal</span></td>
+          <td>Execution engine. Runs the plan's tasks serially and unattended, manages the test-fail auto-loop and review pass, hands off to the finalizer.</td>
+        </tr>
+        <tr>
+          <td><code>absol-executor</code></td>
+          <td><span class="chip">agent</span></td>
+          <td>Single-task executor. TDD for features and bigger bugs; direct edit for tweaks, chores, and low-risk fixes.</td>
+        </tr>
+        <tr>
+          <td><code>absol-reviewer</code><br><code>absol-reviewer-complex</code></td>
+          <td><span class="chip">agent</span></td>
+          <td>Review flagged or failed tasks — sonnet for routine passes, opus for architectural, high-risk, or inconclusive ones.</td>
+        </tr>
+        <tr>
+          <td><code>absol-scratchpad</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Interactive freestyle mode with documentation tracking underneath. Build, fix, explore, or discuss live; can dispatch a dynamic workflow for big interactive builds.</td>
+        </tr>
+        <tr>
+          <td><code>absol-finalizer</code></td>
+          <td><span class="chip">internal</span></td>
+          <td>Closes a run. Reconciles the event stream, writes a lean outcome-only archive, prunes done plans and resolved notes, and snapshots <code>state.md</code>.</td>
+        </tr>
+        <tr>
+          <td><code>absol-newproject</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Scaffolds a new project with the <code>.absol/</code> layout, Docker files, <code>.gitignore</code>, and a git init. Skeleton only — the pipeline builds the rest.</td>
+        </tr>
+        <tr>
+          <td><code>absol-migrate</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Migrates a project to the current schema after a release that changes file shapes. Reads first, writes only on confirmation; git is the revert path.</td>
+        </tr>
+        <tr>
+          <td><code>absol-docs</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Manages the hosted documentation hub (this page lives here). Scaffolds, registers, and themes project docs served by homer.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <footer class="doc-footer"><!-- rewritten by docs.js -->
+      <p><strong>Absol</strong> · <a href="/docs/">all docs</a> · <a href="/">dashboard</a></p>
+    </footer>
+
+  </article>
+
+  <script type="module" src="/docs/_assets/js/docs.js"></script>
+</body>
+</html>

@@ -15,10 +15,18 @@
     <header class="hub-header">
       <p class="hub-eyebrow">Documentation</p>
       <h1>Project documentation</h1>
-      <p class="hub-subtitle">Every project that ships docs is listed below. Expand a card to see its pages.</p>
+      <p class="hub-subtitle">Project docs and knowledge-base entries. Expand a card to see its pages.</p>
     </header>
 
-    <section id="hub-grid" class="hub-grid" aria-live="polite"></section>
+    <section class="hub-section" aria-labelledby="hub-projects-heading">
+      <h2 id="hub-projects-heading" class="hub-section-title">Projects</h2>
+      <div id="hub-grid-projects" class="hub-grid" aria-live="polite"></div>
+    </section>
+
+    <section class="hub-section" aria-labelledby="hub-kb-heading">
+      <h2 id="hub-kb-heading" class="hub-section-title">Knowledge base</h2>
+      <div id="hub-grid-kb" class="hub-grid" aria-live="polite"></div>
+    </section>
   </main>
 
   <template id="card-template">
@@ -37,8 +45,9 @@
 
   <script>
     (async () => {
-      const grid = document.getElementById("hub-grid");
-      const tpl  = document.getElementById("card-template");
+      const gridProjects = document.getElementById("hub-grid-projects");
+      const gridKb       = document.getElementById("hub-grid-kb");
+      const tpl          = document.getElementById("card-template");
 
       let registry;
       try {
@@ -46,7 +55,7 @@
         if (!res.ok) throw new Error(`registry fetch ${res.status}`);
         registry = await res.json();
       } catch (err) {
-        grid.innerHTML = `
+        gridProjects.innerHTML = `
           <div class="hub-empty">
             <p><strong>Couldn't load the docs registry.</strong></p>
             <p>Expected at <code>/docs/_assets/docs-registry.json</code>.</p>
@@ -55,47 +64,54 @@
         return;
       }
 
-      const projects = (registry && registry.projects) || [];
-      if (projects.length === 0) {
-        grid.innerHTML = `
-          <div class="hub-empty">
-            <p><strong>No projects registered yet.</strong></p>
-            <p>Run <code>/absol-docs add &lt;project&gt;</code> to add one.</p>
-          </div>`;
-        return;
-      }
+      const entries = (registry && registry.projects) || [];
+      const projects = entries.filter(e => (e.category || "project") === "project");
+      const kb       = entries.filter(e => e.category === "kb");
 
       const pad = n => String(n).padStart(2, "0");
 
-      for (const p of projects) {
-        const card = tpl.content.firstElementChild.cloneNode(true);
-        card.querySelector(".project-icon i").className = p.icon || "fas fa-file-code";
-        card.querySelector(".project-name").textContent = p.name || p.slug;
-        card.querySelector(".project-desc").textContent = p.description || "";
+      const renderEmpty = (grid, msg) => {
+        grid.innerHTML = `<div class="hub-empty"><p>${msg}</p></div>`;
+      };
 
-        const ul = card.querySelector(".project-docs");
-        const docs = p.docs || [];
-        if (docs.length === 0) {
-          const li = document.createElement("li");
-          li.innerHTML = `<a><span class="doc-title" style="color:var(--text-muted)">No pages yet.</span></a>`;
-          ul.appendChild(li);
-        } else {
-          docs.forEach((d, i) => {
+      const renderInto = (grid, list, defaultIcon) => {
+        if (list.length === 0) return;
+        for (const p of list) {
+          const card = tpl.content.firstElementChild.cloneNode(true);
+          card.querySelector(".project-icon i").className = p.icon || defaultIcon;
+          card.querySelector(".project-name").textContent = p.name || p.slug;
+          card.querySelector(".project-desc").textContent = p.description || "";
+
+          const ul = card.querySelector(".project-docs");
+          const docs = p.docs || [];
+          if (docs.length === 0) {
             const li = document.createElement("li");
-            const a  = document.createElement("a");
-            a.href = `/docs/${p.slug}/${d.path}`;
-            a.innerHTML = `
-              <span class="doc-num">${pad(i + 1)}</span>
-              <span class="doc-title"></span>
-              <span class="doc-arrow">→</span>`;
-            a.querySelector(".doc-title").textContent = d.title;
-            li.appendChild(a);
+            li.innerHTML = `<a><span class="doc-title" style="color:var(--text-muted)">No pages yet.</span></a>`;
             ul.appendChild(li);
-          });
-        }
+          } else {
+            docs.forEach((d, i) => {
+              const li = document.createElement("li");
+              const a  = document.createElement("a");
+              a.href = `/docs/${p.slug}/${d.path}`;
+              a.innerHTML = `
+                <span class="doc-num">${pad(i + 1)}</span>
+                <span class="doc-title"></span>
+                <span class="doc-arrow">→</span>`;
+              a.querySelector(".doc-title").textContent = d.title;
+              li.appendChild(a);
+              ul.appendChild(li);
+            });
+          }
 
-        grid.appendChild(card);
-      }
+          grid.appendChild(card);
+        }
+      };
+
+      if (projects.length === 0) renderEmpty(gridProjects, "No projects registered yet. Run <code>/absol-docs add &lt;slug&gt;</code> to add one.");
+      else renderInto(gridProjects, projects, "fas fa-file-code");
+
+      if (kb.length === 0) renderEmpty(gridKb, "No knowledge-base entries yet.");
+      else renderInto(gridKb, kb, "fas fa-book");
     })();
   </script>
 </body>

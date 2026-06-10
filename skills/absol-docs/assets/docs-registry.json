@@ -4,6 +4,8 @@
       "slug": "metagross",
       "name": "Metagross",
       "icon": "fas fa-gamepad",
+      "category": "project",
+      "projectUrl": "http://aidev:8181",
       "description": "Multiplayer browser game — design corpus, systems, guidelines, deployment plan.",
       "theme": "metagross.css",
       "docs": [
@@ -20,6 +22,8 @@
       "slug": "snowowl",
       "name": "SnowOwl",
       "icon": "fas fa-cube",
+      "category": "project",
+      "projectUrl": "http://aidev:8182",
       "description": "3D product configurator — GLB + sidecar import format spec and authoring guide.",
       "theme": "snowowl.css",
       "docs": [
@@ -32,20 +36,67 @@
       "slug": "cadtool-alpha",
       "name": "Cadtool",
       "icon": "fas fa-car",
+      "category": "project",
       "description": "Research brief — mid-2026 technical path for agentic NURBS surface generation.",
       "docs": [
         { "title": "Research brief", "path": "index.html" }
       ]
     },
     {
-      "slug": "pc-clean",
-      "name": "pc-clean",
-      "icon": "fas fa-broom",
-      "description": "Windows PC scan + cleanup pass — persistent context for the winpc host.",
+      "slug": "shearwater",
+      "name": "Shearwater",
+      "icon": "fas fa-feather",
+      "category": "project",
+      "projectUrl": "http://aidev:8185",
+      "description": "Scroll-driven, music-synced portfolio engine. Chapters and episodes named after birds.",
       "docs": [
         { "title": "Index", "path": "index.html" },
-        { "title": "Pass 1 — dev toolchain", "path": "dev-toolchain.html" },
-        { "title": "Pass 2 — software & caches", "path": "software-and-caches.html" }
+        { "title": "Description", "path": "description.html" },
+        { "title": "Style", "path": "style.html" },
+        { "title": "Ingestion", "path": "ingestion.html" },
+        { "title": "Naming", "path": "naming.html" }
+      ]
+    },
+    {
+      "slug": "absol",
+      "name": "Absol",
+      "icon": "fas fa-diagram-project",
+      "category": "project",
+      "description": "Multi-agent pipeline for Claude Code — intake → shape → research → plan → execute → review → finalize. Workflow diagram and skill reference.",
+      "docs": [
+        { "title": "Workflow & skills", "path": "index.html" }
+      ]
+    },
+    {
+      "slug": "local-ai",
+      "name": "Local AI",
+      "icon": "fas fa-robot",
+      "category": "kb",
+      "projectUrl": "http://192.168.0.84:3000",
+      "description": "Self-hosted LLM stack — Open WebUI + SearXNG on docker-main, llama-swap on AWAC.",
+      "docs": [
+        { "title": "Index", "path": "index.html" }
+      ]
+    },
+    {
+      "slug": "resource-org",
+      "name": "Resource Organisation",
+      "icon": "fas fa-folder-tree",
+      "category": "kb",
+      "description": "NAS resource inventory and organisation plan.",
+      "docs": [
+        { "title": "Index", "path": "index.html" },
+        { "title": "NAS resources drive analysis", "path": "nas-resources-drive.html" }
+      ]
+    },
+    {
+      "slug": "network_map",
+      "name": "Network Map",
+      "icon": "fas fa-network-wired",
+      "category": "kb",
+      "description": "Snapshot of the home network — LAN, tailnet, hosts, workloads, and agent access today.",
+      "docs": [
+        { "title": "Index", "path": "index.html" }
       ]
     }
   ]
