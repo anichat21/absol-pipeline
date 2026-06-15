@@ -157,7 +157,9 @@ Walk the events; collect tasks with `task-completed` `review_flag: yes` OR `task
 
 Reviewers append `[event] type: review` directly to run-active.md.
 
-`fix-required` verdicts feed the next planning cycle. At this point you've exited the test-fail loop — record the verdict, surface in finalize, let the user decide on `/absol` next round.
+**`fix-required` re-executes in-run** — it is not deferred to the next session (that's the "loop surfaces the defect, then ships it anyway" leak). A `fix-required` verdict re-enters the test-fail loop: spawn `absol-planner` with the task + the reviewer's `fix_request` as input, append a `task-retry` event, re-execute (4b), re-verify (4c), then re-review. Cap review-driven retries at 2, sharing the budget with verification retries (count every `task-retry` for the task). On exhaustion, surface via the same `AskUserQuestion` as 4c (**Solve now** / **Log and finalise** / **Discuss**).
+
+Verdicts that do **not** loop: `blocked` (architecture resists — record it, surface in finalize, the user re-plans) and `human-check` (a person must look — record it for the finalize summary and the human-smoke surface).
 
 ### Step 6 — Finalization Checkpoint (REQUIRED)
 
@@ -182,8 +184,11 @@ Summary text (build by walking events):
 Plans:        PLAN-001 (4/4 done), PLAN-002 (5/7 done — 2 failed)
 Execution:    {n_done} done, {n_failed} failed, {n_blocked} blocked
 Review:       {n_reviewed} reviewed — {n_approved} approved, {n_fix} fix-required
+Owes smoke:   {n} human-oracle tasks built but unverified — TSK-NNN …   (omit if none)
 Files modified: {union of files_touched_actual across all task-completed events}
 ```
+
+The `Owes smoke` line lists tasks with `verify_oracle: human` (`verification_result: skipped (needs-human-smoke)`) — the finalizer records these in state.md `## Owes Human Smoke` and `/absol` surfaces them next session.
 
 Then **two** `AskUserQuestion` calls (sequential, not multiselect):
 

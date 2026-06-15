@@ -84,6 +84,7 @@ Plan.md is **per-run** state. Finalizer archives completed plans into the run lo
   - dependencies: none | TSK-xxx, TSK-yyy
   - acceptance_criteria: how to verify the slice is demoable end-to-end
   - verification: command or check to run after the task
+  - verify_oracle: unit | integration | human    (who can judge correctness — see below)
   - risk: low | medium | high
   - executor_tier: micro | full
   - execution_order: 1
@@ -107,6 +108,11 @@ Status lifecycle for plan: `ready` → (pipeline picks plan) → `in-progress` �
 **Execution is unattended.** Every consequential decision (schema/migration, destructive ops, API surface, new deps, breaking changes) is settled during shaping and carried as binding constraints in the seed's `shaper_notes`; tasks don't pause for input. (Interrupt mechanics — failure, `human-check`, manual pause — live in `absol-orchestrate`.)
 
 **`executor_tier`** — `micro` runs inline in the orchestrator (no agent spawn). `full` spawns the executor agent. The planner picks the tier; the orchestrator trusts it.
+
+**`verify_oracle`** — who can actually judge this task is correct, set by the planner. The lever against "green tests, broken feature": a `unit` oracle must never sign off on work only a probe or a human can verify.
+- `unit` — the test suite / `verification` command is sufficient (logic, data shapes, pure functions).
+- `integration` — needs a **runtime probe** that exercises the real seam (mount the registry and assert the query returns >0; hit the endpoint and assert the shape the UI consumes). String-inspecting generated output is NOT enough; `verification` must name the probe.
+- `human` — only a person can judge (visual/audio feel, real-device behaviour). No automated oracle exists, so the run records it as **owed human smoke** at finalize rather than silently calling it done.
 
 **`files_touched`** — planner's prediction. Actual files-touched is recorded per task in run-active.md as the executor runs. Divergence (executor touches files the planner didn't list) auto-sets `review_flag: yes` on the task event — keeps the planner honest over time without paying a cost when prediction was accurate.
 

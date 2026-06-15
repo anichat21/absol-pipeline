@@ -101,6 +101,7 @@ Every task gets every field. No defaults blank.
   - dependencies: none | TSK-xxx, TSK-yyy
   - acceptance_criteria: how to verify the slice is demoable end-to-end
   - verification: command or check to run after the task
+  - verify_oracle: unit | integration | human    ← who can judge correctness (see below)
   - risk: low | medium | high
   - executor_tier: micro | full
   - execution_order: 1
@@ -122,6 +123,14 @@ The executor may still explore to *complete* the task — that's fine. What it s
 **`micro`** when ALL: `risk: low`, single file, unambiguous description, no verification beyond build/lint. Otherwise **`full`**.
 
 Trust your tag — orchestrator runs `micro` inline (no agent spawn), `full` as the executor agent.
+
+### Picking `verify_oracle` (the green-tests-broken-feature guard)
+
+Ask: *who can actually tell this task worked?* Be honest — a `unit` tag on work the suite can't really judge is exactly how 500 green tests ship a dead feature.
+
+- **`unit`** — the test suite / `verification` command settles it: pure logic, data transforms, parsing, anything with a deterministic asserted output.
+- **`integration`** — correctness lives at a runtime seam the suite fakes or skips: a registry round-trip, an endpoint→UI contract, a generated artifact that must actually load. Set this, and write a `verification` that **exercises the real seam and asserts the real result** (e.g. "mount the wipe registry, call `getMeshesByModelRoot`, assert >0") — not a string-inspection of generated output. If unsure between unit and integration for a render/contract/seam task, choose `integration`.
+- **`human`** — only a person can judge: visual/audio feel, animation, real-device (iOS Safari, mobile) behaviour. The pipeline can't close this; it records the task as *owed human smoke* at finalize. Use sparingly — only when no probe could decide it.
 
 ### `files_touched`
 

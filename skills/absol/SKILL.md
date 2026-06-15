@@ -118,6 +118,7 @@ absol — <project>
 
 Last session: <one line from state.md "Last Session">
 In progress:  <one line from state.md "In Progress" or "nothing">
+⚠ Owes smoke:  <count> — TSK-NNN (run): <what to eyeball>, …   (omit the line entirely if none)
 Plans ready:  N
   - PLAN-001 (created 2026-04-25, 11d old — may need re-planning against current codebase)
   - PLAN-002 (created 2026-05-04)
@@ -132,6 +133,8 @@ The Inbox sub-counts annotate `status: new` notes by enrichment: **shaped** = `s
 The plan staleness flag fires when a plan's `created` date is more than **5 days** old — older plans may need re-planning against the current codebase. It's a soft hint, not a block. Omit the date detail when no plans are stale (just `Plans ready: N (PLAN-001, PLAN-002, …)`).
 
 Six-to-ten lines. Don't dump full file contents.
+
+**Owed human smoke (from state.md `## Owes Human Smoke`).** These are tasks the pipeline *built* but only a human can verify (visual/audio feel, real-device) — the `verify_oracle: human` gate. Surface them at the top of the banner so "done" never silently means "unverified." When the user confirms a smoke passed, remove that line from `## Owes Human Smoke`; if it failed, route it through `note-taker` (a BUG) and then remove it. Don't let the list rot — it's the standing answer to "what did we ship that nobody's looked at yet."
 
 ## Mode routing — how to decide
 

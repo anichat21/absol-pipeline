@@ -123,9 +123,13 @@ TDD overhead isn't worth it for one-line CSS or a dep bump. Make the edit, run v
 
 ## Verify
 
-Run the task's `verification`. If unspecified: does it parse? obvious errors? matches `acceptance_criteria`? For TDD work, the suite passing is the verification.
+Verify according to the task's `verify_oracle` (absent → treat as `unit`):
 
-Record `verification_result` honestly. Never claim `pass` when checks failed — the orchestrator's test-fail loop relies on truthful reports to decide whether to re-plan.
+- **`unit`** — run the task's `verification` (for TDD work, the suite passing is the verification). If unspecified: does it parse? obvious errors? matches `acceptance_criteria`?
+- **`integration`** — run the **runtime probe** the task's `verification` names: actually drive the seam (mount the thing and call it, hit the endpoint) and assert the *real* result. Never substitute a string-inspection of generated output for a probe. If the seam genuinely can't be exercised here (no fixture, needs a live service), report `verification_result: skipped (live-unverified)` with the reason — **never `pass`**.
+- **`human`** — you cannot judge this (visual/audio feel, real-device behaviour). Build it, run any automated checks that *do* apply, then set `verification_result: skipped (needs-human-smoke)` and `review_flag: yes`. The human verifies after the run; the finalizer records it as owed smoke.
+
+Record `verification_result` honestly. **Never claim `pass` on a path you didn't actually exercise** — the test-fail loop and the human-smoke gate both rely on truthful reports.
 
 ## Rules
 

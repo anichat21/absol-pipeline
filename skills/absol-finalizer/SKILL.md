@@ -57,6 +57,8 @@ Walk the `## Events` section in chronological order. For each task in the snapsh
 
 Build the reconciled task table for the archive — each task entry gets the static fields PLUS the harvested run-time fields PLUS any review verdicts.
 
+**Owed human smoke.** A task with `verify_oracle: human` whose `verification_result` is `skipped (needs-human-smoke)` (or any human-oracle task no person confirmed during the run) reconciles to `done` — the code is built — but is **owed human smoke**: done-but-human-unverified, not silently done. Collect these into an owed-smoke list for Steps 8 and 10 so the next `/absol` surfaces them.
+
 ### 3. Archive the run
 
 Write `.absol/archive/run-{run_id}.md` — the definitive, **outcome-only** record. Do NOT copy plan-time specs (description, acceptance_criteria, verification command, risk, predicted files_touched); those died with plan.md and aren't needed to know what happened. One line per task. Omit default-value fields (`review_flag: no`, `retries: 0`).
@@ -143,9 +145,16 @@ This is the "items removed once their work completed" rule. Notes never accumula
 
 {Notes with shaper_notes but no promoted_to (shaped but not yet planned).
  One line per item. "None." if none.}
+
+## Owes Human Smoke
+
+{Tasks built this run (or carried from a prior one) with verify_oracle: human that
+ no person has verified yet. One line each — `TSK-NNN (run_id) — what to eyeball`.
+ Carry forward any still-unresolved entries from the prior state.md. Omit the
+ whole section when there are none.}
 ```
 
-**Do not** add Tech Debt, Known Bugs, Planned Features, Pipeline History, or other accumulating sections. Those live in their own `.absol/` files.
+**Do not** add Tech Debt, Known Bugs, Planned Features, Pipeline History, or other accumulating sections. Those live in their own `.absol/` files. (`## Owes Human Smoke` is allowed because it's a *clearing* worklist, not a ledger — entries leave when the user confirms the smoke.)
 
 The transient `## Active Run` and `## Pause` sections were cleared in Step 5. Don't write them back.
 
@@ -173,6 +182,7 @@ Archive:        archive/run-{run_id}.md
 Failed tasks: TSK-XXX: {reason}                        (omit if zero)
 Blocked tasks: TSK-XXX: {blocker}                      (omit if zero)
 Needs review: TSK-XXX: {fix_request}                   (omit if zero)
+Owes human smoke: TSK-XXX — {what to eyeball}          (omit if zero)
 Divergence flags: TSK-XXX touched {N} unexpected files (omit if zero)
 Pause cleared: {run_id}                                (omit if no pause was cleared)
 
