@@ -1,0 +1,24 @@
+/* distillery.css — The Distillery theme.
+   Amber/copper accents lifted from the alias_dstlr brief; Fraunces for that
+   vintage spirit-label display type. */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
+
+:root {
+  --accent: #a86c1d;
+  --accent-hover: #855415;
+  --accent-soft: rgba(168, 108, 29, 0.12);
+  --moss: #5e98ad;
+  --moss-soft: rgba(111, 179, 208, 0.22);
+  --font-display: 'Fraunces', Georgia, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #d2a25c;
+    --accent-hover: #e0b878;
+    --accent-soft: rgba(210, 162, 92, 0.15);
+    --moss: #6fb3d0;
+    --moss-soft: rgba(111, 179, 208, 0.18);
+  }
+}
