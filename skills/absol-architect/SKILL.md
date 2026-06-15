@@ -115,7 +115,7 @@ One PLAN per architect session. Append (preserving any existing plans), separate
 ## PLAN-{next}: {global plan title — what this refactor accomplishes in <8 words}
 
 - meta:
-  - id: PLAN-{next}            ← check existing plan.md, increment
+  - id: PLAN-{next}            ← self-allocate: check existing plan.md, increment (architect runs single, never concurrent — no dispatch-time allocation needed)
   - status: ready
   - created: YYYY-MM-DD
   - author: architect

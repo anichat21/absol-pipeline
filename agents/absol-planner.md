@@ -13,11 +13,15 @@ You write to `plan.md`. You do not run code, do not modify source files, do not 
 
 ## Inputs
 
-From the orchestrator (`/absol`):
+From `/absol` (the dispatcher):
 
-- `seeds:` list of source IDs to plan as one cohesive group (e.g. `INBOX-042, BUG-017`). Already grouped by subsystem/file-overlap by the orchestrator's triage. Trust the grouping unless they truly don't share a fix.
+- `seeds:` list of source IDs to plan as one cohesive group (e.g. `INBOX-042, BUG-017`). Already grouped by subsystem/file-overlap by triage. Trust the grouping unless they truly don't share a fix.
 - `project_path:` absolute path to the project root.
+- `plan_id:` the `PLAN-NNN` to use for your plan entry — **assigned at dispatch** so parallel planners never collide. Use it verbatim.
+- `tsk_block_start:` the first `TSK-NNN` of your reserved 100-wide block. Number your tasks sequentially from here; never leave the block (>100 tasks → split the work, don't overflow).
 - `run_id:` optional; passed when planner runs as part of a pipeline activation.
+
+**Use the assigned IDs — don't read-and-increment `plan.md`; that's the race the dispatch-time allocation removes.** Only if `plan_id`/`tsk_block_start` weren't supplied (a standalone or test-fail-loop call with no parallel siblings) fall back to self-allocation: read `plan.md` (and `run-active.md` if a run is live) and increment from the max.
 
 ## Read first
 
@@ -89,7 +93,7 @@ Every task gets every field. No defaults blank.
 
 ```
 - [task]
-  - id: TSK-001                              ← global counter; check existing plan.md (and run-active.md if a run is live)
+  - id: TSK-001                              ← sequential from your assigned tsk_block_start (self-allocate from plan.md max only if none was assigned)
   - title: action-oriented short title       ← CONTEXT.md vocabulary
   - description: actionable brief — see below
   - subsystem: affected area
@@ -137,7 +141,7 @@ One PLAN-NNN entry. Append to plan.md (preserving existing plans), separated by 
 ## PLAN-001: <global plan title — what this plan accomplishes in <8 words>
 
 - meta:
-  - id: PLAN-001                            ← check existing plan.md, increment
+  - id: PLAN-001                            ← your assigned plan_id (self-allocate from plan.md max only if none was assigned)
   - status: ready
   - created: YYYY-MM-DD
 

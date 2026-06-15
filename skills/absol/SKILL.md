@@ -191,11 +191,15 @@ When pipeline mode is requested:
 
    **b. Research (before the planner).** Invoke the `absol-research` skill on the grouped seeds to map the codebase blast radius and annotate each seed with `research_notes`. This is the lever against the planner's #1 failure — plans that under-predict `files_touched` because one planner context can't see the whole consumer graph. Research scales itself to the work (it skips trivial single-file seeds and fans out only on cross-cutting ones), so always offer it through; the only time to skip entirely is when *every* selected seed is a trivial one-file edit. Research writes `research_notes` in place and returns — no plan, no code.
 
-   **c. Plan.**
-   - One group → spawn one `absol-planner` with its seeds.
-   - Multiple groups → spawn one `absol-planner` per group, in parallel.
+   **c. Plan.** First **pre-allocate IDs at dispatch** so parallel planners can't race the `plan.md` counter. Read `plan.md` (and `run-active.md` if a run is somehow live) for the current highest `PLAN-NNN` and `TSK-NNN`, then hand each planner, in its spawn prompt:
+   - a `plan_id` — `PLAN-{next}`, one per planner, sequential from the max;
+   - a `tsk_block_start` — a reserved task-number block, **stride 100** (planner 1 starts at `max_tsk + 1`, planner 2 at `max_tsk + 101`, …). The planner numbers its tasks sequentially from there and never leaves its block — >100 tasks in one plan means split the work, not overflow the block.
 
-   Each planner reads the seeds' `research_notes` (and `shaper_notes`, if any), appends a PLAN-NNN entry to `plan.md`, and flips its consumed seeds to `status: promoted`. **If a planner returns `verdict: human-required`** (it sees seeds that don't share a fix), see **Bad-grouping handling** below before continuing.
+   Then:
+   - One group → spawn one `absol-planner` with its seeds + its assigned `plan_id` / `tsk_block_start`.
+   - Multiple groups → spawn one `absol-planner` per group, in parallel, each with its own assigned IDs (disjoint by construction).
+
+   Each planner **uses the IDs it was handed** — it does not read-and-increment `plan.md` (that's the race we're removing). It reads the seeds' `research_notes` (and `shaper_notes`, if any), appends its `PLAN-NNN` entry to `plan.md`, and flips its consumed seeds to `status: promoted`. **If a planner returns `verdict: human-required`** (it sees seeds that don't share a fix), see **Bad-grouping handling** below before continuing.
 
 4. **Hand off to `absol-orchestrate`.** Pass the project path + the list of selected PLAN-NNN to execute. Orchestrate's pre-launch checkpoint shows them and confirms before staging.
 
