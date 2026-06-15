@@ -40,7 +40,7 @@ Either way the output is the same: `research_notes` appended to each seed's `[no
 - `.absol/CONTEXT.md` — use these terms verbatim in the map. A research note that renames the domain is worse than none.
 - `.absol/adr/` — so the map flags when a seed's obvious implementation would collide with a decided ADR (note it; don't re-litigate — that's the architect/shaper's call).
 - The source `[note]` for each seed in `inbox.md` / `bugs.md` / `tech-debt.md`. If a seed already has `shaper_notes`, read them — they bound what's in scope, so you map the in-scope surface, not the whole module.
-- `state.md`, `vision.md` — only for orientation.
+- `state.md`, `CLAUDE.md` — only for orientation.
 
 You do **not** need to read the whole codebase yourself — that's what the fan-out is for.
 

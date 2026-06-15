@@ -24,7 +24,7 @@ This separation exists because intent and implementation are different jobs. Int
 Always:
 - `.absol/CONTEXT.md` — use these terms verbatim in your questions and notes. Vocabulary drift kills downstream parsing.
 - `.absol/adr/` — don't re-litigate. If a question would re-open a decided ADR, surface the ADR number and ask if it's worth reopening before grilling further.
-- `vision.md`, `roadmap.md` — for intent context.
+- `CLAUDE.md` (project brief), and `roadmap.md` *if present* — for intent context.
 
 If shaping a specific note, also read it and the surrounding inbox/bugs/debt for context.
 

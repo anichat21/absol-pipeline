@@ -23,7 +23,7 @@ This append-only model exists for two reasons: agents save tokens by not parsing
 | Path | Role |
 |---|---|
 | `state.md` (root) | Truth snapshot. Finalizer-owned, except you write/update transient `## Active Run` + `## Pause` sections. |
-| `vision.md`, `roadmap.md`, `CLAUDE.md` (root) | Read-only. |
+| `CLAUDE.md`, `roadmap.md` *(if present)* (root) | Read-only. |
 | `.absol/CONTEXT.md` | Domain glossary. Every agent reads this. |
 | `.absol/adr/` | Decisions. Every agent scans these. |
 | `.absol/plan.md` | PLAN-NNN entries. Read-only here (planner/architect-owned). |
@@ -43,18 +43,22 @@ From `/absol`:
 
 ## Component routing
 
-| Component | Mode | Model | Definition path | When |
-|---|---|---|---|---|
-| `absol-planner` | Agent tool | opus | `~/.claude/agents/absol-planner.md` (top-level — shared with `/absol`, scratchpad escalations, etc.) | Test-fail auto-loop only — re-plans the fix. (Planning before pipeline is `/absol`'s job.) |
-| `absol-executor` (full) | Agent tool | sonnet | `agents/absol-executor.md` | Task `executor_tier: full`. |
-| `absol-executor` (micro) | inline | n/a | `agents/absol-executor.md` | Task `executor_tier: micro`. You make the edit, run verification, append events directly. |
-| `absol-reviewer` | Agent tool | sonnet | `agents/absol-reviewer.md` | Routine reviews. |
-| `absol-reviewer-complex` | Agent tool | opus | `agents/absol-reviewer-complex.md` | ARCH, high-risk, complex, inconclusive prior reviews, multiple related failures. |
-| `absol-finalizer` | skill (inline) | n/a | `skills/absol-finalizer/SKILL.md` | End of run. Mandatory. |
+| Component | Model | Invoked as | When |
+|---|---|---|---|
+| `absol-planner` | opus | `Agent(subagent_type: absol-planner)` | Test-fail auto-loop only — re-plans the fix. (Planning before pipeline is `/absol`'s job.) |
+| `absol-executor` (full) | sonnet | `Agent(subagent_type: absol-executor)` | Task `executor_tier: full`. |
+| `absol-executor` (micro) | n/a | inline — you make the edit, run verification, append events (follow the `absol-executor` rules) | Task `executor_tier: micro`. |
+| `absol-reviewer` | sonnet | `Agent(subagent_type: absol-reviewer)` | Routine reviews. |
+| `absol-reviewer-complex` | opus | `Agent(subagent_type: absol-reviewer-complex)` | ARCH, high-risk, complex, inconclusive prior reviews, multiple related failures. |
+| `absol-finalizer` | n/a | skill (inline) | End of run. Mandatory. |
 
-### Agent self-loading
+All four agents are **registered agent types** (symlinked into `~/.claude/agents/`) — `subagent_type` resolves directly; you do not read or pass a definition-file path.
 
-Build prompts as: *"Read your definition at `{absolute path}` first. Then handle: {task entry inline + project path + run_id}."* Pass the task entry inline so the agent doesn't have to parse run-active.md. Saves both the definition load and the task-table parse per agent call.
+### Spawning agents
+
+`absol-executor`, `absol-reviewer`, `absol-reviewer-complex`, and `absol-planner` are **registered agent types** — spawn them with the Agent tool and their `subagent_type`; the definition loads as the system prompt automatically (no "read your definition first" step, no per-call file read). Model is pinned in each agent's frontmatter — don't pass a `model` override.
+
+Pass the task entry **inline** in the prompt so the agent never parses run-active.md (saves the task-table parse per call). Build prompts as: *"Handle this task: {task entry inline}. Project path: {path}. run_id: {id}. Append your `[event]` blocks to {run-active.md path}."*
 
 If an agent fails (permissions, tool errors), append a `task-failed` event with the failure as `blocker`, mark the task lost, and continue. Don't re-run the failed agent's work yourself — that's off-plan fixup.
 

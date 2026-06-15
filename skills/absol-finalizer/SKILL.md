@@ -28,7 +28,7 @@ Writes: `state.md`, `.absol/plan.md`, `.absol/inbox.md`, `.absol/bugs.md`, `.abs
 
 Deletes: `.absol/run-active.md` (after archiving).
 
-Never writes: `vision.md`, `roadmap.md`, `CLAUDE.md`, `CONTEXT.md`, ADRs.
+Never writes: `roadmap.md`, `CLAUDE.md`, `CONTEXT.md`, ADRs.
 
 ## Steps
 

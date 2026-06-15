@@ -40,7 +40,7 @@ Refuse unless every condition holds. Surface any failure and confirm via the **`
 
 ## 2. Read & extract
 
-Read the affected files (per the Migration delta). Preserve durable content (vision, roadmap, ADRs, CONTEXT.md, bugs, tech-debt, the state.md truth-snapshot); plan/run churn is regenerated, not migrated. Don't write anything yet.
+Read the affected files (per the Migration delta). Preserve durable content (CLAUDE.md, ADRs, CONTEXT.md, bugs, tech-debt, the state.md truth-snapshot, and `roadmap.md` if the project keeps one); plan/run churn is regenerated, not migrated. Don't write anything yet.
 
 If a class of content has no clean automatic transform (e.g. items in a status the new schema dropped), surface that cohort once, list the items inline, and use **`AskUserQuestion`** for a per-cohort disposition (keep / drop / convert) — bounded prompts, not one per item.
 

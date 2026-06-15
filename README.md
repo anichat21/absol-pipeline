@@ -32,10 +32,9 @@ Pipeline is the default for any action request; scratchpad needs an explicit sig
 
 ```
 my-app/
-├── CLAUDE.md            ← project meta, stack, run commands (root, user-owned)
+├── CLAUDE.md            ← project brief, design philosophy, stack, run commands (root, user-owned)
 ├── state.md             ← truth snapshot (root, finalizer-owned)
-├── vision.md            ← product intent (root, user-owned)
-├── roadmap.md           ← milestones (root, user-owned)
+├── roadmap.md           ← OPTIONAL — phase/milestone list, only if the project sequences in phases (root, user-owned)
 └── .absol/              ← pipeline-owned, hidden
     ├── CONTEXT.md       ← domain glossary; every agent reads this   (tracked)
     ├── adr/             ← Architecture Decision Records             (tracked)
@@ -54,7 +53,8 @@ my-app/
 | File | Purpose | Owner |
 |---|---|---|
 | `state.md` (root) | Truth snapshot — last session, in progress, parked items, transient run sections. | finalizer (+ orchestrator for run sections) |
-| `vision.md`, `roadmap.md`, `CLAUDE.md` (root) | Product framing, stack, run commands. | user |
+| `CLAUDE.md` (root) | Project brief, design philosophy, stack, run commands — the single framing doc. | user |
+| `roadmap.md` (root, optional) | Phase/milestone list. Only for projects that sequence in phases; pipeline reads it if present. | user |
 | `.absol/CONTEXT.md` | Domain glossary; every agent reads it. | shaper, architect, note-taker, user |
 | `.absol/adr/` | Decision records. | architect (writer); user can edit |
 | `.absol/inbox.md` `bugs.md` `tech-debt.md` | Unified `[note]` intake (`status: new` → `promoted`). | note-taker (writes), planner/architect (promote), finalizer (prune) |
@@ -85,12 +85,12 @@ Schemas for every file format live in `skills/absol-orchestrate/references/schem
 
 | Agent | Model | Role |
 |---|---|---|
-| `absol-planner` | **opus** | Triage + decomposition into vertical-slice tasks. (`~/.claude/agents/absol-planner.md`.) |
+| `absol-planner` | **opus** | Triage + decomposition into vertical-slice tasks. |
 | `absol-executor` | sonnet | Single-task executor. TDD for FEAT / medium+ BUG; direct edit otherwise. Also runs inline for `micro` tasks. |
 | `absol-reviewer` | sonnet | Routine reviews on flagged tasks. |
 | `absol-reviewer-complex` | opus | Deep reviews (ARCH, high-risk, complex). |
 
-`absol-planner` is deployed top-level to `~/.claude/agents/`; the executor/reviewer definitions live under `skills/absol-orchestrate/agents/`.
+All four agents live in `agents/` and are symlinked into `~/.claude/agents/`, so the orchestrator spawns them by `subagent_type` directly — no per-spawn definition-file read.
 
 ## Model selection
 
@@ -98,14 +98,12 @@ Default is your session model (sonnet). The planner and complex-reviewer agents 
 
 ## Installation
 
-`~/.claude/skills/` and `~/.claude/agents/` are **symlinked** to this repo, so edits here are live immediately — there is no copy/sync step. To set up on a fresh machine, symlink each skill directory plus the planner agent:
+`~/.claude/skills/` and `~/.claude/agents/` are **symlinked** to this repo, so edits here are live immediately — there is no copy/sync step. To set up on a fresh machine, symlink each skill directory and each agent:
 
 ```bash
 for d in skills/*/; do ln -sfn "$PWD/$d" ~/.claude/skills/"$(basename "$d")"; done
-ln -sfn "$PWD/agents/absol-planner.md" ~/.claude/agents/absol-planner.md
+for a in agents/*.md; do ln -sfn "$PWD/$a" ~/.claude/agents/"$(basename "$a")"; done
 ```
-
-(The executor/reviewer agent definitions live under `skills/absol-orchestrate/agents/` and resolve through the orchestrate symlink — they don't need their own top-level link.)
 
 ## Usage
 

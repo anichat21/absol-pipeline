@@ -1,6 +1,6 @@
 ---
 name: absol-newproject
-description: "Scaffolds a new project for the absol pipeline with the .absol/ layout — root holds CLAUDE.md, state.md, vision.md, roadmap.md; .absol/ holds CONTEXT.md, adr/, inbox.md, plan.md, bugs.md, tech-debt.md, archive/ (and run-active.md is created on first pipeline run). Also writes Docker files, .gitignore, and runs git init. Use whenever the user wants to start, create, scaffold, init, or set up a new project. Trigger on phrases like 'new project', 'start a project', 'scaffold', 'create a project', 'init project', 'set up a new project', or when the user describes a project idea and wants to get started building it. Handles ONLY skeleton + MD files — no language/framework choices. The absol pipeline handles implementation."
+description: "Scaffolds a new project for the absol pipeline with the .absol/ layout — root holds CLAUDE.md and state.md; .absol/ holds CONTEXT.md, adr/, inbox.md, plan.md, bugs.md, tech-debt.md, archive/ (and run-active.md is created on first pipeline run). Also writes Docker files, .gitignore, and runs git init. Use whenever the user wants to start, create, scaffold, init, or set up a new project. Trigger on phrases like 'new project', 'start a project', 'scaffold', 'create a project', 'init project', 'set up a new project', or when the user describes a project idea and wants to get started building it. Handles ONLY skeleton + MD files — no language/framework choices. The absol pipeline handles implementation."
 ---
 
 # absol-newproject
@@ -11,7 +11,7 @@ Layout written:
 
 ```
 <name>/
-├── CLAUDE.md  state.md  vision.md  roadmap.md          (root, tracked)
+├── CLAUDE.md  state.md                                 (root, tracked)
 ├── Dockerfile  docker-compose.yml  nginx.conf  .dockerignore
 ├── .gitignore
 └── .absol/
@@ -25,7 +25,7 @@ Layout written:
 ## Inputs
 
 - **Project name** — lowercase, hyphenated. Normalise spaces → hyphens, uppercase → lowercase.
-- **Project description** — flows into vision.md and CLAUDE.md. Don't write "TBD"; use what the user gave you.
+- **Project description** — flows into CLAUDE.md (overview + design philosophy). Don't write "TBD"; use what the user gave you.
 
 If either is missing, ask one focused question. Don't run a questionnaire.
 
@@ -55,6 +55,15 @@ Templates use `{name}`, `{description}`, `{port}`, `{date}` placeholders.
 # {Name} — Project Overview
 
 {description}
+
+## Design Philosophy
+
+<!-- The north star: core idea, who it's for, the principles that should win when there's a tradeoff. Keep it to what actually guides decisions. -->
+- TBD — flesh out during planning.
+
+## Constraints
+
+- Browser-based deployment via Docker + Cloudflare Tunnel, on Proxmox VM infrastructure.
 
 ## Stack
 
@@ -98,10 +107,10 @@ Root (human-facing, tracked):
 
 | File | Purpose |
 |---|---|
-| `CLAUDE.md` | Project meta, stack, run commands. |
+| `CLAUDE.md` | Project brief, design philosophy, stack, run commands. The single project-framing doc. |
 | `state.md` | Truth snapshot. Last session, in progress, parked items. Finalizer-owned. |
-| `vision.md` | High-level vision, design philosophy, project brief. |
-| `roadmap.md` | Phased roadmap and milestones. |
+
+> No `vision.md` — the brief lives in `CLAUDE.md` (the doc every agent already reads). No `roadmap.md` by default either: most projects sequence work straight from `inbox.md`. Add a hand-written `roadmap.md` *only* if the project runs in explicit phases/milestones; the pipeline reads it when present.
 
 `.absol/` (pipeline-owned, hidden):
 
@@ -134,32 +143,6 @@ Don't edit pipeline state files by hand. The absol-finalizer skill runs end-of-s
 
 ---
 
-### vision.md  (root)
-
-```markdown
-# {Name} — Vision
-
-## Overview
-
-{description}
-
-## Core Concept
-
-<!-- What is the core idea? What problem does it solve? Who is it for? -->
-TBD — flesh out during planning.
-
-## Design Philosophy
-
-- TBD
-
-## Constraints
-
-- Browser-based deployment via Docker + Cloudflare Tunnel
-- Must run on Proxmox VM infrastructure
-```
-
----
-
 ### state.md  (root)
 
 ```markdown
@@ -181,16 +164,6 @@ None.
 ```
 
 `state.md` doesn't carry Tech Debt / Known Bugs / Planned Features sections. Those live in `.absol/tech-debt.md`, `.absol/bugs.md`, `.absol/inbox.md`.
-
----
-
-### roadmap.md  (root)
-
-```markdown
-# {Name} — Roadmap
-
-No phases completed yet. Run absol pipeline to begin planning.
-```
 
 ---
 
@@ -363,5 +336,5 @@ Tell the user: project path, port allocated, files created (root + `.absol/`), s
 - No code files (no `package.json`, `tsconfig`, `requirements.txt`, etc.). The pipeline picks the stack during planning.
 - No language/framework decisions.
 - Always allocate a port via the scan — don't hardcode.
-- Populate `vision.md` meaningfully from the user's description.
+- Populate `CLAUDE.md`'s overview + design philosophy meaningfully from the user's description.
 - Pipeline owns `.absol/inbox.md`, `plan.md`, `run-active.md` (gitignored churn) and `archive/` (tracked). The user can edit `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.

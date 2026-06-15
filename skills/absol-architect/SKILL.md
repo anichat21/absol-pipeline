@@ -28,7 +28,7 @@ Three principles:
 
 ## Read first
 
-`.absol/CONTEXT.md` (domain vocabulary — use verbatim), `.absol/adr/`, `.absol/tech-debt.md` (drives Step 4), `.absol/bugs.md`, `vision.md`, `roadmap.md`, `CLAUDE.md`, `state.md`.
+`.absol/CONTEXT.md` (domain vocabulary — use verbatim), `.absol/adr/`, `.absol/tech-debt.md` (drives Step 4), `.absol/bugs.md`, `CLAUDE.md`, `state.md`, and `roadmap.md` *if present*.
 
 **ADRs are precedent, not law.** Don't blindly re-suggest something an ADR decided against — but ADRs go stale. If one's premise no longer holds (the code, vision, or constraints moved past it), say so and offer to revisit it (`Reopen ADR-NNNN?` via the **`AskUserQuestion` tool**) rather than treating it as permanent. Logged decisions get re-examined, not obeyed forever.
 

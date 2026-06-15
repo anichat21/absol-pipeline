@@ -131,7 +131,7 @@ Record `verification_result` honestly. Never claim `pass` when checks failed —
 
 - One task per invocation.
 - Append-only on run-active.md. Do not read it. Do not modify existing entries. Two events per invocation: `task-started` at the top, then exactly one of `task-completed` / `task-failed` / `task-blocked` at the end.
-- Never modify other tasks, `plan.md`, `inbox.md`, `state.md`, `vision.md`, `roadmap.md`, `bugs.md`, `tech-debt.md`, `CONTEXT.md`, or any ADR.
+- Never modify other tasks, `plan.md`, `inbox.md`, `state.md`, `roadmap.md`, `bugs.md`, `tech-debt.md`, `CONTEXT.md`, or any ADR.
 - Don't loop on failures. Two failed verification attempts → append `task-failed` with the blocker, return. The orchestrator's test-fail loop handles re-planning.
 - Summaries factual and concise. *"Added rate limiter to auth endpoint"*, not *"Successfully implemented…"*.
 - Compute the divergence flag before writing the completion event — don't skip it.
