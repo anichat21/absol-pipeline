@@ -183,11 +183,5 @@ Suppress empty subsections. If anything failed or stayed blocked or has fix-requ
 
 ## Rules
 
-- Same machinery for pipeline (`RUN-`) and scratchpad (`SCR-`) runs. Distinguish by `mode:` in run-active.md header; treat each archive identically.
-- Only durable run history is `archive/run-{run_id}.md`. Do not duplicate run state in `state.md`.
-- Plans are removed from `plan.md` when fully done. Their content lives in the run archive.
-- Notes are removed when their owning plan/scratchpad completes. Their content lives in the run archive (carried into the plan's seed section).
-- `state.md` is a snapshot, not a ledger. Three persistent sections; the transient sections are cleared by you on close.
-- Never write to `bugs.md` / `tech-debt.md` content — only remove `[note]` entries that are `status: promoted` and whose owning work completed.
-- Only delete `run-active.md` AFTER the archive write succeeds. If the archive write fails (disk full, permissions), don't delete — leave the file for retry.
-- If something looks wrong (run-active.md references a plan that doesn't exist, snapshot disagrees with events) → don't repair silently. Surface in the report and let the user fix.
+- Delete `run-active.md` only after the archive write succeeds — if the write fails (disk full, permissions), leave it for retry.
+- If something looks wrong (snapshot disagrees with events, a referenced plan is missing) → don't repair silently; surface it in the report and let the user fix.

@@ -62,8 +62,5 @@ One line including the ID:
 
 ## Rules
 
-- Three destinations, one schema. Never invent a fourth.
-- Never write to `state.md` — that's finalizer-owned.
-- Never write to `plan.md` — only the planner writes there.
-- One follow-up question max for vague notes; otherwise default to inbox.
-- Don't pull existing items into your note — each note stands alone. Cross-references are the planner's job.
+- Three destinations, one schema — never invent a fourth. Your only writes are `[note]` entries in `bugs.md` / `tech-debt.md` / `inbox.md`; never `state.md` (finalizer-owned) or `plan.md` (planner-owned).
+- Each note stands alone — don't pull existing items in; cross-referencing is the planner's job.

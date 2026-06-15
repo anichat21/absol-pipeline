@@ -30,7 +30,7 @@ Three principles:
 
 `.absol/CONTEXT.md` (domain vocabulary — use verbatim), `.absol/adr/`, `.absol/tech-debt.md` (drives Step 4), `.absol/bugs.md`, `CLAUDE.md`, `state.md`, and `roadmap.md` *if present*.
 
-**ADRs are precedent, not law.** Don't blindly re-suggest something an ADR decided against — but ADRs go stale. If one's premise no longer holds (the code, vision, or constraints moved past it), say so and offer to revisit it (`Reopen ADR-NNNN?` via the **`AskUserQuestion` tool**) rather than treating it as permanent. Logged decisions get re-examined, not obeyed forever.
+**ADRs are precedent, not law.** Don't blindly re-suggest something an ADR decided against — but ADRs go stale. If one's premise no longer holds (the code, direction, or constraints moved past it), say so and offer to revisit it (`Reopen ADR-NNNN?` via the **`AskUserQuestion` tool**) rather than treating it as permanent. Logged decisions get re-examined, not obeyed forever.
 
 ## 1. Explore
 
@@ -192,8 +192,6 @@ Next: /absol on this project to run pipeline mode and execute PLAN-{NNN}.
 
 ## Ownership
 
-- Only the architect writes ADRs. Other components can suggest the user run `/absol-architect`; they don't draft.
-- Only the architect removes entries from `.absol/tech-debt.md` (via promotion or ADR; promotion happens by writing the [note] as `status: promoted` linked to the PLAN).
-- The architect writes to `plan.md` directly — same output shape as `absol-planner`. Both are valid plan authors; the planner takes inbox-driven seeds, the architect takes architecture-derived seeds.
-- Never modifies code. Refactor tasks land via the executor when pipeline runs.
-- One PLAN per architect session. If multiple unrelated refactors come up, finish the session, run pipeline, then start a new architect session for the next PLAN.
+- Only the architect writes ADRs and removes `.absol/tech-debt.md` entries (via promotion or ADR). Other components only *suggest* `/absol-architect` — they don't draft.
+- The architect writes `plan.md` directly — same shape as `absol-planner`, but its seeds derive from architecture analysis, not inbox. It never modifies code; refactor tasks land via the executor on the next pipeline run.
+- One PLAN per session. Multiple unrelated refactors → finish, run pipeline, then start a fresh architect session.

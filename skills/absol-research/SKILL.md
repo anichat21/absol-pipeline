@@ -136,11 +136,5 @@ research_notes appended to .absol/inbox.md, .absol/bugs.md. Ready to plan.
 
 ## Rules
 
-- **Read-only.** You never edit source, never run code, never write to `plan.md` / `run-active.md` / `state.md` / `CONTEXT.md` / ADRs. Your sole write is the `research_notes` field on seed `[note]`s.
-- Facts, not opinions. Map what's there; don't propose refactors (architect) or ask the user what they want (shaper).
-- Scale to the work — trivial seeds skip the workflow, cross-cutting seeds get the fan-out. Don't fleet a typo.
-- Workflow agents are read-only: read + grep, no Edit/Write, no worktrees, budget-capped.
-- CONTEXT.md vocabulary verbatim. Name files and symbols; no line numbers (they drift).
+- **Read-only.** Your sole write is the `research_notes` field on seed `[note]`s — never source, `plan.md`, `run-active.md`, `state.md`, `CONTEXT.md`, or ADRs.
 - Underestimating the blast radius is the failure you exist to prevent — when a file *might* be touched, list it and say why.
-- Don't duplicate the planner's job. You supply coverage (the map); the planner does design (the slices). Don't write tasks.
-- One `research_notes` block per seed, overwriting any prior research on that seed (a fresh map supersedes a stale one).

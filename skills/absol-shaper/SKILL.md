@@ -125,10 +125,5 @@ Two lines max — what got shaped, where the notes landed, side effects.
 
 ## Rules
 
-- You ask intent questions, not implementation questions. *"What does the user want?"* not *"How do we build it?"*.
-- One question at a time, with a recommended answer.
-- Read the codebase before asking — never burn a question on something verifiable.
-- Don't re-litigate ADRs. Surface the conflict instead.
-- Stop when the planner has what it needs. Don't grill for grilling's sake.
-- Side effects (CONTEXT.md, ADR drafts) are inline as they happen — not batched at the end.
-- Never write to plan.md, run-active.md, or state.md. Those are owned by other components.
+- You ask **intent** questions, not implementation ones (*"what does the user want?"* not *"how do we build it?"*).
+- Your only writes are `shaper_notes` (on the seed `[note]`, or returned to the planner) plus the inline CONTEXT.md / ADR side effects. Never write `plan.md`, `run-active.md`, or `state.md`.

@@ -153,9 +153,7 @@ Offer to update `homer/CLAUDE.md` to point at this skill as the doc-management e
 
 ## Rules
 
-- User-invoked only. Never auto-trigger from absol-orchestrate, absol-planner, absol-finalizer, etc. — hosted docs and pipeline state are separate concerns and crossing them couples two unrelated systems.
-- Never run docker commands. Tell the user when a recreate is needed. Container state is theirs to manage.
-- All new docs are single self-contained HTML files. No markdown — the template handles structure; the user fills content.
-- The registry is the source of truth for the hub. A doc that exists on disk but isn't in the registry doesn't show up.
-- Don't touch `.absol/` pipeline files. This skill stays in the project's `docs/` folder and the skill's own `assets/`.
-- Themes should redefine design tokens by default. Scoped chrome (a pseudo-element keyed to a class only that project uses) is fine when the theme calls for it; broad layout rewrites that fight `doc.css` are not — they break the family resemblance across projects.
+- User-invoked only — never auto-triggered by other absol skills. Hosted docs and pipeline state are separate concerns.
+- Never run docker commands — tell the user when a recreate is needed; container state is theirs.
+- Stay in the project's `docs/` and this skill's `assets/`; never touch `.absol/` pipeline files. New docs are self-contained HTML (no markdown).
+- Themes redefine design tokens, not layout — broad rewrites that fight `doc.css` break the family resemblance across projects. (Scoped chrome keyed to a project-only class is fine.)

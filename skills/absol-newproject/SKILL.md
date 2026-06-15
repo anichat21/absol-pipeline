@@ -1,6 +1,6 @@
 ---
 name: absol-newproject
-description: "Scaffolds a new project for the absol pipeline with the .absol/ layout — root holds CLAUDE.md and state.md; .absol/ holds CONTEXT.md, adr/, inbox.md, plan.md, bugs.md, tech-debt.md, archive/ (and run-active.md is created on first pipeline run). Also writes Docker files, .gitignore, and runs git init. Use whenever the user wants to start, create, scaffold, init, or set up a new project. Trigger on phrases like 'new project', 'start a project', 'scaffold', 'create a project', 'init project', 'set up a new project', or when the user describes a project idea and wants to get started building it. Handles ONLY skeleton + MD files — no language/framework choices. The absol pipeline handles implementation."
+description: "Scaffolds a new project for the absol pipeline with the .absol/ layout — root holds CLAUDE.md and state.md; .absol/ holds CONTEXT.md, adr/, inbox.md, plan.md, bugs.md, tech-debt.md, archive/ (and run-active.md is created on first pipeline run). Also writes a .gitignore and runs git init. Use whenever the user wants to start, create, scaffold, init, or set up a new project. Trigger on phrases like 'new project', 'start a project', 'scaffold', 'create a project', 'init project', 'set up a new project', or when the user describes a project idea and wants to get started building it. Handles ONLY skeleton + MD files — no language/framework choices. The absol pipeline handles implementation."
 ---
 
 # absol-newproject
@@ -12,7 +12,6 @@ Layout written:
 ```
 <name>/
 ├── CLAUDE.md  state.md                                 (root, tracked)
-├── Dockerfile  docker-compose.yml  nginx.conf  .dockerignore
 ├── .gitignore
 └── .absol/
     ├── CONTEXT.md  bugs.md  tech-debt.md  adr/0000-template.md   (tracked)
@@ -76,23 +75,7 @@ Templates use `{name}`, `{description}`, `{port}`, `{date}` placeholders.
 
 ## How to Run
 
-### Local
-```bash
-# TBD — will be filled in during planning
-```
-
-### Docker
-```bash
-docker compose up --build
-```
-
-## Rebuild & Restart Docker
-
-```bash
-docker compose down && docker compose up --build -d
-```
-
-App runs on `http://localhost:{port}`.
+Filled in during planning, once the stack is chosen. Deployment is Docker on the Proxmox VM (Cloudflare Tunnel) — expect `docker compose up --build` once a compose file exists. App runs on `http://localhost:{port}`.
 
 ## Architecture
 
@@ -234,7 +217,7 @@ No active plans. Run `/absol` and choose pipeline mode to plan from inbox/bugs/t
 ```markdown
 # {Name} — Known Bugs
 
-No known bugs. Add via `note-taker`. Bugs are removed when their owning plan/scratchpad completes (a fix-task lands), or when an ADR records the decision not to fix.
+No known bugs. Add via `note-taker`.
 ```
 
 ### .absol/tech-debt.md
@@ -242,7 +225,7 @@ No known bugs. Add via `note-taker`. Bugs are removed when their owning plan/scr
 ```markdown
 # {Name} — Tech Debt
 
-No tech debt logged. Add via `note-taker`. Removed when their owning plan completes. Reviewed by `/absol-architect`: top items get promoted to `inbox.md` as actionable or get ADR'd as accepted shape.
+No tech debt logged. Add via `note-taker`; reviewed by `/absol-architect`.
 ```
 
 ### .absol/archive/.gitkeep
@@ -251,62 +234,11 @@ Empty file. Tracks the (otherwise empty) folder so the finalizer doesn't have to
 
 ---
 
-### Dockerfile
-
-```dockerfile
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-```
-
-### docker-compose.yml
-
-```yaml
-services:
-  {name}:
-    build: .
-    ports:
-      - "{port}:80"
-    restart: unless-stopped
-```
-
-### nginx.conf
-
-```nginx
-server {
-    listen 80;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-}
-```
-
-### .dockerignore
-
-```
-node_modules
-dist
-.git
-.absol
-*.md
-```
-
 ### .gitignore
 
+Stack-agnostic at scaffold time. The pipeline adds language/framework ignores (`node_modules/`, `dist/`, `__pycache__/`, …) and writes the Docker/deploy files during planning, once the stack is actually chosen — `absol-newproject` never assumes one.
+
 ```
-node_modules/
-dist/
 .env
 .env.*
 *.log

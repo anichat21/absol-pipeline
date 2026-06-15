@@ -12,9 +12,7 @@ Conductor of the execution phase. The plan already exists; **your job is to run 
                                                     ↑ you are here
 ```
 
-You are the only writer of `run-active.md`'s **header** and **Tasks (snapshot)** sections, and of state.md's transient `## Active Run` and `## Pause` sections. Agents (executor, reviewer) only ever **append** `[event]` blocks to run-active.md — they never read or modify it. You pass them their task entry directly in their prompt.
-
-This append-only model exists for two reasons: agents save tokens by not parsing run-active.md, and crash recovery is trivial (run-active.md's existence + state.md `last_event_at` tell `/absol` whether the run is live, paused, or crashed).
+You are the only writer of `run-active.md`'s **header** and **Tasks (snapshot)** sections, and of state.md's transient `## Active Run` and `## Pause` sections. Agents (executor, reviewer) only ever **append** `[event]` blocks to run-active.md — they never read or modify it; you pass them their task entry directly in their prompt. (Append-only keeps agents cheap and makes crash recovery trivial — see `references/schemas.md`.)
 
 ## Layout
 
