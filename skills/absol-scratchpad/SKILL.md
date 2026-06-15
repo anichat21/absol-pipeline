@@ -5,11 +5,9 @@ description: Interactive freestyle mode for absol projects — you and the user 
 
 # absol-scratchpad
 
-Interactive freestyle mode. You and the user work directly — build, fix, explore, discuss — with absol's documentation tracking running underneath. No planning session, no checkpoint, no review gate; decisions get made live, as you go.
+Interactive freestyle mode. You and the user work directly — build, fix, explore, discuss — with absol's documentation tracking underneath. No planning session, no checkpoint, no review gate; decisions get made live. **Scratchpad is where the human stays in the loop** — the pipeline front-loads decisions so it can run unattended; here the user is present to make each call as you go.
 
-This exists because the pipeline is heavy *by design* — it front-loads every decision into shaping so it can then run unattended. When the user is sitting right there, that heaviness is friction: they can just tell you the next call instead of locking it into `shaper_notes` first. **Scratchpad is where the human stays in the loop.**
-
-The boundary between scratchpad and pipeline is **interactivity, not size.** A whole feature is fair game here if the user wants to drive it live — and for the heavy lifting you can dispatch a dynamic workflow (see below), which is *safe in scratchpad precisely because the user is present*: a background workflow can't stop to ask questions, but here the human is already in the chat to answer them. You escalate to the pipeline only when the work wants the pipeline's *properties* — unattended execution, front-loaded decisions, a durable archived plan — not merely because it's large.
+The boundary is **interactivity, not size.** A whole feature is fair game if the user drives it live — dispatch a dynamic workflow for the heavy lifting (safe here precisely because the user is present to answer what a background run can't ask). Escalate to the pipeline only when the work wants its *properties* — unattended execution, front-loaded decisions, a durable archived plan — not merely because it's large.
 
 Scratchpad **logs everything** through `run-active.md` in the same shape as a pipeline run, so:
 
@@ -197,7 +195,7 @@ When closing:
    - Clears `## Active Run` from state.md
    - Updates state.md Last Session
    - Removes any `[note]`s that were `promoted_to: SCR-NNN` (since they're resolved)
-3. Report close in one line:
+4. Report close in one line:
 
    > Scratchpad SCR-2026-05-06 closed: 3 tasks (BUG-017 fixed, 2 tweaks). state.md updated, run archived.
 
@@ -207,13 +205,7 @@ If a `[task]` failed or got blocked and the user hasn't decided what to do, don'
 
 ## Rules
 
-- One scratchpad session at a time per project. If `state.md` has `## Active Run` for a scratchpad already, resume that session instead of starting a new one.
-- Ideation sessions are first-class — a scratchpad with zero edits is a valid run. Log it as a single DISCUSS task at close (or discard if the user says it was idle chat). Don't force a fake CHORE/TWEAK shape.
-- Append-only on run-active.md events (same contract as pipeline executor). You DO write to the snapshot section because you incrementally add tasks as work emerges — but each task entry is write-once: don't mutate after writing.
-- Never spawn the **pipeline's** executor or planner agents — they belong to the unattended pipeline and operate on `plan.md` tasks. You MAY dispatch a dynamic workflow for a large interactive build (see the workflow path) — that's a scratchpad tool, used while the user is present. Escalate to pipeline when the work wants the pipeline's *properties*, not when it's merely big.
-- Same `[task]` schema as pipeline tasks. The finalizer reads `worker:` and `mode:` to distinguish, not the schema shape.
-- Pulled `[note]` gets `promoted_to: SCR-NNN` immediately (not at session close), so we never lose the link if the session is interrupted. **On escalation to pipeline, demote it back** (remove `promoted_to`, restore `status: new`).
-- Honor the pause/active-run lock — refuse to open if either is set in state.md.
-- `note-taker` is allowed mid-session for stray observations.
-- Update `last_event_at` on every event append. This is what keeps `/absol`'s liveness check accurate.
-- Verbose explanations belong in chat, not in `[task].description`. Description should be planner-quality concrete facts.
+- One scratchpad session per project at a time.
+- Append-only on run-active.md events. You DO append `[task]` blocks to the snapshot as work emerges — but each entry is write-once; don't mutate it after.
+- Never spawn the pipeline's executor or planner agents (they operate on `plan.md`). A dynamic workflow is the one fan-out tool you MAY use — it's safe here because the user is present to answer what a background run can't ask.
+- Verbose explanation belongs in chat, not in `[task].description` — keep descriptions planner-quality concrete.

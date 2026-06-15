@@ -209,13 +209,8 @@ On **Finalize**: invoke `absol-finalizer`. On **Stop**: leave run-active.md as-i
 
 ## Rules
 
-- Source edits are only ever a task's own work (`micro` inline, else executor). On verification failure, re-spawn via the test-fail loop or mark `task-failed` — never hand-patch it yourself (orchestrator-fixup). plan.md is your input; producing it is upstream.
-- Serial execution. One task at a time. No parallel mode, no dangling-small fanout.
-- Snapshot is immutable after Step 3. Status mutates via events, not by editing the snapshot.
-- Update `last_event_at` (in both run-active.md header and state.md `## Active Run`) on every event append. This is non-negotiable — it's how `/absol` distinguishes "live elsewhere" from "crashed."
-- Runs unattended once launched. The only interrupts are a post-retry failure (4c), a `human-check` review verdict (Step 5), or a manual user "pause" (4a).
-- Review selectively. Clean passes skip Step 5.
-- Finalize is mandatory. Even on Stop, the unfinalized run is a known recovery state.
-- Component agent failure → append `task-failed`, continue. Don't auto-retry blindly at the agent-call level (the test-fail loop is at the verification level, which is different).
-- Pause check is at task boundary, not mid-task. Broken intermediate state is worse than waiting one task.
-- Inconsistent state (run-active.md present but no `## Active Run` in state.md, etc.) → don't fix silently. Tell the user and let `/absol`'s recovery flow handle it.
+- Serial execution: one task at a time, no parallel mode or dangling-small fan-out.
+- The snapshot is immutable after Step 3 — status mutates via events, never by editing the snapshot.
+- Unattended once launched. The only interrupts are a post-retry failure (4c), a `human-check` review verdict (Step 5), or a user "pause" (4a).
+- A component-agent failure (vs a *verification* failure) → append `task-failed` and continue; don't blindly re-spawn at the agent-call level. The test-fail loop operates at the verification level, which is different.
+- Inconsistent state (run-active.md present but no `## Active Run`, etc.) → don't fix it silently; surface it for `/absol`'s recovery flow.

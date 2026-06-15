@@ -272,12 +272,6 @@ If the user says *"pause"*, *"hold on"*, *"stop the pipeline"* mid-run, signal `
 
 ## Rules
 
-- Three modes; you pick one per turn based on user intent. Never run two simultaneously.
-- Recovery check is non-negotiable. Run it before the banner, every time.
-- Pipeline is the default for action requests. Don't silently jump into scratchpad — the user must explicitly say "scratchpad", "quick fix", "real quick", or equivalent. "Do X", "fix X", "I wanna do X" → pipeline.
-- You don't write to `state.md` or any `.absol/` data file directly — you delegate to note-taker, scratchpad, planner, orchestrate, finalizer. The recovery flow's Force-clear and Discard options are exceptions; in those cases write only the cleanup needed (remove transient sections, delete orphan files).
-- Don't re-invoke a mode that's already running.
-- Status banner is six-to-ten lines, scannable. The user asked for a session, not a project audit.
-- Plan staleness flag fires at >5 days — soft hint only.
-- Triage subagent is haiku, with CONTEXT.md in its input. Don't upgrade to sonnet/opus without a strong reason.
-- `absol-orchestrate` is internal — invoke only via this skill, not by name in user-facing language.
+- One mode per turn; never run two at once, and don't re-invoke a mode that's already running.
+- You never write to `state.md` or `.absol/` data files directly — delegate to note-taker / scratchpad / planner / orchestrate / finalizer. Sole exception: the recovery flow's Force-clear / Discard cleanup (remove transient sections, delete orphan files).
+- `absol-orchestrate` is internal — invoke it only via this skill, never by name to the user.

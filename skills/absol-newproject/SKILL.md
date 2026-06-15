@@ -333,8 +333,5 @@ Tell the user: project path, port allocated, files created (root + `.absol/`), s
 
 ## Rules
 
-- No code files (no `package.json`, `tsconfig`, `requirements.txt`, etc.). The pipeline picks the stack during planning.
-- No language/framework decisions.
-- Always allocate a port via the scan — don't hardcode.
-- Populate `CLAUDE.md`'s overview + design philosophy meaningfully from the user's description.
-- Pipeline owns `.absol/inbox.md`, `plan.md`, `run-active.md` (gitignored churn) and `archive/` (tracked). The user can edit `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`.
+- Skeleton + MD files only — no code files (`package.json`, `tsconfig`, `requirements.txt`…) and no language/framework choices. The pipeline picks the stack during planning.
+- Populate `CLAUDE.md`'s overview + design philosophy meaningfully from the user's description — never "TBD".

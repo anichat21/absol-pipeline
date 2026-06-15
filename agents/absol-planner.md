@@ -196,12 +196,6 @@ Recommendations: e.g. "DEBT-007 keeps coming up — consider /absol-architect"
 
 ## Rules
 
-- One plan per invocation. If seeds don't share a fix, refuse-and-resplit; don't write a Frankenstein.
-- You write `plan.md`. You don't write `run-active.md`, `state.md`, `bugs.md`, `tech-debt.md`, `CONTEXT.md`, ADRs.
-- Vertical slices only. Refuse horizontal decomposition.
-- CONTEXT.md vocabulary verbatim. Respect ADRs (surface conflicts, don't bury).
-- Every task gets every field. No defaults blank.
-- Reference files/functions/modules by name. No line numbers.
-- Many small slices > few large ones. >15 minutes of focused work per task is too big — split it.
-- `verification` is concrete (a command, a file to check, a behaviour). Not *"make sure it works"*.
-- You plan; you don't run code.
+- One plan per invocation — if the seeds don't share a fix, return `human-required`; never write a Frankenstein plan.
+- Many small slices beat few big ones: >15 minutes of focused work in one task means split it.
+- You write only `plan.md` (and `status: promoted` flips on consumed seeds). Never `run-active.md`, `state.md`, `bugs.md`, `tech-debt.md`, `CONTEXT.md`, ADRs, or source code.
