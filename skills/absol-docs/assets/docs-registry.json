@@ -95,6 +95,30 @@
       ]
     },
     {
+      "slug": "barnowl-noir",
+      "name": "BarnOwl Noir",
+      "icon": "fas fa-car",
+      "category": "project",
+      "description": "Offline kiosk car configurator — the UE5.8 hybrid-C++ ground-up rebuild: vision, decisions, and the phased plan. The current-donor map lives in the Pipeline KB.",
+      "docs": [
+        { "title": "Index", "path": "index.html" },
+        { "title": "Vision & plan", "path": "vision.html" },
+        { "title": "The UE5.8 rebuild", "path": "rebuild.html" }
+      ]
+    },
+    {
+      "slug": "zei",
+      "name": "Zei",
+      "icon": "fas fa-cubes",
+      "category": "project",
+      "projectUrl": "http://aidev:8188",
+      "description": "Self-hosted, tag-driven resource hub — a personal front-end over my asset library with on-demand variant generation and manual-only intake.",
+      "docs": [
+        { "title": "Overview", "path": "index.html" },
+        { "title": "Spec", "path": "spec.html" }
+      ]
+    },
+    {
       "slug": "local-ai",
       "name": "Local AI",
       "icon": "fas fa-robot",
@@ -135,6 +159,31 @@
       "description": "Cited design-research on robust geometric surface-normal orientation for messy Class-A NURBS — the decision-layer rebuild for NormalPress.",
       "docs": [
         { "title": "Index", "path": "index.html" }
+      ]
+    },
+    {
+      "slug": "rnlt-edge",
+      "name": "RNLT Edge",
+      "icon": "fas fa-microchip",
+      "category": "kb",
+      "description": "Remote Renault-site GPU workstation (Quadro RTX 6000) — Tailscale-only access, corporate-filter limitations, candidate LLM inference node.",
+      "docs": [
+        { "title": "Index", "path": "index.html" }
+      ]
+    },
+    {
+      "slug": "the-pipeline",
+      "name": "The Pipeline",
+      "icon": "fas fa-route",
+      "category": "kb",
+      "theme": "distillery.css",
+      "description": "The definitive cross-project car-asset pipeline — Alias → VRED → Blender (VRED_Cask) → Unreal (Coustillier) → BarnOwl / Sequencer.",
+      "docs": [
+        { "title": "Index", "path": "index.html" },
+        { "title": "Overview", "path": "overview.html" },
+        { "title": "Current BarnOwl structure", "path": "current-barnowl-structure.html" },
+        { "title": "Current BarnOwl review", "path": "current-barnowl-review.html" },
+        { "title": "Working principles", "path": "principles.html" }
       ]
     }
   ]
