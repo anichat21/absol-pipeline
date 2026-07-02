@@ -15,56 +15,60 @@
     <header class="doc-header">
       <p class="doc-eyebrow">Absol</p>
       <h1>Workflow &amp; skills</h1>
-      <p class="doc-subtitle">A multi-agent pipeline for Claude Code — intake → shape → research → plan → execute → review → finalize. The human decides during shaping; the pipeline then runs unattended.</p>
+      <p class="doc-subtitle">A project workflow for Claude Code — ideas go in as ledger items, work comes out as verified, archived runs. Items grow in place (shape → map → plan); the execute gate auto-fills what's missing; runs execute unattended, AFK and scheduled included.</p>
     </header>
 
     <nav class="toc" aria-label="On this page">
       <p class="toc-title">On this page</p>
       <ul>
         <li><a href="#workflow">Workflow</a></li>
+        <li><a href="#bookkeeping">Bookkeeping</a></li>
         <li><a href="#skills">Skills &amp; agents</a></li>
       </ul>
     </nav>
 
     <h2 id="workflow">Workflow</h2>
-    <p><code>/absol</code> is the only front door. It opens a session, runs crash/pause recovery, prints a status banner, then watches the conversation and routes each turn to one of three modes — <strong>note-taker</strong> (capture), <strong>scratchpad</strong> (interactive freestyle), or <strong>pipeline</strong> (the formal, unattended flow). Pipeline is the default; scratchpad needs an explicit signal.</p>
+    <p><code>/absol</code> is the only front door. It opens a session, recovers crashed or paused runs (one rule: a stale <code>run.md</code> gets finalized as crashed), prints a banner derived live from the ledger, then routes each turn — <strong>note-taker</strong> (capture), <strong>scratchpad</strong> (interactive), or a <strong>run</strong> (the default for action requests). Every unit of work is an <em>item</em> in the ledger that grows in place: a <code>shape:</code> block (your decisions), a <code>map:</code> block (codebase research), a <code>plan:</code> block (tasks). Saying "run BUG-014" pushes the item at the <strong>execute gate</strong>, which fills whatever's missing on the way through — only shaping can need you, so AFK and scheduled runs skip ambiguous unshaped items and log the blocking question instead of guessing.</p>
 
     <pre class="mermaid">
 flowchart TD
     user(["You"]) --> absol["/absol<br/>front door"]
 
     absol -->|"capture a thought"| notetaker["note-taker"]
-    absol -->|"'scratchpad' / quick"| scratch["absol-scratchpad<br/>interactive freestyle"]
-    absol -->|"action request (default)"| shape
+    absol -->|"'scratchpad' / quick"| scratch["absol-scratchpad<br/>interactive"]
+    absol -->|"action request (default)<br/>or scheduled / AFK"| gate
 
-    notetaker --> intake[("inbox · bugs<br/>tech-debt")]
-    intake -. "seeds" .-> shape
+    notetaker --> ledger[("ledger<br/>inbox · bugs · tech-debt<br/>items grow: shape → map → plan")]
+    ledger -. "items" .-> gate
 
-    subgraph PIPE["pipeline · unattended once launched"]
+    architect["absol-architect<br/>shaped ARCH items · ADRs"] -. "items" .-> ledger
+    mega["absol-megareview<br/>deep sweep → report"] -. "pointer item" .-> ledger
+
+    subgraph RUN["a run · unattended once launched"]
       direction TB
-      shape["absol-shaper<br/>lock intent (optional)"] --> research["absol-research<br/>map blast radius"]
-      research --> planner["absol-planner<br/>vertical-slice tasks"]
-      planner --> plan[("plan.md")]
-      plan --> orch["absol-orchestrate<br/>serial execution loop"]
+      gate["execute gate"] -->|"fills missing blocks:<br/>shaper · research · planner"| orch["absol-orchestrate<br/>serial execution"]
+      gate -. "ambiguous + AFK →<br/>skip, log open:" .-> gate
       orch --> exec["absol-executor"]
-      exec -. "verify fail ×2" .-> orch
-      orch --> review["absol-reviewer<br/>/ -complex"]
+      exec -. "fail → re-aim ×2 → smell:" .-> orch
+      orch --> review["absol-reviewer<br/>flagged tasks"]
+      review -. "fix-required<br/>re-executes in-run" .-> orch
     end
 
-    architect["absol-architect<br/>refactor plans + ADRs"] -. "refactor PLAN" .-> plan
-    orch --> finalizer["absol-finalizer<br/>archive · prune · state"]
-    review --> finalizer
+    orch --> finalizer["absol-finalizer<br/>archive · fold ledger · commit"]
     scratch --> finalizer
-    finalizer --> archive[("archive · state.md")]
+    finalizer --> out[("archive/YYYY-MM.md<br/>state.md snapshot")]
     </pre>
 
     <div class="callout callout-note">
       <p class="callout-title">Reading the diagram</p>
-      <p>Solid arrows are control flow; dashed arrows are data (seeds feeding the pipeline, a refactor plan landing in <code>plan.md</code>, the executor's verify-fail loop). Everything inside <em>pipeline</em> runs without human input — every consequential decision is settled earlier, in shaping. <code>absol-newproject</code> (scaffold) and <code>absol-migrate</code> (schema upgrade) sit outside a run; <code>absol-docs</code> manages this very page.</p>
+      <p>Solid arrows are control flow; dashed arrows are data. Runs are bracketed by git commits (a pre-run snapshot anchor and a post-run fold; absol never pushes). Failed tasks re-aim instead of patching — retry 1 asks <em>"is this the right way?"</em>, retry 2 exhausts into a recorded <code>smell:</code> on the item. An AFK run ends its turn completely: open questions land on items as <code>open:</code>, owed human checks become VERIFY items, and the next session's banner surfaces all of it.</p>
     </div>
 
+    <h2 id="bookkeeping">Bookkeeping</h2>
+    <p>One principle: <strong>store only what can't be recomputed — human decisions and outcomes; derive the rest.</strong> No status flags: an item is "planned" because a plan block exists on it; a run is "live" because <code>.absol/run.md</code> exists (its mtime is the heartbeat); history is an append-only <code>archive/YYYY-MM.md</code>. Done items are deleted at finalize — the archive block is their record. Every write is tool-owned; the human's manual surface is decisions only.</p>
+
     <h2 id="skills">Skills &amp; agents</h2>
-    <p>Each component has one job. <span class="chip">skill</span> are invoked through <code>/absol</code> or directly; <span class="chip">agent</span> are spawned by the orchestrator or planner; <span class="chip">internal</span> run only as part of a flow.</p>
+    <p>Each component has one job. <span class="chip">skill</span> are invoked through <code>/absol</code> or directly; <span class="chip">agent</span> are spawned with their task inline in the prompt and only ever append events; <span class="chip">internal</span> run only as part of a flow. Agents inherit the session model — nothing is pinned. Schemas live once, in <code>absol/references/schemas.md</code>.</p>
 
     <table>
       <thead>
@@ -74,67 +78,82 @@ flowchart TD
         <tr>
           <td><code>absol</code></td>
           <td><span class="chip">skill</span></td>
-          <td><strong>Front door.</strong> Opens a session, runs crash/pause recovery, prints a status banner, and routes each turn to note-taker, scratchpad, or pipeline. The only supported entry point.</td>
+          <td><strong>Front door.</strong> Opens a session, one-rule recovery, derived banner (owed smoke, open questions, smells, primed items), routes each turn. Schedules headless AFK runs via cron.</td>
         </tr>
         <tr>
           <td><code>note-taker</code></td>
           <td><span class="chip">skill</span></td>
-          <td>Classifies a dropped thought into a durable <code>[note]</code> — bug → <code>bugs.md</code>, tech debt → <code>tech-debt.md</code>, idea/ambiguous → <code>inbox.md</code>.</td>
+          <td>Captures thoughts as items — bug → <code>bugs.md</code>, debt → <code>tech-debt.md</code>, everything else → <code>inbox.md</code> — and transcribes decisive statements about existing items into their <code>shape:</code> blocks.</td>
         </tr>
         <tr>
           <td><code>absol-shaper</code></td>
           <td><span class="chip">skill</span></td>
-          <td>Removes user-intent ambiguity before planning, one question at a time. Logs the locked-in decisions as <code>shaper_notes</code>. Interactive.</td>
+          <td>Settles intent, one question at a time, under a strict no-filler contract (ask only if the answer changes the plan and two options are genuinely defensible). Every shape names the refuse-boundary — what gets rejected, not recovered.</td>
         </tr>
         <tr>
           <td><code>absol-research</code></td>
           <td><span class="chip">skill</span></td>
-          <td>Read-only pre-planning pass. Fans out a dynamic workflow to map each seed's blast radius (consumers, sync hazards) and writes <code>research_notes</code> so plans respect the whole codebase.</td>
+          <td>Read-only fan-out that maps each item's blast radius (entry points, consumers, sync hazards) into a dated <code>map:</code> block. Scales itself; trivial items get a two-line map.</td>
         </tr>
         <tr>
           <td><code>absol-planner</code></td>
           <td><span class="chip">agent</span></td>
-          <td>The brains. Turns a cohesive seed group into one <code>PLAN</code> of self-contained, vertical-slice tasks tagged with tier and order. Runs on opus.</td>
-        </tr>
-        <tr>
-          <td><code>absol-architect</code></td>
-          <td><span class="chip">skill</span></td>
-          <td>Standalone architecture review. Applies the deletion test, surfaces deepening candidates, drafts ADRs, and writes refactor <code>PLAN</code>s. Does not change code.</td>
+          <td>Designs the build as a <code>plan:</code> block of vertical-slice tasks. Gates: falsify the diagnosis first (bugs), reality-contact at task 1–2, simplest-that-clears-the-bar, honour the refuse-boundary. In retry mode it re-aims — mechanical slip vs wrong approach — and never patches a patch.</td>
         </tr>
         <tr>
           <td><code>absol-orchestrate</code></td>
           <td><span class="chip">internal</span></td>
-          <td>Execution engine. Runs the plan's tasks serially and unattended, manages the test-fail auto-loop and review pass, hands off to the finalizer.</td>
+          <td>Run engine: execute gate → pre-run commit → serial execution → review → close. Passes each agent its task inline; in AFK mode nothing ever blocks on a question.</td>
         </tr>
         <tr>
           <td><code>absol-executor</code></td>
           <td><span class="chip">agent</span></td>
-          <td>Single-task executor. TDD for features and bigger bugs; direct edit for tweaks, chores, and low-risk fixes.</td>
+          <td>One task per invocation. Climbs the ladder before writing (skip → reuse → stdlib → dependency → minimum that works); TDD for features and bigger bugs, direct edit for tweaks. Verifies honestly per oracle — unit suite, runtime probe, or owed-to-human; never claims pass on an unexercised path.</td>
         </tr>
         <tr>
-          <td><code>absol-reviewer</code><br><code>absol-reviewer-complex</code></td>
+          <td><code>absol-reviewer</code></td>
           <td><span class="chip">agent</span></td>
-          <td>Review flagged or failed tasks — sonnet for routine passes, opus for architectural, high-risk, or inconclusive ones.</td>
+          <td>Reviews flagged or failed tasks against acceptance criteria. Fix-required re-executes in-run; overbuild is a finding (hands back a delete-list).</td>
+        </tr>
+        <tr>
+          <td><code>absol-finalizer</code></td>
+          <td><span class="chip">agent</span></td>
+          <td>Closes a run: appends the outcome block to the monthly archive, folds results into the ledger (deletes done items, annotates partials with <code>prior:</code>/<code>smell:</code>, appends VERIFY items), snapshots <code>state.md</code>, post-run commit, deletes <code>run.md</code>.</td>
         </tr>
         <tr>
           <td><code>absol-scratchpad</code></td>
           <td><span class="chip">skill</span></td>
-          <td>Interactive freestyle mode with documentation tracking underneath. Build, fix, explore, or discuss live; can dispatch a dynamic workflow for big interactive builds.</td>
+          <td>Interactive mode on the same run/event model — build, fix, explore, or discuss live; can dispatch a dynamic workflow for big interactive builds. Same finalizer closes it.</td>
         </tr>
         <tr>
-          <td><code>absol-finalizer</code></td>
-          <td><span class="chip">internal</span></td>
-          <td>Closes a run. Reconciles the event stream, writes a lean outcome-only archive, prunes done plans and resolved notes, and snapshots <code>state.md</code>.</td>
+          <td><code>absol-architect</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Interactive deepening pass (deletion test). Accepted candidates land as shaped ARCH items ready for the gate; rejections with durable reasons become ADRs. Sole ADR author.</td>
+        </tr>
+        <tr>
+          <td><code>absol-megareview</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Unattended deep sweep — bugs, logic flaws, smells/overbuild, dead code, structure, docs drift — with adversarial verification of every finding. Writes a report to <code>.absol/reviews/</code> plus one ledger item pointing at it.</td>
+        </tr>
+        <tr>
+          <td><code>absol-explain</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>One-minute plain-language orientation to all of the above.</td>
+        </tr>
+        <tr>
+          <td><code>absol-feedback</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Logs a problem with absol itself — from any project, mid-anything — as a dated note in the absol repo's feedback folder.</td>
         </tr>
         <tr>
           <td><code>absol-newproject</code></td>
           <td><span class="chip">skill</span></td>
-          <td>Scaffolds a new project with the <code>.absol/</code> layout, Docker files, <code>.gitignore</code>, and a git init. Skeleton only — the pipeline builds the rest.</td>
+          <td>Scaffolds the <code>.absol/</code> layout (ledger, CONTEXT.md, adr/, archive/, reviews/), .gitignore, git init. Skeleton only.</td>
         </tr>
         <tr>
           <td><code>absol-migrate</code></td>
           <td><span class="chip">skill</span></td>
-          <td>Migrates a project to the current schema after a release that changes file shapes. Reads first, writes only on confirmation; git is the revert path.</td>
+          <td>Upgrades a project to the current schema (currently: v1 notes/plan.md → v2 items). Reads first, applies on confirmation; git is the revert path.</td>
         </tr>
         <tr>
           <td><code>absol-docs</code></td>
