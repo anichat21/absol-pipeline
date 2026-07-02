@@ -1,137 +1,90 @@
 # absol-pipeline
 
-A multi-agent workflow pipeline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that handles the full lifecycle of a software task — intake → shape → plan → execute → review → finalize. The human decides during **shaping**; the pipeline then runs **unattended**. Each agent has one job; a central orchestrator coordinates them.
+A project workflow for [Claude Code](https://docs.anthropic.com/en/docs/claude-code): ideas go
+in as **ledger items**, work comes out as verified, archived **runs**. The human decides during
+shaping; runs execute unattended (AFK and scheduled runs included).
+
+## Design principle
+
+**Store only what can't be recomputed — human decisions and outcomes. Derive or regenerate
+everything else.** No status flags, no state syncing, no healing passes: an item is "planned"
+because a plan block exists on it; a run is "live" because `run.md` exists (its mtime is the
+heartbeat); history is an append-only monthly archive. One fact, one home — every schema lives
+in `skills/absol/references/schemas.md` and nowhere else.
+
+## The ladder
+
+An item is born in the ledger (`.absol/inbox.md` / `bugs.md` / `tech-debt.md`) and grows in
+place — it never moves, never flips status:
+
+```
+capture ──► shape ──► ready ──► RUN ──► archive
+note-taker  shaper    (primed)  the execute gate auto-fills what's missing
+            (human    map: research (auto) · plan: planner (auto)
+            decisions;             ↓
+            the only    execute serially → review flagged → verify honestly → finalize
+            block that  (unit / runtime probe / owed-to-human VERIFY item)
+            needs you)
+```
+
+**The execute gate**: "run BUG-014 INBOX-021" checks each item for shape/map/plan and fills
+the gaps on the way through. Only shaping can require the user — so AFK and scheduled runs
+skip-and-report ambiguous unshaped items instead of guessing. Plan staleness is mechanical:
+`git log --since=<planned date>` on each task's files; only moved code gets re-mapped/amended.
 
 ## Front door
 
-**`/absol` is the only entry point.** It opens a session on a project, runs crash/pause recovery if needed, prints a status banner, then watches the conversation and routes to one of three modes:
+`/absol <project>` opens a session, recovers crashed/paused runs (one rule: stale `run.md` →
+finalize as crashed), prints a derived banner, and routes: **note-taker** (capturing),
+**scratchpad** (explicit "quick fix"/"let's build it here" — interactive, same event model),
+or a **run** (default for action requests). Scheduling: the front door creates a cron entry
+that fires the same run headless in AFK mode.
 
-| Mode | Trigger | What happens |
+## Components
+
+| Piece | Kind | Job |
 |---|---|---|
-| **note-taker** | "note that…", "add a bug…", "log this as debt" | Routes the note to `inbox.md` / `bugs.md` / `tech-debt.md` |
-| **scratchpad** | explicit "scratchpad" / "quick fix" / "real quick" / "adhoc" | Inline adhoc work or a discussion, no formal plan |
-| **pipeline** | everything else — "do the bugs", "build X", "let's churn" | Plan (planner) → execute (orchestrate) → finalize |
+| absol | skill | front door: open, recover, banner, route, schedule |
+| note-taker | skill | capture items; transcribe decisions onto shape blocks |
+| absol-shaper | skill | settle intent + the refuse-boundary; strict no-filler question contract |
+| absol-research | skill | fan-out blast-radius mapping → `map:` blocks |
+| absol-orchestrate | skill (internal) | the run engine: gate → execute → review → close |
+| absol-planner | agent | design the build → `plan:` block (simplicity gate, reality-contact first, falsify-before-fix) |
+| absol-executor | agent | one task: TDD or direct edit; honest verification |
+| absol-reviewer | agent | flagged tasks; fix-required re-executes in-run |
+| absol-finalizer | agent | close a run: archive, fold ledger, state.md, delete run.md |
+| absol-architect | skill | interactive deepening pass → shaped ARCH items; owns ADRs |
+| absol-megareview | skill | unattended deep review → `.absol/reviews/` report + pointer item |
+| absol-scratchpad | skill | interactive mode on the same run/event model |
+| absol-explain | skill | one-minute orientation |
+| absol-newproject / absol-migrate / absol-docs | skills | scaffold / schema upgrades / docs hub |
 
-Pipeline is the default for any action request; scratchpad needs an explicit signal.
-
-## Pipeline flow
-
-```
-/absol → shape (light, optional) → research → plan → checkpoint
-       → serial execution loop (unattended) → review (if needed) → finalize
-```
-
-- **Shape** (`absol-shaper`, inline) — 1–3 intent questions, recommended answers, reads code instead of asking when it can. This is the sole decision point: every consequential call is settled here so execution runs unattended. Invoked by the planner when intent is ambiguous, or standalone.
-- **Research** (`absol-research`, inline, before planning) — fans out a read-only workflow to map the codebase blast radius for the selected seeds (entry points, consumers, sync hazards) and writes `research_notes` onto each. Coverage the planner can't get from one serial context; scales itself to the work (skips trivial seeds).
-- **Plan** (`absol-planner`, opus agent) — reads inbox/bugs/tech-debt + state + CONTEXT.md + ADRs + source + the seeds' `research_notes`, decomposes into **self-contained, actionable** vertical-slice tasks (the description carries the approach + entry points + constraints so the executor doesn't re-research), tags each with `executor_tier` / `execution_order`, writes one `PLAN-NNN` to `plan.md`.
-- **Execute** (`absol-orchestrate`, internal) — copies the plan's tasks into `run-active.md` and runs them serially, **unattended** — no mid-run pauses; decisions were settled in shaping. Verification failures enter a test-fail auto-loop (re-plan → re-execute, capped); only a post-retry failure or a manual pause interrupts. Each task appends `[event]` blocks to `run-active.md`.
-- **Review** (`absol-reviewer` sonnet / `absol-reviewer-complex` opus) — only on flagged/failed tasks. Verdicts feed the next planning cycle.
-- **Finalize** (`absol-finalizer`, internal, mandatory) — runs verify/smoke, writes a lean **outcome-only** `archive/run-{run_id}.md` (one line per task), updates `state.md` as a truth snapshot, prunes done plans/notes, and rolls run archives older than the current month into `archive/runs-{YYYY-MM}.md`.
+Agents carry no pinned models — they inherit the session (pin only where a cheap model is a
+deliberate choice). Event records carry roles (`worker: executor`), never model names. Every
+reader follows read hygiene: files over 256 KB are sampled, never read whole.
 
 ## Project layout
 
 ```
 my-app/
-├── CLAUDE.md            ← project brief, design philosophy, stack, run commands (root, user-owned)
-├── state.md             ← truth snapshot (root, finalizer-owned)
-├── roadmap.md           ← OPTIONAL — phase/milestone list, only if the project sequences in phases (root, user-owned)
-└── .absol/              ← pipeline-owned, hidden
-    ├── CONTEXT.md       ← domain glossary; every agent reads this   (tracked)
-    ├── adr/             ← Architecture Decision Records             (tracked)
-    ├── bugs.md          ← known bugs, BUG-NNN [note]s               (tracked)
-    ├── tech-debt.md     ← known debt, DEBT-NNN [note]s              (tracked)
-    ├── archive/         ← finalizer run history (lean, rolled up)   (tracked)
-    ├── inbox.md         ← feature/idea intake, INBOX-NNN [note]s    (gitignored)
-    ├── plan.md          ← active PLAN-NNN queue, per-run            (gitignored)
-    └── run-active.md    ← live run event log (created per run)      (gitignored)
+├── CLAUDE.md            brief, stack, ## Pipeline Commands (verify/smoke)   user-owned
+├── state.md             snapshot: Last Session, Open Threads               finalizer-owned
+└── .absol/
+    ├── CONTEXT.md  adr/                        knowledge (shaper/architect grown)
+    ├── inbox.md  bugs.md  tech-debt.md         the ledger — items grow in place
+    ├── archive/YYYY-MM.md                      append-only outcomes
+    ├── reviews/                                megareview reports
+    └── run.md                                  transient; exists ⇔ run live   (gitignored)
 ```
 
-`.gitignore` tracks the durable files — `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`, and `archive/` (the run history, so it has a git safety net) — and ignores only the per-run churn the pipeline regenerates (`inbox.md`, `plan.md`, `run-active.md`).
+Everything is git-tracked except `run.md` — the ledger carries shaped human decisions, so it
+*is* the durable record.
 
-## Files
+## Install
 
-| File | Purpose | Owner |
-|---|---|---|
-| `state.md` (root) | Truth snapshot — last session, in progress, parked items, transient run sections. | finalizer (+ orchestrator for run sections) |
-| `CLAUDE.md` (root) | Project brief, design philosophy, stack, run commands — the single framing doc. | user |
-| `roadmap.md` (root, optional) | Phase/milestone list. Only for projects that sequence in phases; pipeline reads it if present. | user |
-| `.absol/CONTEXT.md` | Domain glossary; every agent reads it. | shaper, architect, note-taker, user |
-| `.absol/adr/` | Decision records. | architect (writer); user can edit |
-| `.absol/inbox.md` `bugs.md` `tech-debt.md` | Unified `[note]` intake (`status: new` → `promoted`). | note-taker (writes), planner/architect (promote), finalizer (prune) |
-| `.absol/plan.md` | `PLAN-NNN` queue with seeds + execution tasks. Per-run; never accumulates. | planner, architect |
-| `.absol/run-active.md` | Live run: header + task snapshot (orchestrator-owned) + appended `[event]`s (agents). | orchestrator (header/snapshot), executor/reviewer (append) |
-| `.absol/archive/` | Lean run history: `run-{run_id}.md` (current month), `runs-{YYYY-MM}.md` + `sessions-{YYYY-MM}.md` (older, rolled up). Tracked. | finalizer |
+Symlink `skills/*` into `~/.claude/skills/` and `agents/*.md` into `~/.claude/agents/`.
 
-Schemas for every file format live in `skills/absol-orchestrate/references/schemas.md`.
+## History
 
-## Components
-
-### Skills
-
-| Skill | Role |
-|---|---|
-| `absol` | **Front door.** Recovery, status banner, mode routing. The only supported entry point. |
-| `absol-orchestrate` | *(internal)* Execution engine. Runs the plan's tasks serially and unattended, manages the test-fail loop / review, hands off to finalizer. |
-| `absol-finalizer` | *(internal)* Closes a run: state.md, archive snapshots, plan/note pruning. |
-| `absol-scratchpad` | Interactive freestyle mode — build/fix/explore/discuss live, with doc-tracking underneath. Can dispatch a dynamic workflow for big interactive builds. |
-| `absol-shaper` | Light interactive shaping (intent only). Inline in the pipeline or standalone. |
-| `absol-research` | Read-only pre-planning pass. Fans out a workflow to map the codebase blast radius, annotates seeds with `research_notes` so the planner stops under-predicting `files_touched`. Inline before planning or standalone. |
-| `absol-architect` | Standalone architecture review. Surfaces deepening candidates, drafts ADRs, writes refactor `PLAN-NNN`s. |
-| `absol-newproject` | Scaffolds a new project with the `.absol/` layout, Docker, gitignore, git init. |
-| `absol-migrate` | Reusable shell to migrate a project to the current schema after a release that changes file shapes. |
-| `note-taker` | Routes notes to `bugs.md` / `tech-debt.md` / `inbox.md`. |
-
-### Agents
-
-| Agent | Model | Role |
-|---|---|---|
-| `absol-planner` | **opus** | Triage + decomposition into vertical-slice tasks. |
-| `absol-executor` | sonnet | Single-task executor. TDD for FEAT / medium+ BUG; direct edit otherwise. Also runs inline for `micro` tasks. |
-| `absol-reviewer` | sonnet | Routine reviews on flagged tasks. |
-| `absol-reviewer-complex` | opus | Deep reviews (ARCH, high-risk, complex). |
-
-All four agents live in `agents/` and are symlinked into `~/.claude/agents/`, so the orchestrator spawns them by `subagent_type` directly — no per-spawn definition-file read.
-
-## Model selection
-
-Default is your session model (sonnet). The planner and complex-reviewer agents are pinned to **opus** regardless, so you don't need to switch sessions to run the pipeline. `absol-architect` is heavy enough that an opus session is recommended before invoking it.
-
-## Installation
-
-`~/.claude/skills/` and `~/.claude/agents/` are **symlinked** to this repo, so edits here are live immediately — there is no copy/sync step. To set up on a fresh machine, symlink each skill directory and each agent:
-
-```bash
-for d in skills/*/; do ln -sfn "$PWD/$d" ~/.claude/skills/"$(basename "$d")"; done
-for a in agents/*.md; do ln -sfn "$PWD/$a" ~/.claude/agents/"$(basename "$a")"; done
-```
-
-## Usage
-
-```
-/absol [project]      # the front door — describe your work, or say "continue"
-/absol-research [ids] # map the codebase blast radius for seeds before planning
-/absol-architect      # architecture review; writes ADRs + refactor plans
-/absol-newproject     # scaffold a new project
-/absol-migrate        # upgrade a project's schema after a release
-```
-
-`note-taker`, `absol-shaper`, `absol-orchestrate`, and `absol-finalizer` are invoked through `/absol` rather than directly.
-
-## Key design decisions
-
-- **Agents self-load.** The orchestrator passes a path to each agent's definition; the agent reads it as Step 0. Saves loading a dozen full definitions into orchestrator context per run.
-- **`run-active.md` is append-only.** The orchestrator owns the header + task snapshot; agents only append `[event]`s. Crash recovery is trivial — the file's existence plus `last_event_at` tell `/absol` whether a run is live, paused, or crashed.
-- **CONTEXT.md is the cheapest consistency lever.** Every agent reads it at start of run, so everyone uses the same word for the same thing.
-- **ADRs close the loop on rejections.** Only `absol-architect` writes them; the next architect run reads them first and doesn't re-suggest. The more ADRs, the cheaper each run.
-- **Decisions front-load into shaping; the pipeline runs unattended.** There are no mid-run human gates — every consequential call is settled while the user is engaged in shaping. Only a genuine failure (after retries) or a reviewer's `human-check` surfaces afterward.
-- **Vertical-slice rule in the planner.** Every task is a tracer bullet through every layer it touches. No "rewrite all schemas first" tasks that fail late.
-- **State is truth, not intent.** The finalizer records only verified outcomes; failed work is tracked honestly. Old session detail compacts to one line; full history goes to monthly archive files.
-- **Pipeline owns one folder end-to-end.** `.absol/` is hidden, gitignored where it churns, tracked where it's durable.
-
-## Feedback
-
-See `feedback/` for retrospectives and improvement notes.
-
-## License
-
-MIT
+`feedback/` holds the design reviews that produced this shape — `corpus-review-2026-07.md`
+(what was wrong with v1) and `flow-redesign.md` (the converged model).

@@ -1,269 +1,51 @@
 ---
 name: absol-newproject
-description: "Scaffolds a new project for the absol pipeline with the .absol/ layout — root holds CLAUDE.md and state.md; .absol/ holds CONTEXT.md, adr/, inbox.md, plan.md, bugs.md, tech-debt.md, archive/ (and run-active.md is created on first pipeline run). Also writes a .gitignore and runs git init. Use whenever the user wants to start, create, scaffold, init, or set up a new project. Trigger on phrases like 'new project', 'start a project', 'scaffold', 'create a project', 'init project', 'set up a new project', or when the user describes a project idea and wants to get started building it. Handles ONLY skeleton + MD files — no language/framework choices. The absol pipeline handles implementation."
+description: Scaffolds a new absol project — root CLAUDE.md + state.md, and .absol/ with CONTEXT.md, adr/, the three ledger files, archive/, reviews/ — plus .gitignore and git init. Skeleton and MD files only; no language or framework choices. Use on 'new project', 'scaffold', 'set up a project', or when the user describes an idea to start building.
 ---
 
 # absol-newproject
 
-Scaffold a new project at `/mnt/nas/dev/projects/<name>/` with the `.absol/` layout, Docker files, `.gitignore`, and `git init`.
+Create `projects/<slug>/` (lowercase slug; ask if the name is ambiguous). Ask only what the
+templates need and the user hasn't said: one-line purpose, stack if known, anything to seed
+CONTEXT.md. Skip questions the conversation already answered.
 
-Layout written:
+## Layout
 
 ```
-<name>/
-├── CLAUDE.md  state.md                                 (root, tracked)
-├── .gitignore
+<slug>/
+├── CLAUDE.md          project brief (user-owned)
+├── state.md           truth snapshot (finalizer-owned)
 └── .absol/
-    ├── CONTEXT.md  bugs.md  tech-debt.md  adr/0000-template.md   (tracked)
-    ├── archive/                                                  (tracked — durable run history)
-    └── inbox.md  plan.md                                         (gitignored — per-run churn)
-
-(`run-active.md` is created on first run, gitignored, deleted by finalizer.)
+    ├── CONTEXT.md     domain glossary, lazy-grown
+    ├── adr/0000-template.md
+    ├── inbox.md  bugs.md  tech-debt.md     ← the ledger (empty placeholders)
+    ├── archive/       finalizer appends archive/YYYY-MM.md per month
+    └── reviews/       megareview reports
 ```
 
-## Inputs
+`run.md` is created per run by orchestrate/scratchpad — never scaffolded.
 
-- **Project name** — lowercase, hyphenated. Normalise spaces → hyphens, uppercase → lowercase.
-- **Project description** — flows into CLAUDE.md (overview + design philosophy). Don't write "TBD"; use what the user gave you.
+## Templates (keep them this small)
 
-If either is missing, ask one focused question. Don't run a questionnaire.
+**CLAUDE.md** — `# <Name>` + one-paragraph brief, `## Stack` (or "TBD"), `## Pipeline
+Commands` with `verify:` / `smoke:` stubs ("TBD — fill before first pipeline run"), and a
+one-line pointer: *"Workflow: absol. Ledger in `.absol/`; schemas in the absol skill."*
 
-## Allocate port
+**state.md** — `# <Name> — Current State`, `*Last updated: <date>*`, `## Last Session` →
+"Project scaffolded.", `## Open Threads` → "None."
 
-```bash
-grep -rh 'ports:' -A1 /mnt/nas/dev/projects/*/docker-compose.yml 2>/dev/null | grep -oP '\d+(?=:80)' | sort -n
-```
+**CONTEXT.md** — `# <Name> — Domain Context`, seeded terms if the user gave any, else
+"*Grown by shaper/architect as terms are named.*"
 
-Pick the next free port from 8180 up. If nothing is allocated, start at 8180.
+**adr/0000-template.md** — standard ADR skeleton (Status / Context / Decision / Consequences).
 
-## Create directories
+**Ledger files** — `# <Name> — {Inbox|Bugs|Tech Debt}` + "*No items yet.*"
 
-```bash
-mkdir -p /mnt/nas/dev/projects/<name>/.absol/adr /mnt/nas/dev/projects/<name>/.absol/archive
-```
+**.gitignore** — `.absol/run.md` only. Everything else — ledger (it carries shaped human
+decisions), archive, reviews — is tracked; that's the safety net.
 
-## Write files
+## Finish
 
-Templates use `{name}`, `{description}`, `{port}`, `{date}` placeholders.
-
----
-
-### CLAUDE.md  (root)
-
-```markdown
-# {Name} — Project Overview
-
-{description}
-
-## Design Philosophy
-
-<!-- The north star: core idea, who it's for, the principles that should win when there's a tradeoff. Keep it to what actually guides decisions. -->
-- TBD — flesh out during planning.
-
-## Constraints
-
-- Browser-based deployment via Docker + Cloudflare Tunnel, on Proxmox VM infrastructure.
-
-## Stack
-
-| Layer | Choice |
-|---|---|
-| Frontend | TBD |
-| Backend | TBD |
-| State | TBD |
-| Deployment | Docker, Proxmox VM, Cloudflare Tunnel + Access |
-
-## How to Run
-
-Filled in during planning, once the stack is chosen. Deployment is Docker on the Proxmox VM (Cloudflare Tunnel) — expect `docker compose up --build` once a compose file exists. App runs on `http://localhost:{port}`.
-
-## Architecture
-
-```
-src/
-  # TBD — will be filled in during planning
-```
-
-## Project MD Files
-
-Root (human-facing, tracked):
-
-| File | Purpose |
-|---|---|
-| `CLAUDE.md` | Project brief, design philosophy, stack, run commands. The single project-framing doc. |
-| `state.md` | Truth snapshot. Last session, in progress, parked items. Finalizer-owned. |
-
-> No `vision.md` — the brief lives in `CLAUDE.md` (the doc every agent already reads). No `roadmap.md` by default either: most projects sequence work straight from `inbox.md`. Add a hand-written `roadmap.md` *only* if the project runs in explicit phases/milestones; the pipeline reads it when present.
-
-`.absol/` (pipeline-owned, hidden):
-
-| File | Purpose | Tracked |
-|---|---|---|
-| `CONTEXT.md` | Domain glossary. Lazy-grown. | yes |
-| `adr/` | Architecture Decision Records. Architect-only writes. | yes |
-| `bugs.md` | Known bugs. Removed when their owning plan completes (or via "won't fix" ADR). | yes |
-| `tech-debt.md` | Known debt. Removed when their owning plan completes; reviewed by `/absol-architect`. | yes |
-| `inbox.md` | Active intake. Items removed when their owning plan/scratchpad completes. | no |
-| `plan.md` | Plan Queue — PLAN-NNN entries with seeds + execution tasks. Cleared per run by finalizer. | no |
-| `run-active.md` | Live run log (header + tasks snapshot + append-only events). Created on session start, deleted by finalizer. | no |
-| `archive/` | Finalizer snapshots — `run-{run_id}.md` is the only durable run history. | no |
-
-## Git
-
-- **Repo:** TBD
-- Commit only when explicitly asked.
-- Never commit `.env`, credentials, or large binary assets.
-- Don't force-push `main`.
-
-## Capture as we discuss
-
-When the user is brainstorming features, bugs, or improvements in conversation (rather than asking to build right now), log them via the `note-taker` skill so they don't get lost. note-taker routes: bugs → `.absol/bugs.md`, tech debt → `.absol/tech-debt.md`, anything else → `.absol/inbox.md` as `status: new`. Default to inbox when ambiguous. Don't break flow to ask — note in passing, confirm in one line, keep the conversation going.
-
-## Wrap-Up
-
-Don't edit pipeline state files by hand. The absol-finalizer skill runs end-of-session: walks the events in `run-active.md`, writes `archive/run-{run_id}.md` as the durable record, removes done plans from `plan.md`, removes notes whose owning plan completed, updates `state.md` as a current-truth snapshot.
-```
-
----
-
-### state.md  (root)
-
-```markdown
-# {Name} — Current State
-
-*Last updated: {date}*
-
-## Last Session
-
-Project scaffolded via absol-newproject. No code written yet.
-
-## In Progress
-
-Nothing — ready for absol pipeline.
-
-## Parked Items
-
-None.
-```
-
-`state.md` doesn't carry Tech Debt / Known Bugs / Planned Features sections. Those live in `.absol/tech-debt.md`, `.absol/bugs.md`, `.absol/inbox.md`.
-
----
-
-### .absol/CONTEXT.md
-
-```markdown
-# {Name} — Context Glossary
-
-Domain terms and naming conventions. Every absol agent reads this at start of run. Lazy-grown by `/absol-shaper`, `/absol-architect`, `note-taker`. Edit by hand any time.
-
-## Domain Terms
-
-<!-- Format: **Term** — definition. Use for X. Don't say Y or Z. -->
-
-None yet.
-
-## Naming Conventions
-
-- File names: TBD
-- Component names: TBD
-- Prefixes: TBD
-```
-
----
-
-### .absol/adr/0000-template.md
-
-```markdown
-# ADR-0000 — Template
-
-**Status:** template — copy as `NNNN-short-slug.md` for new decisions.
-
-## Status
-proposed | accepted | superseded by ADR-NNNN
-
-## Context
-What problem are we facing? What constraints?
-
-## Decision
-What did we choose?
-
-## Consequences
-What tradeoffs did we accept? What does this make easier or harder?
-```
-
----
-
-### .absol/inbox.md
-
-```markdown
-# {Name} — Inbox
-
-No items yet.
-```
-
-### .absol/plan.md
-
-```markdown
-# {Name} — Plan Queue
-
-No active plans. Run `/absol` and choose pipeline mode to plan from inbox/bugs/tech-debt, or `/absol-architect` for a refactor plan.
-```
-
-(`run-active.md` is not scaffolded — it's created by orchestrator/scratchpad on first run.)
-
-### .absol/bugs.md
-
-```markdown
-# {Name} — Known Bugs
-
-No known bugs. Add via `note-taker`.
-```
-
-### .absol/tech-debt.md
-
-```markdown
-# {Name} — Tech Debt
-
-No tech debt logged. Add via `note-taker`; reviewed by `/absol-architect`.
-```
-
-### .absol/archive/.gitkeep
-
-Empty file. Tracks the (otherwise empty) folder so the finalizer doesn't have to mkdir on first run, and so `archive/` exists in git from the start.
-
----
-
-### .gitignore
-
-Stack-agnostic at scaffold time. The pipeline adds language/framework ignores (`node_modules/`, `dist/`, `__pycache__/`, …) and writes the Docker/deploy files during planning, once the stack is actually chosen — `absol-newproject` never assumes one.
-
-```
-.env
-.env.*
-*.log
-.DS_Store
-@eaDir/
-
-# absol pipeline churn — regenerated each run, no value in git history
-.absol/inbox.md
-.absol/plan.md
-.absol/run-active.md
-```
-
-Tracked inside `.absol/`: `CONTEXT.md`, `bugs.md`, `tech-debt.md`, `adr/`, and `archive/` (the durable run history — tracked so it has a git safety net).
-
----
-
-## Init git & confirm
-
-```bash
-cd /mnt/nas/dev/projects/<name> && git init
-```
-
-Tell the user: project path, port allocated, files created (root + `.absol/`), suggest *"Run /absol on this project to open a session and start capturing notes or planning."*
-
-## Rules
-
-- Skeleton + MD files only — no code files (`package.json`, `tsconfig`, `requirements.txt`…) and no language/framework choices. The pipeline picks the stack during planning.
-- Populate `CLAUDE.md`'s overview + design philosophy meaningfully from the user's description — never "TBD".
+`git init` + initial commit ("Scaffold absol project"). Report the tree in ≤6 lines and point
+at the natural next step: capture ideas via note-taker, then `/absol` to run. If the user
+described concrete ideas during setup, offer to capture them as inbox items now.
