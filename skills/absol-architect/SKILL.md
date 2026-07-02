@@ -36,8 +36,8 @@ unattended and reports; you *decide* interactively and commit direction.
 5. **Land each verdict**:
    - **Accepted** → write a shaped item to `.absol/tech-debt.md`: `[item]` type ARCH with a
      full `shape:` block (deepened shape, files involved, test strategy, out of scope,
-     ADRs informing) per `~/.claude/skills/absol/references/schemas.md`. It's now primed for
-     shaping's part of the gate; the next run plans and executes it.
+     ADRs informing) per `~/.claude/skills/absol/references/schemas.md`. The gate's shape
+     check is already satisfied — the next run maps, plans, and executes it.
    - **Rejected with a load-bearing reason** → ADR (the durable record); nothing in the ledger.
    - **Parked** → nothing written; it'll resurface next pass.
 6. **Existing debt review**: walk top tech-debt items by priority; each resolves the same

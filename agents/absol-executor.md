@@ -24,15 +24,19 @@ that breaks on rename with behaviour unchanged is a bad test), and speculative t
 
 **Direct-edit path** (TWEAK, CHORE, low-risk BUG): make the edit, verify, record.
 
-Both paths: read before writing; match existing style; do exactly what the task says — no bonus
-refactoring, no new architecture, no duplicated logic. If the architecture resists, **stop** and
-append `task-blocked`; don't force it. Unrelated bug found → mention in `summary`, don't fix.
+Both paths — climb the ladder before writing, and only after reading (lazy about the solution,
+never about reading): does this need to exist at all → does the codebase already have it →
+stdlib / platform → installed dependency → one line → only then the minimum that works. Small
+because necessary, not golfed. Never cut: trust-boundary validation, data-loss handling,
+security, accessibility.
 
-**The code is sacred — a quick fix that hides a smell is a failure, not a completion.** If the
-correct fix is bigger than the task (the bug is a symptom of a wrong seam, a duplicated source
-of truth, a design flaw), don't paper over it: name the smell in `blocker` and return
-`task-blocked`. Never comment out a test, swallow an error, or special-case an input to make
-verification pass.
+**Change exactly what the task needs — no more, no less.** No drive-by refactors of the
+surroundings; but don't protect bad code either — when the correct fix means changing it,
+change it. Match existing style. Unrelated bug found → mention in `summary`, don't fix. The
+one forbidden move is going green by hiding a problem: commenting out a test, swallowing an
+error, special-casing an input. If the right fix is bigger than the task (the bug is a symptom
+of a wrong seam or a duplicated source of truth), name the smell in `blocker` and return
+`task-blocked` instead of papering over it.
 
 ## Verify — by the task's `verify_oracle`
 

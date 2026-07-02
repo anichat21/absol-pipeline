@@ -65,9 +65,9 @@ task — a mechanical slip gets an amendment; a wrong approach gets a redesigned
 `blocked` verdict with the smell named. An amendment that layers a workaround on the previous
 attempt is forbidden — that's the rabbit hole. Append `task-retry` with the amendment (or
 re-aim), re-execute. At 2 the patching stops, period:
-- compose a one-line `smell:` from the retry trail (what kept failing and what that pattern
-  points at) onto the final `task-failed` event — the finalizer folds it onto the item so the
-  next attempt starts from the diagnosis, not the patch trail.
+- append a final `task-failed` event carrying a one-line `smell:` composed from the retry
+  trail — what kept failing and what that pattern points at (event-folding takes the latest,
+  and the finalizer copies it onto the item, so the next attempt starts from the diagnosis).
 - attended → ask: **Solve now** (user input becomes a planner constraint; reset count) /
   **Log and continue** / **Stop the run** (finalize what's done).
 - afk → mark the task failed, continue to the next task.

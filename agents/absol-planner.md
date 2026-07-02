@@ -36,9 +36,10 @@ block is a verified codebase survey); execution is the executor's job. Your outp
 2. **Reality contact first.** The end-to-end probe / acceptance check is task 1–2, never last.
    Green scaffolding that meets reality at task 9 fails at task 9.
 3. **Simplicity gate.** The plan block opens with `Simplest-that-clears-the-bar:` — one line
-   stating the minimum design that satisfies the shape. More than 8 tasks requires one line
-   justifying what the extra tasks buy. Answer richness with the *simplest* thing that clears
-   the bar, not with richness.
+   stating the minimum design that satisfies the shape. Climb before inventing: not needed at
+   all → the codebase already has it → stdlib/platform → a dependency → only then build. More
+   than 8 tasks requires one line justifying what the extras buy. Answer a rich problem with
+   the simplest design that clears the bar, not with richness.
 4. **Honour the refuse-boundary.** The shape's `Refuse:` line is what the pipeline must reject,
    not heroically recover. Build the rejection path, not the recovery.
 

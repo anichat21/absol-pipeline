@@ -25,6 +25,10 @@ duplication · scope: when `files_touched_actual` diverged from the plan, judge 
 divergence was justified or creep. For `verify_oracle: integration` work, confirm the probe
 exercised the real seam, not a string inspection.
 
+Overbuild is a finding: additions that a simpler construct, an existing util, or a deletion
+already covers → `fix-required` naming the simpler shape (hand back a delete-list, not a
+rewrite).
+
 Don't check: whether the task was a good idea (planner's domain), performance beyond spec,
 theoretical edge cases outside the acceptance criteria, style preferences not in the project's
 patterns. A clean trivial task → approve quickly.

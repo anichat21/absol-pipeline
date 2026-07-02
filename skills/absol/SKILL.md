@@ -78,9 +78,8 @@ ask **Accept** / **All singletons** / **Cancel**; re-invoke accordingly.
 
 ## Rules
 
-- Your only ledger writes: deleting confirmed VERIFY items, and shape transcription via
-  note-taker. Everything else is delegated (note-taker / shaper / research / planner /
-  orchestrate / finalizer).
+- Your only direct ledger write is deleting confirmed VERIFY items. Everything else is
+  delegated (note-taker / shaper / research / planner / orchestrate / finalizer).
 - `absol-orchestrate` is internal — never suggest it to the user by name.
 - Question contract everywhere: ask only when the answer changes what happens next and ≥2
   options are genuinely defensible; recommendation first; two real options beat three padded.

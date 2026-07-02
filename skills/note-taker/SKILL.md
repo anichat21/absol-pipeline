@@ -27,8 +27,9 @@ questionnaire (that's the shaper's job).
 ## Enrich (existing item)
 
 When the user states a decision about a named item — "for BUG-014, skip the animation" —
-append it to that item's `shape:` block as a dated line (create the block if absent). This is
-transcription, not shaping: record what was said, ask nothing.
+append it to that item's `shape:` block as a dated line (create the block if absent). If it
+answers the item's `open:` question, delete the `open:` line. This is transcription, not
+shaping: record what was said, ask nothing.
 
 ## Confirm
 

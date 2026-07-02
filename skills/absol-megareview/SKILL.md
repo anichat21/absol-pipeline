@@ -32,8 +32,9 @@ Finder dimensions — one agent each, scaled to repo size (split big repos by su
    fire.
 2. **Dead & broken** — unreachable code, wired-but-never-rendered UI, exports nothing imports,
    config referencing nothing.
-3. **Smells & duplication** — copied logic drifting apart, sync hazards, shotgun-surgery
-   clusters.
+3. **Smells & overbuild** — copied logic drifting apart, sync hazards, shotgun-surgery
+   clusters, needless abstraction: what a simpler construct or a deletion replaces (propose
+   the delete-list).
 4. **Structure** — deletion-test failures, shallow modules, seams that force lockstep edits
    (analysis + proposal, architect's lens).
 5. **Docs-vs-code drift** — CLAUDE.md/CONTEXT.md/ADR claims the code no longer satisfies.

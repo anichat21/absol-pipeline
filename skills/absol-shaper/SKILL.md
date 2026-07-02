@@ -35,9 +35,9 @@ never burn a question on something you can verify.
 ## The refuse-boundary (mandatory)
 
 Every shape names what gets **rejected, not recovered**: out-of-format inputs, unsupported
-cases, scope the pipeline must hard-fail instead of heroically handling. Unattended runs do
-the modeller's job for out-of-format samples precisely when nobody drew this line. If the
-user can't name it, propose it and confirm.
+cases, scope the pipeline must hard-fail instead of heroically handling. Unattended runs
+attempt heroic recovery of exactly these cases when nobody drew the line. If the user can't
+name it, propose it and confirm.
 
 ## Side effects (inline, as decisions crystallise)
 
