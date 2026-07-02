@@ -64,8 +64,7 @@ Agents carry no pinned models — they inherit the session (pin only where a che
 deliberate choice). Event records carry roles (`worker: executor`), never model names. Every
 reader follows read hygiene: files over 256 KB are sampled, never read whole.
 
-Build ethos (after [ponytail](https://github.com/DietrichGebert/ponytail)'s lazy-senior-dev
-ladder): skip what needn't exist → reuse the codebase → stdlib/platform → dependency → the
+Build ethos: skip what needn't exist → reuse the codebase → stdlib/platform → dependency → the
 minimum that works — lazy about the solution, never about reading; small because necessary,
 not golfed; trust boundaries, data-loss handling, security, and accessibility never cut.
 Change exactly what the task needs: no drive-by refactors, no protecting bad code, and never
