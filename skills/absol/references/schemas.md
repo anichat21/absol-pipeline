@@ -39,6 +39,8 @@ in run.md), never stored.
   - covers: BUG-015, INBOX-021       ← lead item of a group plan (optional)
   - planned_with: BUG-014            ← covered item's pointer to its lead (optional)
   - prior: archive/2026-06.md#RUN-…  ← earlier run touched this (optional)
+  - open: <question> (YYYY-MM-DD)    ← the question that blocked AFK shaping (optional)
+  - smell: <diagnosis> (YYYY-MM-DD)  ← why attempts kept failing — zoom-out, not patch trail (optional)
 ```
 
 - Task IDs are namespaced by item (`BUG-014.1`) — no global counter, no allocation races.
@@ -95,6 +97,7 @@ here — they live in the items' plan blocks; the orchestrator passes each agent
   - task: BUG-014.1
   - files_touched_actual: <even if partial>
   - blocker: one line
+  - smell: <one line — only on terminal failure after retries: what the failure pattern points at>
 
 - [event] <ISO>
   - type: task-retry

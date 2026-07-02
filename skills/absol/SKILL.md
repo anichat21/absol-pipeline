@@ -36,9 +36,14 @@ absol — <project>
 
 Last session: <state.md one-liner>
 ⚠ Owed smoke:  VERIFY-003 — eyeball <what>          (omit if none)
+⚠ Open:        BUG-014 — <the question AFK shaping logged>     (omit if none)
+⚠ Smell:       INBOX-021 — <why attempts kept failing>         (omit if none)
 Primed:       N — BUG-014 (+2 covered), INBOX-030   (items with a plan block)
 Shaped:       N    New: N    (per file: inbox / bugs / debt, non-zero counts only)
 ```
+
+`open:` lines are answerable right here — the user's answer gets transcribed into the item's
+shape (via note-taker) and the `open:` line deleted; the item is then runnable.
 
 Six-to-ten lines, no file dumps. **Owed smoke:** when the user confirms a VERIFY item passed,
 delete it; if it failed, route to note-taker as a BUG, then delete it. Don't let the list rot.

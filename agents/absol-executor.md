@@ -28,6 +28,12 @@ Both paths: read before writing; match existing style; do exactly what the task 
 refactoring, no new architecture, no duplicated logic. If the architecture resists, **stop** and
 append `task-blocked`; don't force it. Unrelated bug found → mention in `summary`, don't fix.
 
+**The code is sacred — a quick fix that hides a smell is a failure, not a completion.** If the
+correct fix is bigger than the task (the bug is a symptom of a wrong seam, a duplicated source
+of truth, a design flaw), don't paper over it: name the smell in `blocker` and return
+`task-blocked`. Never comment out a test, swallow an error, or special-case an input to make
+verification pass.
+
 ## Verify — by the task's `verify_oracle`
 
 - **unit** — run the task's `verification` (for TDD, the suite is the verification).

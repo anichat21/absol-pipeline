@@ -33,7 +33,9 @@ Per item in the run:
   `covers:`). The archive block is its record.
 - **Anything failed / blocked / unrun / needs-review** → item stays. Set
   `prior: archive/{YYYY-MM}.md#{run_id}` and delete its `plan:` block's completed tasks (the
-  remaining tasks are the live remainder; a future launch re-plans or resumes from them).
+  remaining tasks are the live remainder; a future launch re-plans or resumes from them). If
+  the terminal event carries a `smell:`, copy it onto the item (dated) — the next attempt
+  starts from the diagnosis, not the patch trail.
 - **Owed smoke** → append one `[item]` `type: VERIFY` to `inbox.md` per owed task:
   `title: eyeball <what>`, description says what to check and names the run.
 
@@ -41,6 +43,10 @@ Per item in the run:
 
 Delete `.absol/run.md` — only after the archive write succeeded. Rewrite `state.md` as the
 snapshot (Last Session, Open Threads — no transient sections, no accumulating history).
+
+**Post-run commit** (git repo only; skip silently otherwise): commit everything —
+`absol: {run_id} — {n} done, {n} failed` — so the run's code, ledger fold, and archive land as
+one revertable unit against the pre-run snapshot. **Never push**; the user pushes or says to.
 
 ## 5. Report (your return message)
 

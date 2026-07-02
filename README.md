@@ -57,11 +57,20 @@ that fires the same run headless in AFK mode.
 | absol-megareview | skill | unattended deep review → `.absol/reviews/` report + pointer item |
 | absol-scratchpad | skill | interactive mode on the same run/event model |
 | absol-explain | skill | one-minute orientation |
+| absol-feedback | skill | log problems with absol itself → `feedback/YYYYMMDD-NNN-title.md` |
 | absol-newproject / absol-migrate / absol-docs | skills | scaffold / schema upgrades / docs hub |
 
 Agents carry no pinned models — they inherit the session (pin only where a cheap model is a
 deliberate choice). Event records carry roles (`worker: executor`), never model names. Every
 reader follows read hygiene: files over 256 KB are sampled, never read whole.
+
+Pipeline runs are bracketed by commits when the project has git: `absol: pre-run {run_id}
+snapshot` before execution (the rollback anchor) and `absol: {run_id} — n done, n failed` at
+finalize. absol never pushes. Failed tasks re-aim instead of patching: retry 1 forces a
+mechanical-slip vs wrong-approach diagnosis; retry 2 exhausts into a recorded `smell:` on the
+item — no patch-on-patch, no rabbit holes. AFK runs end the turn completely (prompt-cache TTL
+is ~5 min; a run parked on a question pays a full-context re-read per answer) — open questions
+land on items as `open:`, and the next session's banner surfaces everything.
 
 ## Project layout
 

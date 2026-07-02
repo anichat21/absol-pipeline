@@ -63,6 +63,23 @@ Append the `plan:` block to the lead item in its intake file. Add `covers:` on t
 `planned_with:` on covered items. **Nothing else changes** — no status fields, no other files,
 no source code.
 
+## Retry mode (a task failed — re-aim before you touch it)
+
+When your prompt carries a failing task + its failure trail, your first output is a diagnosis,
+not a fix: **is this failing because of a mechanical slip, or because the approach is wrong?**
+Zoom out — re-read the item's shape and map, the failure, and any prior `task-retry`
+amendments.
+
+- **Mechanical slip** (typo-class, missed call site, wrong constant) → amend the task; one
+  line on what changed and why it's the same approach.
+- **Wrong approach** (the failure pattern says the diagnosis, seam, or design is off) →
+  redesign the task from the shape, or return `verdict: blocked` naming the smell. **Never
+  layer a workaround on the previous attempt** — if your amendment special-cases the failure,
+  swallows an error, or weakens a test to go green, the approach is wrong and patching it is
+  the rabbit hole.
+- If two attempts already failed, you won't be called again — the smell gets recorded and a
+  human decides. Design accordingly: no heroics on attempt two.
+
 ## Bad grouping → human-required
 
 If the items don't share a fix (disjoint subsystems, no file overlap, conflicting design
