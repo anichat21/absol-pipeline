@@ -1,310 +1,318 @@
 {
-  "projects": [
+ "projects": [
+  {
+   "slug": "metagross",
+   "name": "Metagross",
+   "icon": "fas fa-gamepad",
+   "category": "project",
+   "projectUrl": "http://aidev:8181",
+   "description": "Multiplayer browser game — design corpus, systems, guidelines, deployment plan.",
+   "theme": "metagross.css",
+   "docs": [
     {
-      "slug": "metagross",
-      "name": "Metagross",
-      "icon": "fas fa-gamepad",
-      "category": "project",
-      "projectUrl": "http://aidev:8181",
-      "description": "Multiplayer browser game — design corpus, systems, guidelines, deployment plan.",
-      "theme": "metagross.css",
-      "docs": [
-        {
-          "title": "Index",
-          "path": "index.html"
-        },
-        {
-          "title": "Game design",
-          "path": "game-design.html"
-        },
-        {
-          "title": "Systems",
-          "path": "systems.html"
-        },
-        {
-          "title": "Design guidelines",
-          "path": "design-guidelines.html"
-        },
-        {
-          "title": "Social & economy notes",
-          "path": "social-economy-notes.html"
-        },
-        {
-          "title": "Dev tooling",
-          "path": "dev-tooling.html"
-        },
-        {
-          "title": "Deployment plan",
-          "path": "deployment-plan.html"
-        }
-      ]
+     "title": "Index",
+     "path": "index.html"
     },
     {
-      "slug": "snowowl",
-      "name": "SnowOwl",
-      "icon": "fas fa-cube",
-      "category": "project",
-      "projectUrl": "http://aidev:8182",
-      "description": "3D product configurator — GLB + sidecar import format spec and authoring guide.",
-      "theme": "snowowl.css",
-      "docs": [
-        {
-          "title": "Index",
-          "path": "index.html"
-        },
-        {
-          "title": "Import format",
-          "path": "import-format.html"
-        },
-        {
-          "title": "Authoring guide",
-          "path": "authoring-guide.html"
-        }
-      ]
+     "title": "Game design",
+     "path": "game-design.html"
     },
     {
-      "slug": "cadtool-alpha",
-      "name": "Cadtool",
-      "icon": "fas fa-car",
-      "category": "project",
-      "description": "Research brief — mid-2026 technical path for agentic NURBS surface generation.",
-      "docs": [
-        {
-          "title": "Research brief",
-          "path": "index.html"
-        }
-      ]
+     "title": "Systems",
+     "path": "systems.html"
     },
     {
-      "slug": "shearwater",
-      "name": "Shearwater",
-      "icon": "fas fa-feather",
-      "category": "project",
-      "projectUrl": "http://aidev:8186",
-      "description": "Scroll-driven, music-synced portfolio engine. Chapters and episodes named after birds.",
-      "docs": [
-        {
-          "title": "Index",
-          "path": "index.html"
-        },
-        {
-          "title": "Description",
-          "path": "description.html"
-        },
-        {
-          "title": "Style",
-          "path": "style.html"
-        },
-        {
-          "title": "Ingestion",
-          "path": "ingestion.html"
-        },
-        {
-          "title": "Naming",
-          "path": "naming.html"
-        }
-      ]
+     "title": "Design guidelines",
+     "path": "design-guidelines.html"
     },
     {
-      "slug": "the-distillery",
-      "name": "The Distillery",
-      "icon": "fas fa-martini-glass",
-      "category": "project",
-      "description": "Scene-prep tooling for automotive surface work — Alias audit/export plugin brief, Blender VRED ingest utilities.",
-      "theme": "distillery.css",
-      "docs": [
-        {
-          "title": "Overview",
-          "path": "index.html"
-        },
-        {
-          "title": "alias_dstlr brief",
-          "path": "alias_dstlr_brief.html"
-        },
-        {
-          "title": "Utility plugins",
-          "path": "utility-plugins.html"
-        },
-        {
-          "title": "Import rules",
-          "path": "import-rules.html"
-        },
-        {
-          "title": "Surface orientation",
-          "path": "surface-orientation.html"
-        }
-      ]
+     "title": "Social & economy notes",
+     "path": "social-economy-notes.html"
     },
     {
-      "slug": "absol",
-      "name": "Absol",
-      "icon": "fas fa-diagram-project",
-      "category": "project",
-      "description": "Item-centric workflow for Claude Code — ledger items through an execute gate into unattended runs. Workflow diagram and skill reference.",
-      "docs": [
-        {
-          "title": "Workflow & skills",
-          "path": "index.html"
-        }
-      ]
+     "title": "Dev tooling",
+     "path": "dev-tooling.html"
     },
     {
-      "slug": "huntrx",
-      "name": "HuntRX",
-      "icon": "fas fa-wallet",
-      "category": "project",
-      "projectUrl": "http://aidev:8184",
-      "description": "Local-first personal finance dashboard — bank-statement import, transaction tagging, interactive analytics. Includes an interactive codebase knowledge graph.",
-      "docs": [
-        {
-          "title": "Index",
-          "path": "index.html"
-        },
-        {
-          "title": "Knowledge graph",
-          "path": "knowledge-graph.html"
-        }
-      ]
-    },
-    {
-      "slug": "barnowl-noir",
-      "name": "BarnOwl Noir",
-      "icon": "fas fa-car",
-      "category": "project",
-      "description": "Offline kiosk car configurator — the UE5.8 hybrid-C++ ground-up rebuild: vision, decisions, and the phased plan. The current-donor map lives in the Pipeline KB.",
-      "docs": [
-        {
-          "title": "Index",
-          "path": "index.html"
-        },
-        {
-          "title": "Vision & plan",
-          "path": "vision.html"
-        },
-        {
-          "title": "The UE5.8 rebuild",
-          "path": "rebuild.html"
-        }
-      ]
-    },
-    {
-      "slug": "zei",
-      "name": "Zei",
-      "icon": "fas fa-cubes",
-      "category": "project",
-      "projectUrl": "http://aidev:8188",
-      "description": "Self-hosted, tag-driven resource hub — a personal front-end over my asset library with on-demand variant generation and manual-only intake.",
-      "docs": [
-        {
-          "title": "Overview",
-          "path": "index.html"
-        },
-        {
-          "title": "Spec",
-          "path": "spec.html"
-        }
-      ]
-    },
-    {
-      "slug": "local-ai",
-      "name": "Local AI",
-      "icon": "fas fa-robot",
-      "category": "kb",
-      "projectUrl": "http://192.168.0.84:3000",
-      "description": "Self-hosted LLM stack — Open WebUI + SearXNG on docker-main, llama-swap on AWAC.",
-      "docs": [
-        {
-          "title": "Index",
-          "path": "index.html"
-        }
-      ]
-    },
-    {
-      "slug": "resource-org",
-      "name": "Resource Organisation",
-      "icon": "fas fa-folder-tree",
-      "category": "kb",
-      "description": "NAS resource inventory and organisation plan.",
-      "docs": [
-        {
-          "title": "Index",
-          "path": "index.html"
-        },
-        {
-          "title": "NAS resources drive analysis",
-          "path": "nas-resources-drive.html"
-        }
-      ]
-    },
-    {
-      "slug": "network_map",
-      "name": "Network Map",
-      "icon": "fas fa-network-wired",
-      "category": "kb",
-      "description": "Snapshot of the home network — LAN, tailnet, hosts, workloads, and agent access today.",
-      "docs": [
-        {
-          "title": "Index",
-          "path": "index.html"
-        }
-      ]
-    },
-    {
-      "slug": "normalpress-orientation-research",
-      "name": "NormalPress Orientation Research",
-      "icon": "fas fa-draw-polygon",
-      "category": "kb",
-      "theme": "distillery.css",
-      "description": "Cited design-research on robust geometric surface-normal orientation for messy Class-A NURBS — the decision-layer rebuild for NormalPress.",
-      "docs": [
-        {
-          "title": "Index",
-          "path": "index.html"
-        }
-      ]
-    },
-    {
-      "slug": "rnlt-edge",
-      "name": "RNLT Edge",
-      "icon": "fas fa-microchip",
-      "category": "kb",
-      "description": "Remote Renault-site GPU workstation (Quadro RTX 6000) — Tailscale-only access, corporate-filter limitations, candidate LLM inference node.",
-      "docs": [
-        {
-          "title": "Index",
-          "path": "index.html"
-        }
-      ]
-    },
-    {
-      "slug": "the-pipeline",
-      "name": "The Pipeline",
-      "icon": "fas fa-route",
-      "category": "kb",
-      "theme": "distillery.css",
-      "description": "The definitive cross-project car-asset pipeline — Alias → VRED → Blender (VRED_Cask) → Unreal (Coustillier) → BarnOwl / Sequencer.",
-      "docs": [
-        {
-          "title": "Index",
-          "path": "index.html"
-        },
-        {
-          "title": "Overview",
-          "path": "overview.html"
-        },
-        {
-          "title": "Current BarnOwl structure",
-          "path": "current-barnowl-structure.html"
-        },
-        {
-          "title": "Current BarnOwl review",
-          "path": "current-barnowl-review.html"
-        },
-        {
-          "title": "Working principles",
-          "path": "principles.html"
-        }
-      ]
+     "title": "Deployment plan",
+     "path": "deployment-plan.html"
     }
-  ]
+   ]
+  },
+  {
+   "slug": "snowowl",
+   "name": "SnowOwl",
+   "icon": "fas fa-cube",
+   "category": "project",
+   "projectUrl": "http://aidev:8182",
+   "description": "3D product configurator — GLB + sidecar import format spec and authoring guide.",
+   "theme": "snowowl.css",
+   "docs": [
+    {
+     "title": "Index",
+     "path": "index.html"
+    },
+    {
+     "title": "Import format",
+     "path": "import-format.html"
+    },
+    {
+     "title": "Authoring guide",
+     "path": "authoring-guide.html"
+    }
+   ]
+  },
+  {
+   "slug": "cadtool-alpha",
+   "name": "Cadtool",
+   "icon": "fas fa-car",
+   "category": "project",
+   "description": "Research brief — mid-2026 technical path for agentic NURBS surface generation.",
+   "docs": [
+    {
+     "title": "Research brief",
+     "path": "index.html"
+    }
+   ]
+  },
+  {
+   "slug": "shearwater",
+   "name": "Shearwater",
+   "icon": "fas fa-feather",
+   "category": "project",
+   "projectUrl": "http://aidev:8186",
+   "description": "Scroll-driven, music-synced portfolio engine. Chapters and episodes named after birds.",
+   "docs": [
+    {
+     "title": "Index",
+     "path": "index.html"
+    },
+    {
+     "title": "Description",
+     "path": "description.html"
+    },
+    {
+     "title": "Style",
+     "path": "style.html"
+    },
+    {
+     "title": "Ingestion",
+     "path": "ingestion.html"
+    },
+    {
+     "title": "Naming",
+     "path": "naming.html"
+    }
+   ]
+  },
+  {
+   "slug": "the-distillery",
+   "name": "The Distillery",
+   "icon": "fas fa-martini-glass",
+   "category": "project",
+   "description": "Scene-prep tooling for automotive surface work — Alias audit/export plugin brief, Blender VRED ingest utilities.",
+   "theme": "distillery.css",
+   "docs": [
+    {
+     "title": "Overview",
+     "path": "index.html"
+    },
+    {
+     "title": "alias_dstlr brief",
+     "path": "alias_dstlr_brief.html"
+    },
+    {
+     "title": "Utility plugins",
+     "path": "utility-plugins.html"
+    },
+    {
+     "title": "Import rules",
+     "path": "import-rules.html"
+    },
+    {
+     "title": "Surface orientation",
+     "path": "surface-orientation.html"
+    }
+   ]
+  },
+  {
+   "slug": "absol",
+   "name": "Absol",
+   "icon": "fas fa-diagram-project",
+   "category": "project",
+   "description": "Item-centric workflow for Claude Code — ledger items through an execute gate into unattended runs. Workflow diagram and skill reference.",
+   "docs": [
+    {
+     "title": "Workflow & skills",
+     "path": "index.html"
+    }
+   ]
+  },
+  {
+   "slug": "huntrx",
+   "name": "HuntRX",
+   "icon": "fas fa-wallet",
+   "category": "project",
+   "projectUrl": "http://aidev:8184",
+   "description": "Local-first personal finance dashboard — bank-statement import, transaction tagging, interactive analytics. Includes an interactive codebase knowledge graph.",
+   "docs": [
+    {
+     "title": "Index",
+     "path": "index.html"
+    },
+    {
+     "title": "Knowledge graph",
+     "path": "knowledge-graph.html"
+    }
+   ]
+  },
+  {
+   "slug": "barnowl-noir",
+   "name": "BarnOwl Noir",
+   "icon": "fas fa-car",
+   "category": "project",
+   "description": "Offline kiosk car configurator — the UE5.8 hybrid-C++ ground-up rebuild: vision, decisions, and the phased plan. The current-donor map lives in the Pipeline KB.",
+   "docs": [
+    {
+     "title": "Index",
+     "path": "index.html"
+    },
+    {
+     "title": "Vision & plan",
+     "path": "vision.html"
+    },
+    {
+     "title": "The UE5.8 rebuild",
+     "path": "rebuild.html"
+    }
+   ]
+  },
+  {
+   "slug": "zei",
+   "name": "Zei",
+   "icon": "fas fa-cubes",
+   "category": "project",
+   "projectUrl": "http://aidev:8188",
+   "description": "Self-hosted, tag-driven resource hub — a personal front-end over my asset library with on-demand variant generation and manual-only intake.",
+   "docs": [
+    {
+     "title": "Overview",
+     "path": "index.html"
+    },
+    {
+     "title": "Spec",
+     "path": "spec.html"
+    }
+   ]
+  },
+  {
+   "slug": "local-ai",
+   "name": "Local AI",
+   "icon": "fas fa-robot",
+   "category": "kb",
+   "projectUrl": "http://192.168.0.84:3000",
+   "description": "Self-hosted LLM stack — Open WebUI + SearXNG on docker-main, llama-swap on AWAC.",
+   "docs": [
+    {
+     "title": "Index",
+     "path": "index.html"
+    }
+   ]
+  },
+  {
+   "slug": "resource-org",
+   "name": "Resource Organisation",
+   "icon": "fas fa-folder-tree",
+   "category": "kb",
+   "description": "NAS resource inventory and organisation plan.",
+   "docs": [
+    {
+     "title": "Index",
+     "path": "index.html"
+    },
+    {
+     "title": "NAS resources drive analysis",
+     "path": "nas-resources-drive.html"
+    }
+   ]
+  },
+  {
+   "slug": "network_map",
+   "name": "Network Map",
+   "icon": "fas fa-network-wired",
+   "category": "kb",
+   "description": "Snapshot of the home network — LAN, tailnet, hosts, workloads, and agent access today.",
+   "docs": [
+    {
+     "title": "Index",
+     "path": "index.html"
+    }
+   ]
+  },
+  {
+   "slug": "normalpress-orientation-research",
+   "name": "NormalPress Orientation Research",
+   "icon": "fas fa-draw-polygon",
+   "category": "kb",
+   "theme": "distillery.css",
+   "description": "Cited design-research on robust geometric surface-normal orientation for messy Class-A NURBS — the decision-layer rebuild for NormalPress.",
+   "docs": [
+    {
+     "title": "Index",
+     "path": "index.html"
+    }
+   ]
+  },
+  {
+   "slug": "rnlt-edge",
+   "name": "RNLT Edge",
+   "icon": "fas fa-microchip",
+   "category": "kb",
+   "description": "Remote Renault-site GPU workstation (Quadro RTX 6000) — Tailscale-only access, corporate-filter limitations, candidate LLM inference node.",
+   "docs": [
+    {
+     "title": "Index",
+     "path": "index.html"
+    }
+   ]
+  },
+  {
+   "slug": "the-pipeline",
+   "name": "The Darkrai Pipeline",
+   "icon": "fas fa-route",
+   "category": "kb",
+   "theme": "distillery.css",
+   "description": "The Darkrai pipeline — the definitive cross-project car-asset flow: Alias → VRED → Blender (Distillery plugin) → Unreal (Coustillier) → BarnOwl / Sequencer.",
+   "docs": [
+    {
+     "title": "Index",
+     "path": "index.html"
+    },
+    {
+     "title": "Overview",
+     "path": "overview.html"
+    },
+    {
+     "title": "Pipeline tasks",
+     "path": "pipeline-tasks.html"
+    },
+    {
+     "title": "Renault 3VISU reference",
+     "path": "renault-3visu.html"
+    },
+    {
+     "title": "Current BarnOwl structure",
+     "path": "current-barnowl-structure.html"
+    },
+    {
+     "title": "Current BarnOwl review",
+     "path": "current-barnowl-review.html"
+    },
+    {
+     "title": "Working principles",
+     "path": "principles.html"
+    }
+   ]
+  }
+ ]
 }
