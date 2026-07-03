@@ -31,6 +31,9 @@ Per item in the run:
 
 - **All tasks done** → delete the item from its intake file (covered items too, via the lead's
   `covers:`). The archive block is its record.
+- **`resolves:` on a done scratchpad task** → same deletion for the named item(s); the archive
+  block records `resolves:` on the task line. A `resolves:` on a failed/blocked task deletes
+  nothing.
 - **Anything failed / blocked / unrun / needs-review** → item stays. Set
   `prior: archive/{YYYY-MM}.md#{run_id}` and delete its `plan:` block's completed tasks (the
   remaining tasks are the live remainder; a future launch re-plans or resumes from them). If

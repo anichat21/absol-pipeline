@@ -24,6 +24,8 @@ in run.md), never stored.
       Mapped YYYY-MM-DD.
       Entry points: … Changes: … Blast radius: … Consumers: …
       Sync hazards: … Patterns to mirror: … Gotchas: …
+      Full detail: reviews/YYYY-MM-DD-<ID>-map.md   ← only when raw fan-out output is big;
+                                                    ←   the block above stays condensed
   - plan: |                          ← planner output (optional; dated; makes the item PRIMED)
       Planned YYYY-MM-DD. Simplest-that-clears-the-bar: <one line>.
       - [task] BUG-014.1
@@ -91,6 +93,8 @@ here — they live in the items' plan blocks; the orchestrator passes each agent
   - summary: one factual line
   - verification_result: pass | fail | skipped (<reason>)
   - review_flag: yes | no
+  - resolves: BUG-004                ← scratchpad only: ledger item(s) this task completes;
+                                     ←   the finalizer deletes them (pipeline tasks never carry it)
 
 - [event] <ISO>
   - type: task-failed | task-blocked
@@ -121,7 +125,9 @@ here — they live in the items' plan blocks; the orchestrator passes each agent
 Worker/reviewer fields carry **roles, not model names** — models are deployment detail.
 
 Scratchpad runs have no plan blocks to reference: the `task-started` event carries
-`title:` and `description:` inline; task IDs are `SCR.1`, `SCR.2`, …
+`title:` and `description:` inline; task IDs are `SCR.1`, `SCR.2`, … — **even when the work is
+a pulled ledger item**. The item link is the `resolves:` field on the terminal event, never
+the task ID.
 
 ## `.absol/archive/YYYY-MM.md` — append-only history
 

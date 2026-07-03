@@ -49,6 +49,9 @@ of a wrong seam or a duplicated source of truth), name the smell in `blocker` an
 Never claim `pass` on a path you didn't exercise. One internal fix attempt on a verification
 failure is fine; a second failure → `task-failed` and return — retries are the orchestrator's.
 
+Run builds/tests only via the project's capped commands — never uncapped (workspace compute
+rules; an uncapped run can OOM-freeze the host).
+
 ## Record — your only writes to run.md
 
 Append `task-started` before any work, then exactly one terminal event:

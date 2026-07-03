@@ -32,6 +32,12 @@ Target shapes: `~/.claude/skills/absol/references/schemas.md`.
    month files and delete the originals.
 7. **Scaffold** — create `.absol/reviews/` if absent; update `.gitignore` to ignore only
    `.absol/run.md` and track the ledger + archive.
+8. **Project CLAUDE.md** — rewrite every absol-related section to v2 truth: the `.absol/` file
+   table (`run.md`, not `run-active.md`; no `plan.md`; `archive/YYYY-MM.md`; `reviews/`), the
+   Wrap-Up/finalizer description, and any `[note]`/`status:`/`PLAN-NNN` language. Agents read
+   this file at run start — a stale table feeds them v1 instructions on every run. Add the
+   `## Shipping & Git` baseline from absol-newproject's template if the file has no ops
+   section; existing project-specific ops rules win over the baseline.
 
 Report: counts per step, anything skipped, and the commit hash. Revert = `git revert` that
 commit.

@@ -82,13 +82,15 @@ land on items as `open:`, and the next session's banner surfaces everything.
 
 ```
 my-app/
-├── CLAUDE.md            brief, stack, ## Pipeline Commands (verify/smoke)   user-owned
+├── CLAUDE.md            brief, stack, ## Pipeline Commands, ## Shipping & Git   user-owned
 ├── state.md             snapshot: Last Session, Open Threads               finalizer-owned
+├── docs/                hosted/working docs (hub-registered HTML)
+├── references/          source material the project consumes (PDFs, corpora, study mds)
 └── .absol/
     ├── CONTEXT.md  adr/                        knowledge (shaper/architect grown)
     ├── inbox.md  bugs.md  tech-debt.md         the ledger — items grow in place
     ├── archive/YYYY-MM.md                      append-only outcomes
-    ├── reviews/                                megareview reports
+    ├── reviews/                                review & research artifacts
     └── run.md                                  transient; exists ⇔ run live   (gitignored)
 ```
 
@@ -99,7 +101,8 @@ Everything is git-tracked except `run.md` — the ledger carries shaped human de
 
 Symlink `skills/*` into `~/.claude/skills/` and `agents/*.md` into `~/.claude/agents/`.
 
-## History
+## Feedback
 
-`feedback/` holds the design reviews that produced this shape — `corpus-review-2026-07.md`
-(what was wrong with v1) and `flow-redesign.md` (the converged model).
+`feedback/` holds dated problem reports about absol's own behaviour (`absol-feedback` writes
+them from any project, mid-anything). The folder is swept when working on absol itself:
+applied notes are deleted (git history is the record).

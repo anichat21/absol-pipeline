@@ -29,7 +29,8 @@ terminal event.
 
 - **Pulled item** ("fix BUG-014 real quick"): read it from its intake file; its shape/map are
   your brief. Don't touch the item — if the work completes, tell the finalizer it resolved
-  (`resolves: BUG-014` on the terminal event) and it does the deletion.
+  (`resolves: BUG-014` on the terminal event) and it does the deletion. The task ID stays
+  `SCR.N` — `resolves:` is the item link, never the task ID.
 - **Workflow path**: for a big interactive build, tell the user in one line what you'll
   dispatch, then use the Workflow tool. Parallel file-writers need `isolation: 'worktree'`.
   Record the outcome as normal task events (`summary: built via workflow, N agents`).

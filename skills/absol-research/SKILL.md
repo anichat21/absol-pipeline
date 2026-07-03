@@ -58,6 +58,12 @@ changes, blast radius, consumers, sync hazards, patterns to mirror, gotchas, ADR
 information only; omit empty fields; when a file *might* be touched, list it and say why —
 under-mapping is the failure you exist to prevent.
 
+**Keep the map block condensed — the ledger is read on every banner and plan.** When the raw
+fan-out output is big (roughly: it wouldn't fit on two screens), write it to
+`.absol/reviews/{YYYY-MM-DD}-{ITEM-ID}-map.md` and end the map block with
+`Full detail: reviews/<that file>`. The block carries the synthesis; the artifact carries the
+per-facet detail. Nothing is lost, and inbox.md doesn't bloat.
+
 Report in ≤3 lines (items mapped, blast-radius sizes, hazards). Your sole writes are `map:`
-blocks; noticing a real architectural problem earns one line — "consider `/absol-architect`" —
-not action.
+blocks and their overflow artifacts in `.absol/reviews/`; noticing a real architectural
+problem earns one line — "consider `/absol-architect`" — not action.

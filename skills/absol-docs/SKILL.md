@@ -1,6 +1,6 @@
 ---
 name: absol-docs
-description: Manage the hosted project documentation served by homer (http://aidev:8080/docs/). Scaffolds new project doc folders, registers them in the central docs hub, swaps per-project themes. User-invoked. Use when the user says `/absol-docs`, "add docs to <project>", "register <project> in the docs hub", "theme <project>", "set up the docs hub", or otherwise asks to create, register, restyle, or rewire a hosted HTML doc. Not for `.absol/` pipeline files — those are owned by other absol skills.
+description: Manage the hosted project documentation served by homer (http://aidev:8080/docs/). Scaffolds new project doc folders, registers them in the central docs hub, swaps per-project themes. Owns the workspace docs/-vs-references/ folder convention. User-invoked. Use when the user says `/absol-docs`, "add docs to <project>", "register <project> in the docs hub", "theme <project>", "set up the docs hub", asks where reference material belongs, or otherwise asks to create, register, restyle, or rewire a hosted HTML doc. Not for `.absol/` pipeline files — those are owned by other absol skills.
 ---
 
 # absol-docs
@@ -8,6 +8,15 @@ description: Manage the hosted project documentation served by homer (http://aid
 Own the **hosted project documentation** for this workspace. Project docs live as self-contained HTML files in each project's `docs/`; homer bind-mounts them and serves a hub page at `http://aidev:8080/docs/` that lists every registered project. This skill scaffolds new docs, edits the central registry, wires up the docker mount, and swaps the per-project theme.
 
 User-invoked only. Other absol skills never call this one — the pipeline doesn't need to know about hosted docs, and the two concerns are kept apart on purpose.
+
+## The docs / references convention (this skill owns it)
+
+Every project entry has at most two doc-ish folders, always these names:
+
+- **`docs/`** — what the project *publishes*: working/hosted HTML, hub-registered. The only folder this skill's intents operate on.
+- **`references/`** — what the project *consumes*: source PDFs, corpus dumps, study mds, client contracts. Plain files, lowercase folder name, never hub-registered by default — on request, individual reference files can be registered as doc pages (copy/convert into `docs/`, don't mount `references/` itself).
+
+No per-project inventions (`Reference/`, `archives/`, etc.) — when you meet one, suggest the rename. A file that describes the project's own systems goes in `docs/`; a file the project learns from goes in `references/`. absol-newproject scaffolds both.
 
 ## Architecture
 

@@ -19,7 +19,7 @@ Per item, check prerequisites and fill what's missing:
 
 | Check | Missing / stale → | AFK behaviour |
 |---|---|---|
-| `shape:` | if intent is genuinely ambiguous, invoke `absol-shaper` inline; if the request context already settles it, skip — shape isn't ceremony | **skip the item**; append the blocking question to it as `open:` (dated) and report it — next session's shaping starts from the question, not from scratch |
+| `shape:` | if intent is genuinely ambiguous, invoke `absol-shaper` inline; if the request context already settles it, skip — shape isn't ceremony. *The test:* ambiguous ⇔ you could write two shapes with different `Refuse:` or scope lines that both fit the item as written | **skip the item**; append the blocking question to it as `open:` (dated) and report it — next session's shaping starts from the question, not from scratch. Unsure whether it's ambiguous → it is; skip |
 | `map:` | invoke `absol-research` on the unmapped items (it scales itself; trivial items get a two-line map) | same, automatic |
 | `plan:` | group + spawn planner (below) | same, automatic |
 | freshness | per task: `git log --since=<block date> -- <files_touched>`; touched files → re-map those items, then spawn planner to amend just the affected tasks | same, automatic |
@@ -50,9 +50,9 @@ Walk all primed items' tasks by `execution_order`, dependencies first. Per task:
 - **Pause check** (attended only): user said "pause"/"hold on" → finish the current task,
   append a `pause` event with `next_task`, stop. `/absol` resumes.
 - `executor_tier: micro` → do it inline: edit, run `verification`, append `task-started` +
-  terminal event yourself (executor's rules apply, `worker: inline`). If your own context is
-  getting heavy — long run, many tasks — spawn the executor even for micro; protecting the
-  conductor's context outranks saving a spawn.
+  terminal event yourself (executor's rules apply, `worker: inline`). Once ~15 tasks have
+  executed this run (or context has already compacted), spawn the executor even for micro;
+  protecting the conductor's context outranks saving a spawn.
 - `executor_tier: full` → spawn `absol-executor` with the task entry inline in the prompt (it
   never reads run.md).
 - An agent that dies on tool/permission errors → append `task-failed` with the error as

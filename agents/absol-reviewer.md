@@ -20,7 +20,8 @@ over 256 KB, sample — never read whole.
 ## Check
 
 Correctness against the task description · acceptance criteria point by point (run the task's
-`verification` if you can) · integration (broken imports/refs nearby) · regressions ·
+`verification` if you can — capped commands only, never uncapped builds/tests) ·
+integration (broken imports/refs nearby) · regressions ·
 duplication · scope: when `files_touched_actual` diverged from the plan, judge whether the
 divergence was justified or creep. For `verify_oracle: integration` work, confirm the probe
 exercised the real seam, not a string inspection.

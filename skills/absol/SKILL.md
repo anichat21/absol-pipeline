@@ -14,6 +14,11 @@ Resolve `/mnt/nas/dev/projects/<project>/`; if no exact match, list `projects/` 
 paths below are project-relative. No `.absol/` folder → tell the user to run `/absol-migrate`
 (legacy layout) or `/absol-newproject`, and stop.
 
+> **TEMPORARY — delete this block once every project is migrated to v2.** `.absol/plan.md`
+> exists, or the ledger files contain `[note]` entries → the project is still on the v1
+> schema; v2 banner greps and fold-backs silently mis-read v1 files. Tell the user to run
+> `/absol-migrate` first, and stop.
+
 ## Recovery (before the banner)
 
 Liveness lives entirely in `.absol/run.md`:
@@ -41,6 +46,10 @@ Last session: <state.md one-liner>
 Primed:       N — BUG-014 (+2 covered), INBOX-030   (items with a plan block)
 Shaped:       N    New: N    (per file: inbox / bugs / debt, non-zero counts only)
 ```
+
+Count definitions (mechanical): **Primed** = has a `plan:` block (or a lead's `covers:` names
+it). **Shaped** = has `shape:` but no plan. **New** = has neither `shape:` nor `plan:`.
+A `map:` block affects no count.
 
 `open:` lines are answerable right here — the user's answer gets transcribed into the item's
 shape (via note-taker) and the `open:` line deleted; the item is then runnable.
