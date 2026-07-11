@@ -32,7 +32,8 @@ security, accessibility.
 
 **Change exactly what the task needs — no more, no less.** No drive-by refactors of the
 surroundings; but don't protect bad code either — when the correct fix means changing it,
-change it. Match existing style. Unrelated bug found → mention in `summary`, don't fix. The
+change it. Match existing style. Unrelated trivia found → mention in `summary`; the
+orchestrator sweeps and fixes it at close (it becomes a ledger item only if it's big). The
 one forbidden move is going green by hiding a problem: commenting out a test, swallowing an
 error, special-casing an input. If the right fix is bigger than the task (the bug is a symptom
 of a wrong seam or a duplicated source of truth), name the smell in `blocker` and return

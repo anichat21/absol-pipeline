@@ -43,18 +43,26 @@ in run.md), never stored.
   - prior: archive/2026-06.md#RUN-…  ← earlier run touched this (optional)
   - open: <question> (YYYY-MM-DD)    ← the question that blocked AFK shaping (optional)
   - smell: <diagnosis> (YYYY-MM-DD)  ← why attempts kept failing — zoom-out, not patch trail (optional)
+  - tags: tuning                     ← quiet lane (optional): real work, suppressed from the
+                                     ←   banner and default lists; shown on request
 ```
 
 - Task IDs are namespaced by item (`BUG-014.1`) — no global counter, no allocation races.
 - Item counters are per-file and **never reset**: next = max(this file, `grep` of `archive/`).
-- `type: VERIFY` items are owed human smoke, appended by the finalizer
-  (`title: eyeball <what>`, description says what to check and which run built it). The front
-  door deletes one when the user confirms the smoke; a failed smoke becomes a BUG via note-taker.
+- `type: VERIFY` items are the **smoke ledger** — a reference checklist the user consults so
+  nothing gets missed, appended by the finalizer (`title: eyeball <what>`, description says
+  what to check and which run built it). The front door deletes one when the user confirms the
+  smoke; a failed smoke becomes a BUG via note-taker. **Decay — silence is a pass** (doctrine):
+  the finalizer deletes any VERIFY item whose minting run is ≥4 runs back in the archive with
+  no related BUG filed since, recording one archive line: `presumed passed in use`. A new
+  release supersedes older VERIFY items on the same surface immediately.
 
 ### Field semantics
 
-- **shape** — human decisions only; binding. The one enrichment that can require the user.
-  Must include the refuse-boundary (what is out-of-format / rejected, not recovered).
+- **shape** — human decisions only; binds unattended runs. The one enrichment that can require
+  the user. Must include the refuse-boundary (what is out-of-format / rejected, not recovered).
+  The owner's live word supersedes any shape line on contact — rewrite the line, report in one
+  line (doctrine.md).
 - **map** — codebase facts. Regenerated when stale; never contains decisions.
 - **plan** — the stored, runnable design. Staleness is mechanical, not calendar:
   `git log --since=<planned date> -- <files_touched>` per task; touched files → re-map + amend
@@ -171,6 +179,8 @@ don't share a fix.)
 
 - Item is **planned** ⇔ its ID appears in a plan block (own or a lead's `covers:`).
 - Item is **primed** ⇔ shaped (or trivially unambiguous) + has a fresh plan.
+- Banner counts exclude `tags: tuning` items and enumerate no VERIFY items — both lanes show
+  as counts only, listed on request.
 - Run **live** ⇔ run.md exists and mtime < 15 min. **Paused** ⇔ last event is `pause`.
   **Crashed** ⇔ run.md exists, mtime ≥ 15 min, last event isn't `pause`.
 - Banner counts = grep of the three intake files + archive tail.

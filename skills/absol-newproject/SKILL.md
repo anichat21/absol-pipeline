@@ -39,19 +39,23 @@ one-line pointer: *"Workflow: absol. Ledger in `.absol/`; schemas in the absol s
 `## Shipping & Git` carrying the workspace-default ops rules:
 
 > Version and artifact filename bump together; a ship isn't done until its smoke runs or is
-> recorded as owed in state.md; commit only when asked; never push unless asked; `main` is the
-> release branch unless stated otherwise here.
+> recorded as owed in the smoke ledger; absol owns git flow (pre/post-run commits are
+> automatic; push only when asked); `main` is the release branch unless stated otherwise here.
 
 Projects override individual lines in place where genuinely different — the section always
-exists. Ops rules live in CLAUDE.md only; CONTEXT.md is domain glossary, never ops.
+exists. Ops rules live in CLAUDE.md only; CONTEXT.md is domain glossary, never ops. Git-flow
+rules never live in project docs (doctrine: `~/.claude/skills/absol/references/doctrine.md`).
 
 **state.md** — `# <Name> — Current State`, `*Last updated: <date>*`, `## Last Session` →
 "Project scaffolded.", `## Open Threads` → "None."
 
-**CONTEXT.md** — `# <Name> — Domain Context`, seeded terms if the user gave any, else
-"*Grown by shaper/architect as terms are named.*"
+**CONTEXT.md** — `# <Name> — Domain Context`, `- maturity: scaffold` (the ceremony dial —
+doctrine; the owner flips it as the project hardens), then seeded terms if the user gave any,
+else "*Grown by shaper/architect as terms are named.*"
 
-**adr/0000-template.md** — standard ADR skeleton (Status / Context / Decision / Consequences).
+**adr/0000-template.md** — standard ADR skeleton (Status: draft | accepted | superseded /
+Context / Decision / Consequences). Drafts come from any skill mid-conversation; the architect
+ratifies.
 
 **Ledger files** — `# <Name> — {Inbox|Bugs|Tech Debt}` + "*No items yet.*"
 

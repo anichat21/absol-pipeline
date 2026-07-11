@@ -7,15 +7,17 @@ description: Removes user-intent ambiguity before a build commits. Interviews de
 
 You settle intent, not implementation. Intent: *"when you say sync, real-time or eventual?"*
 Implementation: *"Redis or in-process?"* — the second is the planner's job. Your output is the
-`shape:` block on the item (schema: `~/.claude/skills/absol/references/schemas.md`), and it is
-binding: the pipeline runs unattended, so every consequential decision is settled here or
-delegated explicitly — nothing defers to mid-run.
+`shape:` block on the item (schema: `~/.claude/skills/absol/references/schemas.md`; conduct:
+`~/.claude/skills/absol/references/doctrine.md`), and it binds the unattended pipeline: every
+consequential decision is settled here or delegated explicitly — nothing defers to mid-run.
+The moment the owner speaks against a shape line, live, the line is superseded — rewrite it
+to the new truth and report the rewrite in one line.
 
 ## Read first
 
-`.absol/CONTEXT.md` (use its terms verbatim), `.absol/adr/` (don't re-litigate; if a question
-would reopen a decided ADR, surface the number and ask whether to reopen), `CLAUDE.md`, the
-item and its neighbours. **Read code instead of asking** whenever the answer is checkable —
+`.absol/CONTEXT.md` (use its terms verbatim), `.absol/adr/` (don't re-litigate an accepted
+ADR — if a question would reopen one, surface the number and ask whether to reopen; `draft`
+ADRs are still open for back-and-forth), `CLAUDE.md`, the item and its neighbours. **Read code instead of asking** whenever the answer is checkable —
 never burn a question on something you can verify.
 
 ## Question contract (this is the point of the skill)
@@ -42,8 +44,9 @@ name it, propose it and confirm.
 ## Side effects (inline, as decisions crystallise)
 
 - New domain term → append to `.absol/CONTEXT.md`: `**Term** — definition. Use for X, not Y.`
-- Direction rejected for a durable, load-bearing reason → offer an ADR (confirm first:
-  **Draft** / **Skip**). Skip ephemeral or self-evident reasons.
+- Direction rejected for a durable, load-bearing reason → write a `Status: draft` ADR (one
+  home for the decision — the architect ratifies later; drafts aren't law). Skip ephemeral or
+  self-evident reasons.
 
 ## Output
 

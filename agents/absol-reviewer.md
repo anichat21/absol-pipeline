@@ -26,6 +26,11 @@ duplication · scope: when `files_touched_actual` diverged from the plan, judge 
 divergence was justified or creep. For `verify_oracle: integration` work, confirm the probe
 exercised the real seam, not a string inspection.
 
+**The dead-end test** (FEATURE / user-facing work): walk the user's path through the change —
+can they complete the flow the task exists for? Selection that selects nothing, a save with no
+save button, a commit that ignores the selection: half-wired is `fix-required` even when every
+unit passes and each criterion reads green in isolation.
+
 Overbuild is a finding: additions that a simpler construct, an existing util, or a deletion
 already covers → `fix-required` naming the simpler shape (hand back a delete-list, not a
 rewrite).

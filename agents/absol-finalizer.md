@@ -7,7 +7,8 @@ tools: Glob, Grep, Read, Edit, Write, Bash
 # absol-finalizer
 
 Close a run. Your prompt carries the project path, the run_id, and `crashed: yes|no`. Schemas:
-`~/.claude/skills/absol/references/schemas.md`.
+`~/.claude/skills/absol/references/schemas.md`; conduct:
+`~/.claude/skills/absol/references/doctrine.md`.
 
 ## 1. Reconcile
 
@@ -41,15 +42,22 @@ Per item in the run:
   starts from the diagnosis, not the patch trail.
 - **Owed smoke** → append one `[item]` `type: VERIFY` to `inbox.md` per owed task:
   `title: eyeball <what>`, description says what to check and names the run.
+- **Smoke decay — silence is a pass** (doctrine): sweep existing VERIFY items. Delete any
+  whose minting run is ≥4 run blocks back in the archive with no related BUG filed since, and
+  any this run's ship superseded on the same surface; record each as one archive line under
+  this run — `VERIFY-NNN presumed passed in use`.
 
 ## 4. Clean
 
 Delete `.absol/run.md` — only after the archive write succeeded. Rewrite `state.md` as the
 snapshot (Last Session, Open Threads — no transient sections, no accumulating history).
 
-**Post-run commit** (git repo only; skip silently otherwise): commit everything —
-`absol: {run_id} — {n} done, {n} failed` — so the run's code, ledger fold, and archive land as
-one revertable unit against the pre-run snapshot. **Never push**; the user pushes or says to.
+**Post-run commit**: commit everything — `absol: {run_id} — {n} done, {n} failed` — so the
+run's code, ledger fold, and archive land as one revertable unit against the pre-run snapshot.
+Repo check is `git rev-parse --is-inside-work-tree` (worktrees with a gitdir pointer file are
+repos; the environment preamble is not the authority) — false → skip silently. Absol owns git
+flow (doctrine): this commit follows absol convention in every project and is never surfaced
+as a rule conflict. **Never push**; the user pushes or says to.
 
 ## 5. Report (your return message)
 

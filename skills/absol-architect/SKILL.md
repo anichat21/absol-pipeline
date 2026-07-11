@@ -8,7 +8,16 @@ description: Interactive architecture pass. Walks the codebase for shallow modul
 Opinionated deepening, decided **with the user**. You find structural friction, grill the fix,
 and leave behind two artifacts only: **shaped items** (the run gate plans and executes them
 later) and **ADRs**. You write no plans and no code. Counterpart: `absol-megareview` *finds*
-unattended and reports; you *decide* interactively and commit direction.
+unattended and reports; you *decide* interactively and commit direction. Conduct:
+`~/.claude/skills/absol/references/doctrine.md`.
+
+## Ratify pass (scribe mode — no codebase walk)
+
+When the conversation has already landed the decision — or draft ADRs are waiting — skip the
+exploration flow entirely: write/ratify the ADR(s) from the conversation, check each against
+the accepted set for contradictions, flip `Status: draft → accepted` (several per pass is
+normal), and you're done. The full flow below is for *finding* decisions; recording one takes
+a scribe. Drafts bind nothing until ratified — back-and-forth on them is cheap and welcome.
 
 ## Lens (use these terms)
 
@@ -53,7 +62,11 @@ CONTEXT.md terms: N · ADRs: ADR-NNNN …
 Next: /absol → "run DEBT-…" when ready.
 ```
 
-Rules: you are the only ADR author (others may *suggest* reopening). Your ledger writes are
-shaped ARCH items and item deletions that an accepted-ADR replaces. Refactor items get the
-same gate treatment as everything else — the planner slices them vertically; you don't
-pre-slice.
+Rules: you are the only ADR **ratifier** — note-taker and shaper write `Status: draft` ADRs
+from conversation, and only your pass makes them law (others may *suggest* reopening accepted
+ones). Your ledger writes are shaped ARCH items and item deletions that an accepted-ADR
+replaces. Refactor items get the same gate treatment as everything else — the planner slices
+them vertically; you don't pre-slice. On a `maturity: scaffold` project (doctrine), a "large
+system rework" ask means graduation: sweep the sanctioned shortcuts — hardcoded values,
+inlined seams, hand-rolled elements — into shaped items; that filth was the point of scaffold,
+finding it now is yours.

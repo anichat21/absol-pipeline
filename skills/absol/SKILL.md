@@ -5,8 +5,9 @@ description: Front door for absol project sessions. Opens the project, recovers 
 
 # absol
 
-Data shapes: `references/schemas.md` (relative to this skill). Three jobs: open the project,
-recover if needed, route the conversation.
+Data shapes: `references/schemas.md`; conduct: `references/doctrine.md` (both relative to this
+skill — doctrine governs rules-vs-facts, git flow, and effort allocation everywhere). Three
+jobs: open the project, recover if needed, route the conversation.
 
 ## Entry
 
@@ -40,22 +41,24 @@ Grep the three intake files and read `state.md`:
 absol — <project>
 
 Last session: <state.md one-liner>
-⚠ Owed smoke:  VERIFY-003 — eyeball <what>          (omit if none)
 ⚠ Open:        BUG-014 — <the question AFK shaping logged>     (omit if none)
 ⚠ Smell:       INBOX-021 — <why attempts kept failing>         (omit if none)
 Primed:       N — BUG-014 (+2 covered), INBOX-030   (items with a plan block)
 Shaped:       N    New: N    (per file: inbox / bugs / debt, non-zero counts only)
+Smoke: N owed · Tuning: N     (counts only, non-zero; "smoke"/"tuning" lists them)
 ```
 
 Count definitions (mechanical): **Primed** = has a `plan:` block (or a lead's `covers:` names
 it). **Shaped** = has `shape:` but no plan. **New** = has neither `shape:` nor `plan:`.
-A `map:` block affects no count.
+A `map:` block affects no count. `tags: tuning` items and VERIFY items live outside all counts
+above — quiet lanes, one count line, enumerated only when the user asks.
 
 `open:` lines are answerable right here — the user's answer gets transcribed into the item's
 shape (via note-taker) and the `open:` line deleted; the item is then runnable.
 
-Six-to-ten lines, no file dumps. **Owed smoke:** when the user confirms a VERIFY item passed,
-delete it; if it failed, route to note-taker as a BUG, then delete it. Don't let the list rot.
+Six-to-ten lines, no file dumps. **Smoke ledger:** a reference checklist, not an alarm —
+silence is a pass signal (doctrine). When the user confirms a VERIFY item passed, delete it;
+if it failed, route to note-taker as a BUG, then delete it. Decay is the finalizer's job.
 
 ## Routing
 
@@ -75,8 +78,13 @@ One mode per turn. Genuinely unclear between capture and action → ask.
 1. Resolve the selection to item IDs (named IDs, a type — "the bugs", or "everything primed").
 2. Ask AFK or attended if not obvious (user present and engaged → attended; "run it and I'll
    check later", scheduled, or "afk" → `afk: yes`).
-3. Invoke `absol-orchestrate` with `items:` + `afk:`. It gates, plans what's missing, executes,
-   reviews, and finalizes — including the checkpoint UX, so don't pre-ask anything else.
+3. **Planner tier** (attended only): planners default to Opus. When the selection is a genuine
+   system rework — cross-cutting ARCH scope, many subsystems — propose the upgrade in one line
+   with the reason ("this touches all 9 routers — Fable planner? y/n") and pass the answer as
+   `planner_model:`. AFK runs stay on the default.
+4. Invoke `absol-orchestrate` with `items:` + `afk:` (+ `planner_model:` if upgraded). It
+   gates, plans what's missing, executes, reviews, and finalizes — including the checkpoint
+   UX, so don't pre-ask anything else.
 
 **Scheduling** ("run this tonight", "every morning"): use the `schedule` skill to create a
 headless invocation of `/absol <project> run <selection> afk`. The gate makes this safe:

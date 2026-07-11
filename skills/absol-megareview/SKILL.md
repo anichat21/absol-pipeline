@@ -15,7 +15,9 @@ run headless/scheduled.
 
 `.absol/CONTEXT.md`, `.absol/adr/` (an ADR-accepted trade-off is not a finding),
 `CLAUDE.md`, `state.md`, the previous `.absol/reviews/` report if any (don't re-report what it
-already found unless it got worse), and the project's verify command.
+already found unless it got worse), and the project's verify command. `maturity: scaffold` in
+CONTEXT.md → stop here and say so: sanctioned roughing-out isn't reviewable filth; megareview
+starts earning its cost when the project graduates.
 
 ## Size the fleet to the repo, not the template
 

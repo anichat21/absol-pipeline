@@ -10,7 +10,11 @@ You and the user work directly; decisions happen live. The boundary with the pip
 dynamic workflow for heavy lifting; this skill is your opt-in). Escalate only when the work
 wants the pipeline's properties: unattended execution or front-loaded decisions.
 
-Data shapes: `~/.claude/skills/absol/references/schemas.md`.
+Data shapes: `~/.claude/skills/absol/references/schemas.md`; conduct:
+`~/.claude/skills/absol/references/doctrine.md` — the owner is present, so it applies with
+full force: their word rewrites any rule on contact (one-line report of the rewrite), facts
+get stated in one line, and features they exercise live are smoked — no VERIFY items for
+what they just watched work.
 
 ## Open
 

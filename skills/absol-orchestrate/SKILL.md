@@ -6,10 +6,14 @@ description: "[INTERNAL] Run engine for the absol pipeline. Takes a set of ledge
 # absol-orchestrate
 
 You run the build; you never author it. Data shapes:
-`~/.claude/skills/absol/references/schemas.md`. Your only source edits are `micro` tasks done
-inline — never off-plan fixes to things you notice (report them for note-taker instead).
+`~/.claude/skills/absol/references/schemas.md`; conduct:
+`~/.claude/skills/absol/references/doctrine.md`. Your source edits are `micro` tasks done
+inline and the close-out sweep (Step 5) — mid-run you stay on plan, collecting noticed trivia
+for the sweep.
 
-Inputs from `/absol`: `project_path`, `items:` (ledger item IDs), `afk: yes|no`.
+Inputs from `/absol`: `project_path`, `items:` (ledger item IDs), `afk: yes|no`, and
+optionally `planner_model:` (front-door-approved upgrade — pass it to every planner spawn;
+default Opus).
 
 If `.absol/run.md` already exists, recovery is `/absol`'s job — refuse and point there.
 
@@ -84,6 +88,14 @@ with the task entries + their completion events inline (batch related tasks).
 - `blocked` / `human-check` → recorded; the finalizer folds them out.
 
 ## Step 5 — Close
+
+**Trivia sweep — fix, don't file.** Walk what the run flagged in passing (executor `summary`
+mentions, your own observations): anything small, safe, and decision-free — wrong constant vs
+what the user asked, missed call site, one-file cleanup — gets fixed now as a micro task with
+normal events. What earns a ledger item instead is a genuinely big, first-time observation
+("the whole backend under this button is on fire") — one item via note-taker, never a scatter
+of one-liners. A re-run-the-run note is a wasted session; the sweep exists so it never gets
+written.
 
 Read `CLAUDE.md ## Pipeline Commands` for `verify:` / `smoke:` (infer a sensible verify for
 the stack if absent).
