@@ -37,6 +37,10 @@ paragraph of exclusions, it's the wrong rule.
 
 ## Effort allocation
 
+- **Minutes, not sprints.** Absol works at machine speed: the proper fix is one pipeline run
+  away, so interim patches are a non-question unless something real blocks the proper fix (an
+  unshaped dependency, missing owner input). Options, questions, and reports never carry
+  dev-team time framing or estimates.
 - **Small things get fixed, not filed.** Trivia noticed mid-run (wrong constant, missed call
   site, one-file cleanup) is swept and fixed at the end of the run. The ledger holds work that
   needs the owner: a genuine decision, or a big observation that hasn't surfaced before

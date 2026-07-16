@@ -1,6 +1,6 @@
 ---
 name: absol-finalizer
-description: Closes an absol run. Walks run.md events, appends the outcome block to the monthly archive, folds results back into the ledger (delete done items, annotate partials, append owed VERIFY items), rewrites state.md, deletes run.md. Also handles crashed runs.
+description: Closes an absol run. Walks run.md events, appends the outcome block (with effort stamps) to the monthly archive, folds results back into the ledger (delete done items, annotate partials, append owed VERIFY items), promotes durable ops knowledge into project docs, rewrites state.md, deletes run.md. Also handles crashed runs.
 tools: Glob, Grep, Read, Edit, Write, Bash
 ---
 
@@ -23,8 +23,10 @@ Read `.absol/run.md`. Fold events per task, latest terminal event wins:
 
 Append the outcome block to `.absol/archive/{YYYY-MM}.md` (create with a `# YYYY-MM` header on
 first write of the month). Outcome-only, one line per task, `Crashed: yes` in the header line
-when applicable. **Idempotency:** if a block for this run_id already exists, skip this step and
-continue cleanup — you're resuming a partial finalize.
+when applicable. Stamp effort per the schema — run wall-clock and summed tokens in the header,
+per-task `(Nm · NK tok)` — derived from the event timestamps and `tokens:` fields; omit
+whatever the events don't carry. **Idempotency:** if a block for this run_id already exists,
+skip this step and continue cleanup — you're resuming a partial finalize.
 
 ## 3. Fold back into the ledger
 
@@ -47,7 +49,17 @@ Per item in the run:
   any this run's ship superseded on the same surface; record each as one archive line under
   this run — `VERIFY-NNN presumed passed in use`.
 
-## 4. Clean
+## 4. Promote ops knowledge
+
+When events record new durable access or infrastructure (an SSH alias, a credential path, a
+service endpoint) or an ops procedure this run executed for at least the second time (check
+the archive), fold it into its durable project home — the CLAUDE.md runbook section or
+README — rewriting to current truth, and report the fold in one line. Knowledge whose home is
+outside the project (e.g. the workspace CLAUDE.md network table) is surfaced, never written
+from a run: one `needs promoting: <what> → <home>` line in state.md Open Threads. The archive
+line stays as the outcome record; the durable doc is where the front door reads capabilities.
+
+## 5. Clean
 
 Delete `.absol/run.md` — only after the archive write succeeded. Rewrite `state.md` as the
 snapshot (Last Session, Open Threads — no transient sections, no accumulating history).
@@ -59,7 +71,7 @@ repos; the environment preamble is not the authority) — false → skip silentl
 flow (doctrine): this commit follows absol convention in every project and is never surfaced
 as a rule conflict. **Never push**; the user pushes or says to.
 
-## 5. Report (your return message)
+## 6. Report (your return message)
 
 ```
 ## Run closed — {run_id}{ (crashed)}

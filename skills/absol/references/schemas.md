@@ -76,9 +76,11 @@ in run.md), never stored.
 
 ## `.absol/run.md` — transient run log
 
-Exists ⇔ a run is open. **File mtime is the liveness signal** — no timestamps are copied
-anywhere. Header is write-once; everything else is append-only events. Tasks are NOT copied
-here — they live in the items' plan blocks; the orchestrator passes each agent its task inline.
+Exists ⇔ a run is open. **File mtime is the liveness signal** — timestamps are never copied
+as state; the finalizer derives durations from them once, at close. `<ISO>` is full ISO with
+seconds (`2026-07-01T14:03:22+02:00`). Header is write-once; everything else is append-only
+events. Tasks are NOT copied here — they live in the items' plan blocks; the orchestrator
+passes each agent its task inline.
 
 ```
 # RUN-2026-07-01            ← -2, -3 for same-day reruns (check archive for collisions)
@@ -101,6 +103,9 @@ here — they live in the items' plan blocks; the orchestrator passes each agent
   - summary: one factual line
   - verification_result: pass | fail | skipped (<reason>)
   - review_flag: yes | no
+  - tokens: 29K                      ← any terminal event, delegated workers only: from the
+                                     ←   agent result's usage, retries accumulated. Inline and
+                                     ←   scratchpad tasks have no figure — omit the field
   - resolves: BUG-004                ← scratchpad only: ledger item(s) this task completes;
                                      ←   the finalizer deletes them (pipeline tasks never carry it)
 
@@ -108,6 +113,7 @@ here — they live in the items' plan blocks; the orchestrator passes each agent
   - type: task-failed | task-blocked
   - task: BUG-014.1
   - files_touched_actual: <even if partial>
+  - tokens: 88K
   - blocker: one line
   - smell: <one line — only on terminal failure after retries: what the failure pattern points at>
 
@@ -140,13 +146,16 @@ the task ID.
 ## `.absol/archive/YYYY-MM.md` — append-only history
 
 The finalizer appends one block per run. Files are never renamed, merged, or deleted.
-Outcome-only — plan-time specs are not copied.
+Outcome-only — plan-time specs are not copied. Effort figures are derived here, once, from
+run.md before it's deleted (task = task-started → latest terminal event, retries included;
+run = `started:` → last event; tokens summed from `tokens:` fields) — omit whatever the
+events don't carry. They're diagnostics for studying run norms, never promises.
 
 ```
-## RUN-2026-07-01 · pipeline · 2026-07-01 · 3 done, 1 failed (· Crashed: yes)
+## RUN-2026-07-01 · pipeline · 2026-07-01 · 3 done, 1 failed · 42m · 214K tok (· Crashed: yes)
 Items: BUG-014 (done), INBOX-021 (partial)
-- BUG-014.1 done — summary. files: src/a.ts. verify: pass.
-- BUG-014.2 failed (×2) — blocker. files: src/b.ts.
+- BUG-014.1 done (4m · 29K tok) — summary. files: src/a.ts. verify: pass.
+- BUG-014.2 failed (×2) (11m · 88K tok) — blocker. files: src/b.ts.
 - Notable: <only what a future run must know>          (omit if none)
 ```
 
