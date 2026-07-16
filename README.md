@@ -101,6 +101,11 @@ Everything is git-tracked except `run.md` — the ledger carries shaped human de
 
 Symlink `skills/*` into `~/.claude/skills/` and `agents/*.md` into `~/.claude/agents/`.
 
+## Working on this repo
+
+`CLAUDE.md` anchors the repo's own working system (no `.absol/` here). Authoring principles
+for skills and agents: `meta/authoring.md` — read it before editing them.
+
 ## Feedback
 
 `feedback/` holds dated problem reports about absol's own behaviour (`absol-feedback` writes
