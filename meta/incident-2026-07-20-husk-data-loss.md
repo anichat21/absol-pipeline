@@ -27,7 +27,7 @@ before the damage.
 - **The hoard convention** (dev workspace `CLAUDE.md`): irreplaceable data lives in
   `hoard/` — a nested repo with a local mirror remote, never GitHub; gitignore hides
   regenerable junk only. Nothing valuable is ever merely ignored.
-- **The codex rework** (`absol-codex_wip`): containment choreography (worktrees +
+- **The codex rework** (`absol-codex`): containment choreography (worktrees +
   symlinks + merges) replaced by codex working the real checkout on the commit gate;
   orchestrator git reduced to status/diff/commit.
 - **Husk BUG-012**: the frozen bench is retired (old hand-scores incomparable, data not
