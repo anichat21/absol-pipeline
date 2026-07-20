@@ -64,7 +64,7 @@ The two baited traps decided it:
 
 ## Codex operations
 
-Operational usage (incantation, wrapper script, traps, containment) lives in the **absol-codex skill** (`skills/absol-codex/SKILL.md`, symlinked into `~/.claude/skills/`) — triggers only on explicit mention of codex. This doc keeps the evidence; the skill owns the how.
+Operational usage (incantation, wrapper script, traps, the commit-gate system) lives in the **absol-codex skill** (`skills/absol-codex/SKILL.md`, symlinked into `~/.claude/skills/`) — triggers only on explicit mention of codex. This doc keeps the evidence; the skill owns the how.
 
 ## Harness facts (Claude Code build as of 2026-07-16)
 
