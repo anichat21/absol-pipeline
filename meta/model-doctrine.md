@@ -97,4 +97,16 @@ Operational usage (incantation, wrapper script, traps, the commit-gate system) l
 
 1. **Executor race** — Sonnet vs Opus vs GPT-5.6-sol implementing the same task. Codex-as-executor is now field-validated (2026-07 runs above) but never raced head-to-head against Claude tiers.
 2. **Effort dimension** — low vs high on Sonnet/Opus readers, via Workflow.
-3. **GPT as reader** — racing 2026-07-25 (docs-hub stale/consistency sweep: Opus control vs gpt-5.6-sol vs gpt-5.6-terra, both at high). Measures tokens, wall-clock, and finding precision; results land here.
+3. ~~GPT as reader~~ — **raced 2026-07-25** (docs-hub stale/consistency audit, ~4MB text corpus, identical briefs; orchestrator-verified sample of each lane's unique claims):
+
+| Lane | Time | Findings | Sample precision | Character |
+|---|---|---|---|---|
+| Opus (control) | 8m57s · 299K tokens (Claude window) | **57** | high; 1 direction error | Broadest sweep by far — chrome/theme/structural drift others missed |
+| GPT-5.6-sol high | 14m19s · ~275K uncached in + 33K out ($0) | 33 | high; 1 framing error | Deepest *content* reading — semantic contradictions Opus missed (doctrine conflicts, stale data counts) |
+| GPT-5.6-terra high | **5m35s** · ~212K uncached in + 16K out ($0) | 14 | high, but sampled not swept | Precise and fast; recall collapses at corpus scale |
+
+   Verdict: sol's reading precision is real — zero false positives in the verified sample —
+   so the scout ban lifts; but recall splits by *kind* (Opus sees structure, sol sees meaning),
+   and the union covered nearly everything either missed. **Audit-grade reads → Opus + sol in
+   parallel, dedupe the union** (sol's lane is free and doesn't touch the Claude window).
+   Terra: targeted/pointer-fed reads only, not open-ended sweeps.
