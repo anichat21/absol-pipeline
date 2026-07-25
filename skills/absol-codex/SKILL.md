@@ -33,6 +33,9 @@ READ-ONLY, I will diff it" — held byte-identical at 4K-line scale (artemis, 20
 
 The gate covers *tracked* files only; the workspace hoard convention (dev workspace
 `CLAUDE.md`) guarantees that's everything valuable — gitignore hides regenerable junk only.
+Some write targets sit outside any gate regardless (non-repo paths like `knowledge_base/`,
+repos that deliberately ignore their docs): tar-backup those files before codex writes —
+the backup is the rollback there.
 
 ## What to send it, and how to brief it
 
@@ -43,6 +46,10 @@ free parallel power, not a scarce fallback. Calibration evidence lives in the mo
 - **Brief it like a respected peer**: goal, acceptance criteria, constraints/refuse-lines —
   never a step-by-step how. The validated runs won *because* codex planned its own path
   (caught ADR contradictions, self-scoped work the brief didn't ask for).
+- **Flag-don't-force is part of every brief**: "if a listed item looks wrong after reading,
+  flag it with a citation instead of forcing the edit." A refusal is a review event —
+  adjudicate it before overriding; the one exercised refusal (2026-07-25) was correct and
+  beat both the upstream reader and the orchestrator's spot-check.
 - **Brief hazards inline.** Codex under-weights artifacts the brief only references — a
   hazard flagged in a linked map file was acted on only once restated in the brief body
   (husk RUN-2026-07-17-4). Binding constraints, refuse-lines, and vocabulary go in the
@@ -105,3 +112,6 @@ codex exec --skip-git-repo-check --sandbox danger-full-access \
   writes outside its `-C` dir as a matter of course; don't treat `-C` as containment.
 - No quota-query surface — on rate-limit errors, back off; GPT quota exhaustion is not a
   Claude problem, just report it.
+- Token accounting: per-run usage lives in `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`
+  (`token_count` events; last one carries the totals — read cached vs uncached input apart,
+  the cached bulk is nearly free). Match runs to lanes by start timestamp.

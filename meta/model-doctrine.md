@@ -64,6 +64,13 @@ Recall over a verified 15-core/6-peripheral consumer set incl. two un-greppable 
 - **07-22 planner+executor AFK run**: 3 plans at effort high (zero retries, exact schema),
   9 executions at medium — 9/9 first-try VERIFY PASS, every mapped trap avoided. Sole
   finding: one stale docstring.
+- **07-25 docs-hub fix pass** (loop trial): sol-medium executed 62/64 briefed doc fixes
+  across 3 parallel disjoint-checkout execs + one class-audit iteration, preserving each
+  doc's voice; its one refusal (flag-don't-force) was correct and beat both the upstream
+  reader and the judge's grep spot-check — the executor is a verification layer, not just
+  hands. Terra cleared a 4-fix pointer-fed batch in 39s. Grep-based judging is triage, not
+  truth: content-blind spot-checks passed a false positive that only full-context reading
+  caught.
 
 ### Planner race — INBOX-031 (shadows + N8AO tier), unanimous 3/3 blind ranking
 

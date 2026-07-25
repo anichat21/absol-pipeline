@@ -28,7 +28,8 @@ module).
 
 Two stages per item: stage 1 finds *what changes*, stage 2 greps *what that ripples to* — the
 ripple is exactly what a single context misses. Readers are read-only (no Edit/Write, no
-worktrees). **Embed the items as a literal `const` in the script** — the Workflow `args`
+worktrees). Audit-grade maps: add a codex-sol reader in parallel (free pool; per the model
+doctrine it finds semantic defects Claude readers miss — union the results). **Embed the items as a literal `const` in the script** — the Workflow `args`
 field does not reach the script in this environment (see workspace CLAUDE.md). Give every
 reader the read-hygiene rule: check file size first; over 256 KB, sample with
 `head`/`grep`/`jq`, never read whole.

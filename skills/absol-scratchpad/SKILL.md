@@ -51,7 +51,9 @@ On "diagnose X" / "loop on X": an AFK-able read → report → fix → verify cy
 target with the project's feedback surface (CLAUDE.md `smoke:`, Playwright for UIs, whatever
 the project offers), report findings as a task event, fix per the lane rules (mechanical +
 plural → codex), verify with the same probe, repeat until clean or a finding needs the owner.
-Built for UI smoke; any project with a probe-able surface qualifies.
+Iterate in two shapes: fix the listed instances, then audit the *defect class* (verify every
+instance of the kind against content) — instance-scoped fixes miss residue. Built for UI
+smoke; any project with a probe-able surface qualifies.
 
 ## Escalate to pipeline
 
