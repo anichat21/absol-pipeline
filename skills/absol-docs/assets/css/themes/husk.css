@@ -1,0 +1,32 @@
+/* husk.css — theme override for the Husk docs.
+   Matte-black internal-tool stage, single amber signal, flat functional color
+   blocking, mono numerals. Force-dark: same look regardless of prefers-color-scheme. */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Stage — matte black, no gradients doing mood work */
+  --bg:            #0b0b0c;
+  --bg-subtle:     #131315;
+  --text:          #e8e8e6;
+  --text-muted:    #7d7d7a;
+  --border:        #2b2b2e;
+  --border-subtle: #1d1d20;
+  --heading:       #ffffff;
+  --code-bg:       #131315;
+  --code-text:     #e8e8e6;
+
+  /* Primary signal — the AI-acting amber; color only ever means something */
+  --accent:        #f5a623;
+  --accent-hover:  #ffc04d;
+  --accent-soft:   rgba(245, 166, 35, 0.16);
+
+  /* Secondary — cold instrument grey-blue (overlays, technical lines) */
+  --moss:          #8fb4c9;
+  --moss-soft:     rgba(143, 180, 201, 0.16);
+
+  /* Typography — grotesque display, quiet body, mono for every number */
+  --font-display: 'Space Grotesk', -apple-system, sans-serif;
+  --font-sans:    'Inter', -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
