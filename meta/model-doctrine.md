@@ -105,7 +105,10 @@ Operational usage (incantation, wrapper script, traps, the commit-gate system) l
 | GPT-5.6-sol high | 14m19s · ~275K uncached in + 33K out ($0) | 33 | high; 1 framing error | Deepest *content* reading — semantic contradictions Opus missed (doctrine conflicts, stale data counts) |
 | GPT-5.6-terra high | **5m35s** · ~212K uncached in + 16K out ($0) | 14 | high, but sampled not swept | Precise and fast; recall collapses at corpus scale |
 
-   Verdict: sol's reading precision is real — zero false positives in the verified sample —
+   Verdict: sol's reading precision is real — one false positive total, and it was caught by
+   sol *itself* in the executor pass (the "fuzzy vs no-fuzzy" contradiction was Names-vs-
+   Materials domain confusion; the fix-batch executor refused the edit with the correct
+   citation, beating both the reader and the judge's spot-check) —
    so the scout ban lifts; but recall splits by *kind* (Opus sees structure, sol sees meaning),
    and the union covered nearly everything either missed. **Audit-grade reads → Opus + sol in
    parallel, dedupe the union** (sol's lane is free and doesn't touch the Claude window).
