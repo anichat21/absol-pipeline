@@ -68,7 +68,7 @@ flowchart TD
     <p>One principle: <strong>store only what can't be recomputed — human decisions and outcomes; derive the rest.</strong> No status flags: an item is "planned" because a plan block exists on it; a run is "live" because <code>.absol/run.md</code> exists (its mtime is the heartbeat); history is an append-only <code>archive/YYYY-MM.md</code>. Done items are deleted at finalize — the archive block is their record. Every write is tool-owned; the human's manual surface is decisions only.</p>
 
     <h2 id="skills">Skills &amp; agents</h2>
-    <p>Each component has one job. <span class="chip">skill</span> are invoked through <code>/absol</code> or directly; <span class="chip">agent</span> are spawned with their task inline in the prompt and only ever append events; <span class="chip">internal</span> run only as part of a flow. Agents inherit the session model — nothing is pinned. Schemas live once, in <code>absol/references/schemas.md</code>.</p>
+    <p>Each component has one job. <span class="chip">skill</span> are invoked through <code>/absol</code> or directly; <span class="chip">agent</span> are spawned with their task inline in the prompt and only ever append events; <span class="chip">internal</span> run only as part of a flow. Agents inherit the session model — nothing is pinned. Schemas live once, in <code>skills/absol/references/schemas.md</code>.</p>
 
     <table>
       <thead>
@@ -159,6 +159,11 @@ flowchart TD
           <td><code>absol-docs</code></td>
           <td><span class="chip">skill</span></td>
           <td>Manages the hosted documentation hub (this page lives here). Scaffolds, registers, and themes project docs served by homer.</td>
+        </tr>
+        <tr>
+          <td><code>absol-codex</code></td>
+          <td><span class="chip">skill</span></td>
+          <td>Delegates volume work — execution batches, review, and bulk reading — to OpenAI Codex CLI.</td>
         </tr>
       </tbody>
     </table>

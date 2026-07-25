@@ -18,6 +18,10 @@
      "path": "game-design.html"
     },
     {
+     "title": "Game design (French)",
+     "path": "game-design.fr.html"
+    },
+    {
      "title": "Systems",
      "path": "systems.html"
     },
@@ -171,6 +175,7 @@
    "name": "BarnOwl Noir",
    "icon": "fas fa-car",
    "category": "project",
+   "theme": "distillery.css",
    "description": "Offline kiosk car configurator — the UE5.8 hybrid-C++ ground-up rebuild: vision, decisions, and the phased plan. The current-donor map lives in the Pipeline KB.",
    "docs": [
     {
