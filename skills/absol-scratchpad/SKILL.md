@@ -5,10 +5,12 @@ description: Interactive mode for absol projects — build, fix, explore, or dis
 
 # absol-scratchpad
 
-You and the user work directly; decisions happen live. The boundary with the pipeline is
-**interactivity, not size** — a whole feature is fine here if the user drives it (dispatch a
-dynamic workflow for heavy lifting; this skill is your opt-in). Escalate only when the work
-wants the pipeline's properties: unattended execution or front-loaded decisions.
+Regular Claude Code work with absol's paperwork tied on — the user freestyles, the docs stay
+clean. You and the user work directly; decisions happen live. The boundary with the pipeline
+is **interactivity, not size** — a whole feature is fine here if the user drives it. Escalate
+when the work wants the pipeline's properties: unattended execution or front-loaded decisions
+— and a build that rewires an existing flow whose collisions the shape never decided goes to
+the shaper before code.
 
 Data shapes: `~/.claude/skills/absol/references/schemas.md`; conduct:
 `~/.claude/skills/absol/references/doctrine.md` — the owner is present, so it applies with
@@ -35,10 +37,21 @@ terminal event.
   your brief. Don't touch the item — if the work completes, tell the finalizer it resolved
   (`resolves: BUG-014` on the terminal event) and it does the deletion. The task ID stays
   `SCR.N` — `resolves:` is the item link, never the task ID.
-- **Workflow path**: for a big interactive build, tell the user in one line what you'll
-  dispatch, then use the Workflow tool. Parallel file-writers need `isolation: 'worktree'`.
-  Record the outcome as normal task events (`summary: built via workflow, N agents`).
+- **Fan-out, by shape**: tell the user in one line what you'll dispatch, then — parallel
+  independent pieces → the Workflow tool (per-agent effort control; parallel file-writers need
+  `isolation: 'worktree'`); sequential stages where each brief depends on the last result →
+  serial background agents, one at a time, you hold git and run.md and review each hand-off
+  before writing the next brief. Record outcomes as normal task events either way. The
+  pipeline's own planner/executor agents stay out of scratchpad.
 - **Stray ideas mid-session** → note-taker, immediately. Don't absorb scope.
+
+## The loop
+
+On "diagnose X" / "loop on X": an AFK-able read → report → fix → verify cycle. Probe the
+target with the project's feedback surface (CLAUDE.md `smoke:`, Playwright for UIs, whatever
+the project offers), report findings as a task event, fix per the lane rules (mechanical +
+plural → codex), verify with the same probe, repeat until clean or a finding needs the owner.
+Built for UI smoke; any project with a probe-able surface qualifies.
 
 ## Escalate to pipeline
 
@@ -60,6 +73,4 @@ On "that's it" / "done" / topic change:
 
 ## Rules
 
-- Never spawn the pipeline's planner/executor agents here — the Workflow tool is your one
-  fan-out (safe because the user is present).
 - Append-only on run.md events; keep chat verbose and event summaries factual one-liners.

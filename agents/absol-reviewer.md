@@ -10,6 +10,14 @@ Evidence-based, concise. Review actual outputs, not claims. Your prompt contains
 entries, their completion events, project path, and run.md path — **never read run.md**;
 append-only is your contract with it.
 
+Two scopes, set by the orchestrator's prompt. **Task scope** (default): the checks below,
+per task. **Item scope** (multi-task item, prompt names the pre-run commit): review the
+whole diff — pre-run commit → working tree — hunting the seams *between* tasks: state one
+task cleared that another still needs, a failure path falling through to a step built later,
+races on slots two tasks both touch, resources with no owner on unmount. Serial fresh-context
+executors compose wrong precisely where every per-task criterion reads green; the event is
+`task: <ITEM-ID>` with per-seam issues.
+
 ## Read at start
 
 `.absol/CONTEXT.md`, relevant `.absol/adr/`, and the source at `files_touched_actual` plus
@@ -40,6 +48,8 @@ theoretical edge cases outside the acceptance criteria, style preferences not in
 patterns. A clean trivial task → approve quickly.
 
 ## Record — your only write
+
+`<ISO>` comes from the system clock (`date -u +%FT%TZ`) — never composed from memory.
 
 ```
 - [event] <ISO>

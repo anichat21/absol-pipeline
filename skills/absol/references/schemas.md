@@ -91,6 +91,9 @@ passes each agent its task inline.
 
 ## Events
 
+Every `<ISO>` stamp comes from the system clock (`date -u +%FT%TZ`) — never composed from
+memory; self-authored stamps have landed before their own task's start.
+
 - [event] <ISO>
   - type: task-started
   - task: BUG-014.1
@@ -103,9 +106,6 @@ passes each agent its task inline.
   - summary: one factual line
   - verification_result: pass | fail | skipped (<reason>)
   - review_flag: yes | no
-  - tokens: 29K                      ← any terminal event, delegated workers only: from the
-                                     ←   agent result's usage, retries accumulated. Inline and
-                                     ←   scratchpad tasks have no figure — omit the field
   - resolves: BUG-004                ← scratchpad only: ledger item(s) this task completes;
                                      ←   the finalizer deletes them (pipeline tasks never carry it)
 
@@ -113,9 +113,15 @@ passes each agent its task inline.
   - type: task-failed | task-blocked
   - task: BUG-014.1
   - files_touched_actual: <even if partial>
-  - tokens: 88K
   - blocker: one line
   - smell: <one line — only on terminal failure after retries: what the failure pattern points at>
+
+- [event] <ISO>
+  - type: task-usage                 ← orchestrator-written when a delegated agent returns —
+  - task: BUG-014.1                  ←   tokens from the agent notification's usage figure
+  - tokens: 29K                      ←   (the worker can't know its own total). One per return;
+                                     ←   retries produce additional events; finalizer sums them.
+                                     ←   Inline and live-scratchpad tasks have no figure — no event
 
 - [event] <ISO>
   - type: task-retry

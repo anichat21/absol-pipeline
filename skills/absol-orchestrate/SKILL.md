@@ -15,6 +15,11 @@ Inputs from `/absol`: `project_path`, `items:` (ledger item IDs), `afk: yes|no`,
 optionally `planner_model:` (front-door-approved upgrade — pass it to every planner spawn;
 default Opus).
 
+**Lanes:** judgment and gates (shaping, plan approval, commits) stay here; volume work —
+mechanical execution batches, whole-diff review, bulk reading — routes to codex by default
+(`absol-codex` owns the how, `meta/model-doctrine.md` the evidence). Report the routing in
+one line; don't ask.
+
 If `.absol/run.md` already exists, recovery is `/absol`'s job — refuse and point there.
 
 ## Step 1 — The gate
@@ -58,7 +63,8 @@ Walk all primed items' tasks by `execution_order`, dependencies first. Per task:
   executed this run (or context has already compacted), spawn the executor even for micro;
   protecting the conductor's context outranks saving a spawn.
 - `executor_tier: full` → spawn `absol-executor` with the task entry inline in the prompt (it
-  never reads run.md).
+  never reads run.md). When any delegated agent returns, append a `task-usage` event with the
+  notification's token figure — the worker can't know its own total (schema in schemas.md).
 - An agent that dies on tool/permission errors → append `task-failed` with the error as
   blocker; continue. Don't redo its work inline.
 
@@ -82,6 +88,11 @@ re-aim), re-execute. At 2 the patching stops, period:
 
 Collect tasks with `review_flag: yes` or `task-failed`. None → skip. Spawn `absol-reviewer`
 with the task entries + their completion events inline (batch related tasks).
+
+**Items that ran as multiple tasks additionally get one item-scope review** — the whole diff,
+pre-run commit → tree (name the commit in the prompt) — regardless of flags: serial executors
+each pass their own acceptance while the seams between tasks drift; per-task review is scoped
+blind to that. Seam findings enter the same retry loop.
 
 - `fix-required` → re-enters the retry loop with the `fix_request` (shared cap of 2 retries
   per task, verification + review combined). Exhausted → same attended/afk fork as above.

@@ -13,6 +13,11 @@ this file wins.
 - **Facts bind everyone.** When the ask contradicts observable reality — "make the logo
   bigger" and there is no logo — state the fact in one line, then follow the owner's call.
   Distinguishing test: a rule was *written by someone*; a fact is *checkable in the world*.
+- **User-supplied files that surprise get surfaced.** When a file the owner handed over reads
+  differently from what their words implied — extra content, missing content, different
+  structure — state the difference in one line and let them rule before building on it. One
+  question beats a hundred downstream corrections. (Owner inputs only, not general code
+  reading.)
 - **Silence is a pass signal.** The owner uses shipped features daily and files bugs the same
   day something breaks. A feature that shipped N versions ago with no complaint is working;
   treat accumulated owed-smoke as a reference checklist, never as mounting evidence of

@@ -12,7 +12,7 @@ Evidence base: two blind-judged reading tests + a three-way planner race, all on
 | Discovery, blast-radius mapping, precision review | **Opus** | Only reading model with 0 false positives (both discovery runs), near-max recall, fastest premium reader, ~half Sonnet's cost. Demoted from planner, not from scout. |
 | Max-recall sweeps when a downstream verify pass exists | **Sonnet** | Only model to hit 15/15+6/6 recall on discovery — but 1–2 confabulations per run and ~5× Haiku cost, ~2× Opus time. |
 | Pointer-fed extraction, verification, grading, mechanical work | **Haiku** | Perfect (10/10, 0 hallucinations) on targeted reading at ~1/4 cost. **Law: Haiku with a map = perfect; Haiku doing its own discovery = coin flip with confabulation risk.** Never hand it open-ended discovery solo. |
-| Second opinions, drafts, dumb-shit bulk, late-session offload | **GPT-5.6-sol via codex** | Beat Opus on planning judgment (n=1). $0 marginal (ChatGPT $20 sub — the only pool that doesn't drain the Claude usage window). 2–4× slower wall-clock. |
+| Volume lane: execution batches, review passes, bulk reading, drafts, second opinions | **GPT-5.6-sol via codex** | Field-validated across four husk runs (see 2026-07 evidence below): 7/7 then 9/9 first-try executor batches, plan-review catch rate held at feature scale, honest-verify confirmed against independent re-runs. $0 marginal (ChatGPT sub — the only pool that doesn't drain the Claude window). 2–4× slower wall-clock. Judgment and gates stay on Claude — economics, not quality: planning is low-token/high-judgment, and Claude reviews the plan anyway. |
 
 Cross-cutting rules:
 - **A confidently-wrong map costs the orchestrator more than an incomplete one** — weight false positives over recall when picking a reader.
@@ -20,6 +20,8 @@ Cross-cutting rules:
 - Two independent runs of any model tend to have *different* single misses — union of 2× Opus ≈ perfect map at ~one Sonnet's price.
 - Unpinned absol agents inherit the parent (Fable, $10/$50) — ~7× Haiku for no measured reading benefit. Route deliberately.
 - **Late-game protocol**: when the Claude 5h window runs hot, judgment stays on Claude, bulk reading/drafting shifts to codex. Haiku is cheap but drains the same Claude window; GPT is a separate pool.
+- **Codex is free parallel power** (owner ruling 2026-07-25): read-only codex calls (reviews, reads, opinions) parallelize freely as background calls — no commit gate involved. Writers stay serial on the one checkout. It also shares neither Claude's window nor its attention: an attended Claude session runs at full quality *while* a codex batch executes.
+- **Brief style** (owner ruling 2026-07-25): goal + acceptance criteria + constraints inline, never a step-by-step how — the validated runs won because codex planned its own path. Effort split validated: plan `high`, execute `medium`.
 
 ## Evidence
 
@@ -48,6 +50,21 @@ Recall over a verified 15-core/6-peripheral consumer set incl. two un-greppable 
 | opus-1 | 14 | 6 | **0** | both | 52.4K | 124s |
 | opus-2 | 14 | 6 | **0** | both | 58.6K | 151s |
 
+### Codex field runs — husk, 2026-07 (production evidence, not raced)
+
+- **07-17 executor pilot**: 3 bugs + 4 tweaks, one brief, single exec — 7/7 done, commit per
+  item, doctrine held everywhere checked (seam-level fix pre-banned per-card patch; zero
+  parallax leftovers), +12 tests, verify green. One unprompted bonus sweep (z-index scale) —
+  in-doctrine. Review cost: one diff read.
+- **07-21 two-stage plan→execute** (BUG-020 + INBOX-090, feature scale): read-only planning
+  pass verified the root cause with file:line citations, caught two accepted ADRs
+  contradicting the new design, self-scoped a sanctioned debt convergence. Fresh executor
+  landed the approved plan in one exec — 1,744 insertions / 25 files; its verify claim
+  matched the orchestrator's independent re-run exactly.
+- **07-22 planner+executor AFK run**: 3 plans at effort high (zero retries, exact schema),
+  9 executions at medium — 9/9 first-try VERIFY PASS, every mapped trap avoided. Sole
+  finding: one stale docstring.
+
 ### Planner race — INBOX-031 (shadows + N8AO tier), unanimous 3/3 blind ranking
 
 | Rank | Contender | Tasks | Tokens | Time | Est. cost |
@@ -64,7 +81,7 @@ The two baited traps decided it:
 
 ## Codex operations
 
-Operational usage (incantation, wrapper script, traps, the commit-gate system) lives in the **absol-codex skill** (`skills/absol-codex/SKILL.md`, symlinked into `~/.claude/skills/`) — triggers only on explicit mention of codex. This doc keeps the evidence; the skill owns the how.
+Operational usage (incantation, wrapper script, traps, the commit-gate system) lives in the **absol-codex skill** (`skills/absol-codex/SKILL.md`, symlinked into `~/.claude/skills/`) — fires on explicit mention anywhere, and by default for volume work inside absol runs. This doc keeps the evidence; the skill owns the how. Model tiers on this plan: `gpt-5.6-sol` (flagship), `gpt-5.6-terra` (lower-cost, verified 2026-07-25), `gpt-5.5` (superseded).
 
 ## Harness facts (Claude Code build as of 2026-07-16)
 
@@ -78,6 +95,6 @@ Operational usage (incantation, wrapper script, traps, the commit-gate system) l
 
 ## Open tests (next races)
 
-1. **Executor race** — Sonnet vs Opus vs GPT-5.6-sol implementing the same task (the biggest absol cost center, wholly untested).
+1. **Executor race** — Sonnet vs Opus vs GPT-5.6-sol implementing the same task. Codex-as-executor is now field-validated (2026-07 runs above) but never raced head-to-head against Claude tiers.
 2. **Effort dimension** — low vs high on Sonnet/Opus readers, via Workflow.
-3. **GPT as reader** — its reading precision is unmeasured; don't hand it Opus's scout role on one planning datapoint.
+3. **GPT as reader** — racing 2026-07-25 (docs-hub stale/consistency sweep: Opus control vs gpt-5.6-sol vs gpt-5.6-terra, both at high). Measures tokens, wall-clock, and finding precision; results land here.

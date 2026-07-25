@@ -1,6 +1,6 @@
 ---
 name: absol-codex
-description: Delegate work to OpenAI Codex CLI (GPT, $0 marginal on the ChatGPT sub — a separate usage pool from Claude). Trigger ONLY when the user explicitly says "codex" — "ask codex", "codex review", "offload this to codex", "/absol-codex". Never self-trigger on generic phrasing ("second opinion", "have GPT check this") that doesn't name codex.
+description: Delegate work to OpenAI Codex CLI (GPT, $0 marginal on the ChatGPT sub — a separate usage pool from Claude). Fires on explicit "codex" mention anywhere ("ask codex", "codex review", "/absol-codex") — and by default inside absol runs, where the orchestrator routes volume work (execution batches, whole-diff review, bulk reading) here with a one-line report. Outside runs, never self-trigger on generic phrasing ("second opinion", "have GPT check this") that doesn't name codex.
 ---
 
 # absol-codex
@@ -36,20 +36,26 @@ The gate covers *tracked* files only; the workspace hoard convention (dev worksp
 
 ## What to send it, and how to brief it
 
-- **Second opinions / plan review** — proven catch rate (beat Opus on planning judgment,
-  n=1). Free adversary before the execute gate.
-- **Bulk drafting, boilerplate, dumb-shit volume work** — anything where 2–4× slower
-  wall-clock doesn't matter and free tokens do.
-- **Bulk ports: go two-phase** — framework/contract first, volume second, with "tell me if
-  the contract breaks" standing; the phase-1 diff is what makes the architecture claim
-  verifiable (LVGL→HTML port, 2026-07-20: 1,198 lines added phase 2, 4 changed).
-- **Late-game offload** — Claude 5h window hot → judgment stays on Claude, reading/drafting
-  moves here.
+Codex is the volume lane — execution batches, review passes, bulk reading; judgment and
+gates (shaping, plan approval, commits) stay with Claude. Quota is generous: treat it as
+free parallel power, not a scarce fallback. Calibration evidence lives in the model doctrine.
+
+- **Brief it like a respected peer**: goal, acceptance criteria, constraints/refuse-lines —
+  never a step-by-step how. The validated runs won *because* codex planned its own path
+  (caught ADR contradictions, self-scoped work the brief didn't ask for).
 - **Brief hazards inline.** Codex under-weights artifacts the brief only references — a
   hazard flagged in a linked map file was acted on only once restated in the brief body
   (husk RUN-2026-07-17-4). Binding constraints, refuse-lines, and vocabulary go in the
   prompt text; file references are background only.
-- Its reading *precision* is unmeasured — don't hand it Opus's scout role yet (open test).
+- **Effort split (validated)**: plan at `high`, execute at `medium` — a well-briefed
+  executor doesn't need high.
+- **Reading is sanctioned** (owner call, 2026-07-25; tier calibration via the docs-hub race).
+  Read-only calls carry no commit gate — parallelize freely as background `ask.sh` calls.
+  Writers stay serial on the one checkout.
+- **Second opinions / plan review** — free adversary before the execute gate.
+- **Bulk ports: go two-phase** — framework/contract first, volume second, with "tell me if
+  the contract breaks" standing; the phase-1 diff is what makes the architecture claim
+  verifiable (LVGL→HTML port, 2026-07-20: 1,198 lines added phase 2, 4 changed).
 
 ## Invocation
 
@@ -81,8 +87,9 @@ codex exec --skip-git-repo-check --sandbox danger-full-access \
 
 ## Models & sessions
 
-- Available on this plan: `gpt-5.5` (config default), `gpt-5.6-sol` (quality pick). Bare
-  `gpt-5.6` / `gpt-5.6-codex` are rejected server-side.
+- Available on this plan: `gpt-5.6-sol` (flagship, quality pick), `gpt-5.6-terra` (lower-cost
+  tier, verified 2026-07-25), `gpt-5.5` (config default; superseded — prefer the 5.6 tiers).
+  Bare `gpt-5.6` / `gpt-5.6-codex` are rejected server-side.
 - Multi-turn: `codex exec … resume --last` (or `resume <id>`) — every exec-level flag goes
   **before** `resume`, e.g.
   `codex exec --skip-git-repo-check --sandbox danger-full-access -m gpt-5.6-sol -C <dir> -o <out> resume --last "<prompt>"`;

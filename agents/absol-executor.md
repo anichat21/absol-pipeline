@@ -55,7 +55,8 @@ rules; an uncapped run can OOM-freeze the host).
 
 ## Record — your only writes to run.md
 
-Append `task-started` before any work, then exactly one terminal event:
+Append `task-started` before any work, then exactly one terminal event. Every `<ISO>` stamp
+comes from the system clock (`date -u +%FT%TZ`) — never composed from memory.
 
 ```
 - [event] <ISO>
