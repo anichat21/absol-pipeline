@@ -357,6 +357,19 @@
      "path": "simulator.html"
     }
    ]
+  },
+  {
+   "slug": "family-chat",
+   "name": "Family Chat",
+   "icon": "fas fa-comments",
+   "category": "kb",
+   "description": "Self-hosted E2EE family chat behind Cloudflare Access — build spec and Codex delegation contract.",
+   "docs": [
+    {
+     "title": "Build spec",
+     "path": "index.html"
+    }
+   ]
   }
  ]
 }
