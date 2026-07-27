@@ -60,7 +60,8 @@ export function parseEntries(text, kind) {
       continue;
     }
     if (!cur) {
-      if (line.trim() === '' || line.startsWith('#') || line.trim() === 'None.') preamble.push(i);
+      if (line.trim() === '' || line.startsWith('#') || line.trim() === 'None.'
+        || line.trim().startsWith('<!--')) preamble.push(i);
       else stray.push({ line: i, text: line });
       continue;
     }

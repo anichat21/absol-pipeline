@@ -19,7 +19,7 @@ const DEFAULT_PORTFOLIO = '/mnt/nas/dev/projects/absol/portfolio.md';
 const argv = process.argv.slice(2);
 const verb = argv[0];
 const opts = { _: [], field: [], set: [], unset: [] };
-const BOOL_FLAGS = ['stdin', 'json', 'all', 'help', 'description-stdin', 'portfolio'];
+const BOOL_FLAGS = ['stdin', 'json', 'all', 'help', 'description-stdin', 'portfolio', 'strict'];
 for (let i = 1; i < argv.length; i++) {
   const a = argv[i];
   if (a.startsWith('--') && BOOL_FLAGS.includes(a.slice(2))) opts[a.slice(2)] = true;
@@ -61,6 +61,23 @@ function archiveTexts(dir) {
   return readdirSync(ad).filter((f) => f.endsWith('.md')).map((f) => readFileSync(join(ad, f), 'utf8'));
 }
 
+// Every ID trace in .absol/ — keeps allocation monotonic even for items removed
+// before archiving (all three ledgers, archive, run.md, reviews/ + adr/ filenames).
+function idEvidence(dir) {
+  const texts = archiveTexts(dir);
+  for (const l of Object.keys(LEDGERS)) {
+    const t = readFileOr(join(dir, `${l}.md`));
+    if (t !== null) texts.push(t);
+  }
+  const run = readFileOr(join(dir, 'run.md'));
+  if (run !== null) texts.push(run);
+  for (const sub of ['reviews', 'adr']) {
+    const d = join(dir, sub);
+    if (existsSync(d)) texts.push(readdirSync(d).join('\n'));
+  }
+  return texts;
+}
+
 function findItem(dir, id) {
   for (const ledger of Object.keys(LEDGERS)) {
     const path = ledgerPath(dir, ledger);
@@ -98,7 +115,14 @@ const verbs = {
       if (text === null) die(`${path} does not exist — scaffold the project first`);
       if (opts.type && !ITEM_TYPES.includes(opts.type)) die(`type must be one of ${ITEM_TYPES.join(' | ')}`);
       if (opts.priority && !PRIORITIES.includes(opts.priority)) die(`priority must be one of ${PRIORITIES.join(' | ')}`);
-      const id = nextId(LEDGERS[opts.ledger], text, archiveTexts(dir));
+      // allocation floor: <!-- counter: N --> in the preamble keeps IDs monotonic
+      // even when an item was removed before leaving any archive trace
+      const counterRe = /^<!-- counter: (\d+) -->$/m;
+      const cm = text.match(counterRe);
+      const floor = cm ? parseInt(cm[1], 10) : 0;
+      const derived = nextId(LEDGERS[opts.ledger], text, idEvidence(dir));
+      const num = Math.max(parseInt(derived.split('-')[1], 10), floor + 1);
+      const id = `${LEDGERS[opts.ledger]}-${String(num).padStart(3, '0')}`;
       const block = ['', `- [item] ${id}`, `  - title: ${opts.title}`];
       if (opts.type) block.push(`  - type: ${opts.type}`);
       if (opts.priority) block.push(`  - priority: ${opts.priority}`);
@@ -112,6 +136,13 @@ const verbs = {
       const lines = text.split('\n');
       const noneIdx = lines.findIndex((l) => l.trim() === 'None.');
       if (noneIdx >= 0) newText = spliceLines(text, noneIdx, 1);
+      // maintain the allocation floor
+      if (cm) newText = newText.replace(counterRe, `<!-- counter: ${num} -->`);
+      else {
+        const nl = newText.split('\n');
+        const at = nl[0].startsWith('#') ? 1 : 0;
+        newText = spliceLines(newText, at, 0, [`<!-- counter: ${num} -->`]);
+      }
       newText = newText.replace(/\n*$/, '\n') + block.join('\n').replace(/^\n/, '') + '\n';
       save(path, newText);
       out(id);
@@ -128,6 +159,7 @@ const verbs = {
       let delta = 0; // line drift from earlier splices
       for (const [k, v] of kvPairs(opts.set)) {
         if (ITEM_BLOCK_FIELDS.includes(k)) die(`'${k}' is a block field — use --block ${k}`);
+        if (!ITEM_SCALAR_FIELDS.includes(k)) die(`unknown field '${k}' — scalar fields: ${ITEM_SCALAR_FIELDS.join(', ')}`);
         const f = getField(entry, k);
         if (f) newText = spliceLines(newText, f.line + delta, 1, [`  - ${k}: ${v}`]);
         else {
@@ -147,7 +179,8 @@ const verbs = {
       if (opts.block) {
         if (![...ITEM_BLOCK_FIELDS].includes(opts.block)) die(`--block must be one of ${ITEM_BLOCK_FIELDS.join(' | ')}`);
         const content = opts.stdin ? readStdin() : opts.text;
-        if (!content) die('--block needs --stdin or --text');
+        if (content === undefined) die('--block needs --stdin or --text');
+        if (!content.trim()) die('block content is empty');
         const body = [`  - ${opts.block}: |`, ...blockLines(content)];
         const f = getField(entry, opts.block);
         if (f && f.isBlock) {
@@ -245,7 +278,7 @@ const verbs = {
       for (const f of findings) out(`${f.sev.toUpperCase()} ${f.file}:${f.line + 1} ${f.msg}`);
       const errors = findings.filter((f) => f.sev === 'error').length;
       out(`${errors} error(s), ${findings.length - errors} warning(s)`);
-      process.exit(errors ? 1 : 0);
+      process.exit(errors || (opts.strict && findings.length) ? 1 : 0);
     },
   },
 

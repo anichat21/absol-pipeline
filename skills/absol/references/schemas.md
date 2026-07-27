@@ -70,7 +70,10 @@ in run.md), never stored.
 ```
 
 - Task IDs are namespaced by item (`BUG-014.1`) — no global counter, no allocation races.
-- Item counters are per-file and **never reset**: next = max(this file, `grep` of `archive/`).
+- Item counters are per-file and **never reset**: next = max(every ID trace in `.absol/`,
+  the `<!-- counter: N -->` preamble line). The counter line is the allocation floor the
+  toolset's `add` maintains — it keeps IDs monotonic even when an item is removed before
+  leaving an archive trace; max() semantics make a stale line harmless.
 - `type: VERIFY` items are the **smoke ledger** — a reference checklist the user consults so
   nothing gets missed, appended by the finalizer (`title: eyeball <what>`, description says
   what to check and which run built it). The front door deletes one when the user confirms the
