@@ -57,7 +57,7 @@ else "*Grown by shaper/architect as terms are named.*"
 Context / Decision / Consequences). Drafts come from any skill mid-conversation; the architect
 ratifies.
 
-**Ledger files** — `# <Name> — {Inbox|Bugs|Tech Debt}` + "*No items yet.*"
+**Ledger files** — `# <Name> — {Inbox|Bugs|Tech Debt}` + `None.` (the schema's empty-ledger placeholder)
 
 **.gitignore** — `.absol/run.md` only. Everything else — ledger (it carries shaped human
 decisions), archive, reviews — is tracked; that's the safety net.
