@@ -5,9 +5,11 @@ description: Manage the hosted project documentation served by homer (http://aid
 
 # absol-docs
 
-**Legacy lane (2026-07-27):** ArcticTern serves the docs URL space with a filesystem-generated
-registry; authoring rules live in `~/.claude/skills/absol/references/knowledge.md`. Keep this
-skill's registry/mount edits for homer-era maintenance only — it retires with homer.
+**Retired (homer sunset 2026-07-27):** ArcticTern (`aidev:8191`) serves the docs URL space with a
+filesystem-generated registry; authoring rules live in `~/.claude/skills/absol/references/knowledge.md`.
+This skill's `assets/` (css/js/templates) remain the live source ArcticTern serves at `/docs/_assets/`
+— keep maintaining those. The registry-editing and compose-mount procedures below are dead; do not
+perform them.
 
 Own the **hosted project documentation** for this workspace. Project docs live as self-contained HTML files in each project's `docs/`; homer bind-mounts them and serves a hub page at `http://aidev:8080/docs/` that lists every registered project. This skill scaffolds new docs, edits the central registry, wires up the docker mount, and swaps the per-project theme.
 

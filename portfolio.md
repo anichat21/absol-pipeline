@@ -8,7 +8,8 @@
 - [project] cadtool-alpha
   - status: unset
 - [project] homer
-  - status: unset
+  - notes: sunset 2026-07-27 — superseded by ArcticTern; repo kept, resurrect via docker compose up
+  - status: done
 - [project] huntrx
   - status: unset
 - [project] huntrx-tracker
@@ -48,3 +49,6 @@
 - [project] family-chat
   - status: unset
   - notes: knowledge_base entry
+- [project] arctic-tern
+  - status: active
+  - next: owner device eyeball (VERIFY in inbox); Nano Banana thumbnails when owner supplies prompt
