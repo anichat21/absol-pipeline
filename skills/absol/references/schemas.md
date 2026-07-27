@@ -3,6 +3,24 @@
 Rule: a schema is written out **here and nowhere else**. Skills and agents reference this file;
 each agent's definition inlines only the event block that agent itself writes.
 
+## The toolset — the write path
+
+State changes to ledger items, tags, run.md events, and the portfolio go through the CLI:
+
+```
+node /mnt/nas/dev/projects/absol/tools/absol-tool.mjs <verb> …
+```
+
+Verbs: `add` (allocates the next ID, archive included) · `update` (fields; `--block shape|map|plan`
+from stdin) · `tag` / `untag` · `remove` · `append-event` (system-clock ISO stamp) · `lint`
+(structural conformance, file or whole project) · `query` (filtered JSON — the read path for
+agents and renderers) · `portfolio list|get|add|set`. Run any verb with `--help` for flags.
+
+Hand-edits remain legal — they must pass `lint`. Archive blocks and state.md are prose surfaces
+(finalizer-written); the toolset does not manage them. The parser library
+(`tools/lib/parse.mjs`) is the single implementation of these schemas — renderers import it
+rather than re-parsing.
+
 ## The item — `.absol/inbox.md`, `.absol/bugs.md`, `.absol/tech-debt.md`
 
 One shape across all three files (the ledger, sharded by type). An item grows in place as tools
@@ -16,6 +34,8 @@ in run.md), never stored.
   - type: ARCH | FEATURE | BUG | TWEAK | CHORE | VERIFY
   - priority: critical | high | medium | low
   - subsystem: affected area
+  - description: |                   ← free prose detail — repro, context, evidence (optional)
+      what/where/why in as many lines as it needs
   - shape: |                         ← shaper / transcribed user decisions (optional)
       Shaped YYYY-MM-DD.
       In: … Out: … Refuse: …         ← the hard-fail boundary is mandatory when shaped
@@ -43,8 +63,10 @@ in run.md), never stored.
   - prior: archive/2026-06.md#RUN-…  ← earlier run touched this (optional)
   - open: <question> (YYYY-MM-DD)    ← the question that blocked AFK shaping (optional)
   - smell: <diagnosis> (YYYY-MM-DD)  ← why attempts kept failing — zoom-out, not patch trail (optional)
-  - tags: tuning                     ← quiet lane (optional): real work, suppressed from the
-                                     ←   banner and default lists; shown on request
+  - tags: tuning, rtr                ← optional. tuning = quiet lane: real work, suppressed from
+                                     ←   the banner and default lists; shown on request.
+                                     ←   rtr = owner pre-authorization for unattended execution;
+                                     ←   records the authorization only — readiness stays derived
 ```
 
 - Task IDs are namespaced by item (`BUG-014.1`) — no global counter, no allocation races.
@@ -184,6 +206,20 @@ No transient sections, ever. Liveness lives in run.md's existence.
 
 Owed smoke is NOT here — it's VERIFY items in inbox.md.
 
+## `portfolio.md` (absol repo root) — the estate ledger
+
+One block per workspace entry (projects and knowledge_base both). Owner-set fields only —
+activity, counts, and liveness are derived at read time from each project's own files, never
+stored here. Written via `portfolio` verbs.
+
+```
+- [project] snowowl
+  - status: active | simmering | frozen | done
+  - next: one line — the next meaningful action     (optional while status is unset-fresh)
+  - re-entry: one line — how to resume              (mandatory when frozen)
+  - notes: free line                                (optional)
+```
+
 ## Verdict — when an agent returns to its caller
 
 `verdict: approved | fix-required | blocked | human-check | human-required`
@@ -194,6 +230,7 @@ don't share a fix.)
 
 - Item is **planned** ⇔ its ID appears in a plan block (own or a lead's `covers:`).
 - Item is **primed** ⇔ shaped (or trivially unambiguous) + has a fresh plan.
+- Item is **ready** (the night-run pickup set) ⇔ tagged `rtr` AND primed.
 - Banner counts exclude `tags: tuning` items and enumerate no VERIFY items — both lanes show
   as counts only, listed on request.
 - Run **live** ⇔ run.md exists and mtime < 15 min. **Paused** ⇔ last event is `pause`.
