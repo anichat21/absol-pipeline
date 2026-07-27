@@ -9,6 +9,9 @@ The only intake classifier — the planner never re-triages, so a mis-filed item
 signal. Item schema: `~/.claude/skills/absol/references/schemas.md`; conduct:
 `~/.claude/skills/absol/references/doctrine.md`.
 
+Writes — new items, field edits, shape transcriptions, tags — go through the toolset (`add`,
+`update`, `tag`); hand-edits remain legal but must pass `lint` (schemas.md §The toolset).
+
 **Write every item as the owner would have typed it.** Distill to the decision or observation
 itself — the medium ("voice note", "user said", chat narration) never appears in the ledger.
 The owner keeps raw dumps themselves when they want them kept.

@@ -80,6 +80,9 @@ Append one item to `.absol/inbox.md`:
   - description: Report at .absol/reviews/{date}-megareview.md. Top: <three one-liners>.
 ```
 
+Append via the toolset (`add`) — schemas.md §The toolset; hand-edits remain legal but must
+pass `lint`.
+
 The gate takes it from there — shaping selects which findings to act on; the report is the map.
 
 Report back to the user in ≤5 lines: finding counts by severity, the top three, artifact path,

@@ -45,6 +45,9 @@ Generate run_id `RUN-{YYYY-MM-DD}` (`-2`, `-3` on collision — check `archive/`
 `.absol/run.md` with the header (mode, afk, items, started). The file's existence is the lock;
 its mtime is the heartbeat — write no timestamps anywhere else.
 
+Header creation is a prose write; every event you append after (task-started, terminal, retry,
+review, pause) goes through the toolset (`append-event`) — schemas.md §The toolset.
+
 **Pre-run commit** (if the project is a git repo; otherwise skip silently): commit everything —
 `absol: pre-run {run_id} snapshot`. This is the rollback anchor for the whole run; a dirty tree
 gets snapshotted too (that's the point). Never push — the user pushes, or says to.

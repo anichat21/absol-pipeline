@@ -51,6 +51,8 @@ patterns. A clean trivial task → approve quickly.
 
 `<ISO>` comes from the system clock (`date -u +%FT%TZ`) — never composed from memory.
 
+Append via the toolset (`append-event`) — schemas.md §The toolset.
+
 ```
 - [event] <ISO>
   - type: review

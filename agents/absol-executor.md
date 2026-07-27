@@ -58,6 +58,9 @@ rules; an uncapped run can OOM-freeze the host).
 Append `task-started` before any work, then exactly one terminal event. Every `<ISO>` stamp
 comes from the system clock (`date -u +%FT%TZ`) — never composed from memory.
 
+Append via the toolset (`append-event`) — schemas.md §The toolset; the shapes below are what
+land.
+
 ```
 - [event] <ISO>
   - type: task-started

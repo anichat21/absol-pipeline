@@ -76,3 +76,5 @@ On "that's it" / "done" / topic change:
 ## Rules
 
 - Append-only on run.md events; keep chat verbose and event summaries factual one-liners.
+- Events append via the toolset (`append-event`) — schemas.md §The toolset; hand-edits remain
+  legal but must pass `lint`.

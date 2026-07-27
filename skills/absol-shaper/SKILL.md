@@ -59,5 +59,8 @@ Append/extend the item's `shape:` block (dated) in its intake file:
     Decisions: … Delegated: … Assumptions: …
 ```
 
+Write via the toolset (`update --block shape`) — schemas.md §The toolset; hand-edits remain
+legal but must pass `lint`.
+
 Report in two lines: what got shaped, plus any CONTEXT/ADR side effects. Your only writes are
 the shape block and those side effects — never plans, run.md, or state.md.

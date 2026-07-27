@@ -5,6 +5,8 @@ description: Migrates an absol project to the current schema after a release cha
 
 # absol-migrate
 
+Schema current as of 2026-07-27 (toolset introduced; `lint` is the conformance check).
+
 Reusable shell; the **Migration delta** below is rewritten by each schema-changing release.
 Pre-flight: the project must be a clean git tree (or the user accepts migrating dirty —
 confirm). Read everything the delta touches, print a kept-vs-dropped report, get one

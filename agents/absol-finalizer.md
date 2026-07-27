@@ -30,6 +30,10 @@ skip this step and continue cleanup — you're resuming a partial finalize.
 
 ## 3. Fold back into the ledger
 
+Ledger writes here — item deletion, partial edits, VERIFY appends — go through the toolset
+(`remove`, `update`, `add`); archive blocks (§2) and state.md (§5) stay prose writes. Hand-edits
+remain legal but must pass `lint` (schemas.md §The toolset).
+
 Per item in the run:
 
 - **All tasks done** → delete the item from its intake file (covered items too, via the lead's

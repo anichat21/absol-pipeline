@@ -76,6 +76,9 @@ Append the `plan:` block to the lead item in its intake file. Add `covers:` on t
 `planned_with:` on covered items. **Nothing else changes** — no status fields, no other files,
 no source code.
 
+Write via the toolset (`update --block plan`) — schemas.md §The toolset; hand-edits remain
+legal but must pass `lint`.
+
 ## Retry mode (a task failed — re-aim before you touch it)
 
 When your prompt carries a failing task + its failure trail, your first output is a diagnosis,
