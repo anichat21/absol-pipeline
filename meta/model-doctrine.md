@@ -72,6 +72,16 @@ Recall over a verified 15-core/6-peripheral consumer set incl. two un-greppable 
   truth: content-blind spot-checks passed a false positive that only full-context reading
   caught.
 
+### Codex UI-smoke capability — huntrx, 2026-07
+
+- **07-26 unattended UI smoke** (RUN-2026-07-26, gpt-5.6-sol effort high, 1 shot): briefed to
+  smoke 5 owed VERIFY items against the live app with no existing harness — self-bootstrapped
+  Playwright 1.62 in a scratch dir end-to-end, tested both viewports, returned a verdict table
+  (3 PASS / 2 PARTIAL) whose failures were all real on inspection (an inert button, a
+  truncation blowout with pixel measurements, a tag-DELETE 500, an incidental openapi.json
+  404). Verdicts trustworthy. (Same run surfaced a storage-write escalation, now a briefed
+  boundary — see absol-codex skill.)
+
 ### Planner race — INBOX-031 (shadows + N8AO tier), unanimous 3/3 blind ranking
 
 | Rank | Contender | Tasks | Tokens | Time | Est. cost |

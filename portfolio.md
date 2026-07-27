@@ -1,0 +1,50 @@
+# Portfolio — the estate ledger
+- [project] absol
+  - status: unset
+- [project] artemis-watch
+  - status: unset
+- [project] barnowl-noir
+  - status: unset
+- [project] cadtool-alpha
+  - status: unset
+- [project] homer
+  - status: unset
+- [project] huntrx
+  - status: unset
+- [project] huntrx-tracker
+  - status: unset
+- [project] husk
+  - status: unset
+- [project] metagross
+  - status: unset
+- [project] personal-projects
+  - status: unset
+- [project] shearwater
+  - status: unset
+- [project] snowowl
+  - status: unset
+- [project] the-distillery
+  - status: unset
+- [project] zei
+  - status: unset
+- [project] local-ai
+  - status: unset
+  - notes: knowledge_base entry
+- [project] network_map
+  - status: unset
+  - notes: knowledge_base entry
+- [project] normalpress-orientation-research
+  - status: unset
+  - notes: knowledge_base entry
+- [project] resource-org
+  - status: unset
+  - notes: knowledge_base entry
+- [project] rnlt-edge
+  - status: unset
+  - notes: knowledge_base entry
+- [project] the-pipeline
+  - status: unset
+  - notes: knowledge_base entry
+- [project] family-chat
+  - status: unset
+  - notes: knowledge_base entry

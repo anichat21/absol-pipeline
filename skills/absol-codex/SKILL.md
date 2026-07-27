@@ -50,6 +50,10 @@ free parallel power, not a scarce fallback. Calibration evidence lives in the mo
   flag it with a citation instead of forcing the edit." A refusal is a review event —
   adjudicate it before overriding; the one exercised refusal (2026-07-25) was correct and
   beat both the upstream reader and the orchestrator's spot-check.
+- **Improvise freely inside the app's API surface.** Storage-layer writes on live data are a
+  flagged blocker back to the orchestrator — if cleanup fails, report it rather than touching
+  the datastore directly (huntrx RUN-2026-07-26: codex wrote fixture cleanup straight to the
+  live SQLite DB when a DELETE endpoint 500'd).
 - **Brief hazards inline.** Codex under-weights artifacts the brief only references — a
   hazard flagged in a linked map file was acted on only once restated in the brief body
   (husk RUN-2026-07-17-4). Binding constraints, refuse-lines, and vocabulary go in the
