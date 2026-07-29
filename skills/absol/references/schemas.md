@@ -223,6 +223,8 @@ stored here. Written via `portfolio` verbs.
   - next: one line — the next meaningful action     (optional while status is unset-fresh)
   - re-entry: one line — how to resume              (mandatory when frozen)
   - notes: free line                                (optional)
+  - prod_url: http://…                              (optional — deployed app, prod; ArcticTern's
+  - dev_url: http://…                               (optional — and dev; drives the Apps row)
 ```
 
 ## Verdict — when an agent returns to its caller

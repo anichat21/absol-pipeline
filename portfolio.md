@@ -50,5 +50,6 @@
   - status: unset
   - notes: knowledge_base entry
 - [project] arctic-tern
+  - prod_url: http://aidev:8191
   - status: active
   - next: owner device eyeball (VERIFY in inbox); Nano Banana thumbnails when owner supplies prompt
