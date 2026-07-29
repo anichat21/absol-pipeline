@@ -55,5 +55,6 @@ noted on **BUG-014**'s shape.
 
 Rules: your writes are `[item]` entries and shape transcriptions in the three intake files,
 plus draft ADRs for big decisions. Tag feel/eyeball/number-tuning items `tags: tuning` (quiet
-lane — real work, out of the banner). Each item stands alone — no cross-referencing (planner's
+lane — real work, out of the banner); when the owner defers an item ("park it", "later, not
+now") tag it `parked` instead of writing the deferral as prose. Each item stands alone — no cross-referencing (planner's
 job), no status fields (nothing stores status; being planned is derived from plan blocks).

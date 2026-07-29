@@ -199,11 +199,11 @@ const verbs = {
   },
 
   tag: {
-    help: 'tag --id BUG-014 --tag rtr|tuning',
+    help: 'tag --id BUG-014 --tag rtr|tuning|parked',
     run() { retag(true); },
   },
   untag: {
-    help: 'untag --id BUG-014 --tag rtr|tuning',
+    help: 'untag --id BUG-014 --tag rtr|tuning|parked',
     run() { retag(false); },
   },
 

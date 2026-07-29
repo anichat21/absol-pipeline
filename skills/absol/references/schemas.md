@@ -63,10 +63,12 @@ in run.md), never stored.
   - prior: archive/2026-06.md#RUN-…  ← earlier run touched this (optional)
   - open: <question> (YYYY-MM-DD)    ← the question that blocked AFK shaping (optional)
   - smell: <diagnosis> (YYYY-MM-DD)  ← why attempts kept failing — zoom-out, not patch trail (optional)
-  - tags: tuning, rtr                ← optional. tuning = quiet lane: real work, suppressed from
+  - tags: tuning, rtr, parked        ← optional. tuning = quiet lane: real work, suppressed from
                                      ←   the banner and default lists; shown on request.
                                      ←   rtr = owner pre-authorization for unattended execution;
-                                     ←   records the authorization only — readiness stays derived
+                                     ←   records the authorization only — readiness stays derived.
+                                     ←   parked = owner deferred it: quiet lane, excluded from
+                                     ←   type-wide run selections; only an explicit ID runs it
 ```
 
 - Task IDs are namespaced by item (`BUG-014.1`) — no global counter, no allocation races.
@@ -234,8 +236,8 @@ don't share a fix.)
 - Item is **planned** ⇔ its ID appears in a plan block (own or a lead's `covers:`).
 - Item is **primed** ⇔ shaped (or trivially unambiguous) + has a fresh plan.
 - Item is **ready** (the night-run pickup set) ⇔ tagged `rtr` AND primed.
-- Banner counts exclude `tags: tuning` items and enumerate no VERIFY items — both lanes show
-  as counts only, listed on request.
+- Banner counts exclude `tags: tuning` and `tags: parked` items and enumerate no VERIFY items —
+  quiet lanes show as counts only, listed on request.
 - Run **live** ⇔ run.md exists and mtime < 15 min. **Paused** ⇔ last event is `pause`.
   **Crashed** ⇔ run.md exists, mtime ≥ 15 min, last event isn't `pause`.
 - Banner counts = grep of the three intake files + archive tail.

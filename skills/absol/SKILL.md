@@ -45,13 +45,14 @@ Last session: <state.md one-liner>
 ⚠ Smell:       INBOX-021 — <why attempts kept failing>         (omit if none)
 Primed:       N — BUG-014 (+2 covered), INBOX-030   (items with a plan block)
 Shaped:       N    New: N    (per file: inbox / bugs / debt, non-zero counts only)
-Smoke: N owed · Tuning: N     (counts only, non-zero; "smoke"/"tuning" lists them)
+Smoke: N owed · Tuning: N · Parked: N     (counts only, non-zero; "smoke"/"tuning"/"parked" lists them)
 ```
 
 Count definitions (mechanical): **Primed** = has a `plan:` block (or a lead's `covers:` names
 it). **Shaped** = has `shape:` but no plan. **New** = has neither `shape:` nor `plan:`.
-A `map:` block affects no count. `tags: tuning` items and VERIFY items live outside all counts
-above — quiet lanes, one count line, enumerated only when the user asks.
+A `map:` block affects no count. `tags: tuning`, `tags: parked`, and VERIFY items live outside
+all counts above — quiet lanes, one count line, enumerated only when the user asks. Parked items
+never enter type-wide run selections ("run the inbox") — only an explicit ID runs one.
 
 `open:` lines are answerable right here — the user's answer gets transcribed into the item's
 shape (via note-taker) and the `open:` line deleted; the item is then runnable.

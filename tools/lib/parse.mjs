@@ -12,7 +12,7 @@ export const ITEM_SCALAR_FIELDS = [
 export const ITEM_BLOCK_FIELDS = ['description', 'shape', 'map', 'plan'];
 export const ITEM_TYPES = ['ARCH', 'FEATURE', 'BUG', 'TWEAK', 'CHORE', 'VERIFY'];
 export const PRIORITIES = ['critical', 'high', 'medium', 'low'];
-export const TAGS = ['tuning', 'rtr'];
+export const TAGS = ['tuning', 'rtr', 'parked'];
 
 export const EVENT_TYPES = {
   'task-started': ['task', 'worker'],
