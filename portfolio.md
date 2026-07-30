@@ -14,25 +14,34 @@
   - status: done
 - [project] huntrx
   - type: finance
+  - prod_url: http://aidev:8184
   - status: unset
 - [project] huntrx-tracker
   - type: finance
   - status: unset
 - [project] husk
   - type: AI
+  - prod_url: http://aidev:8190
+  - dev_url: http://aidev:8189
   - status: unset
 - [project] metagross
   - type: game
+  - prod_url: http://aidev:8181
   - status: unset
 - [project] personal-projects
   - status: unset
 - [project] shearwater
+  - prod_url: http://aidev:8186
+  - dev_url: http://aidev:8185
   - status: unset
 - [project] snowowl
+  - prod_url: http://aidev:8182
+  - dev_url: http://aidev:8183
   - status: unset
 - [project] the-distillery
   - status: unset
 - [project] zei
+  - dev_url: http://aidev:8188
   - status: unset
 - [project] local-ai
   - status: unset
