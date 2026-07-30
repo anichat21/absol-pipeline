@@ -27,7 +27,7 @@ export const EVENT_TYPES = {
 };
 
 export const PORTFOLIO_STATUSES = ['active', 'simmering', 'frozen', 'done', 'unset'];
-export const PORTFOLIO_FIELDS = ['status', 'next', 're-entry', 'notes', 'prod_url', 'dev_url'];
+export const PORTFOLIO_FIELDS = ['status', 'next', 're-entry', 'notes', 'prod_url', 'dev_url', 'type'];
 
 const ENTRY_RE = /^- \[(item|project|event)\] (.+?)\s*$/;
 const FIELD_RE = /^  - ([A-Za-z_-]+): ?(.*)$/;

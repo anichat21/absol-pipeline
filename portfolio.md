@@ -2,8 +2,10 @@
 - [project] absol
   - status: unset
 - [project] artemis-watch
+  - type: hardware
   - status: unset
 - [project] barnowl-noir
+  - type: pipeline
   - status: unset
 - [project] cadtool-alpha
   - status: unset
@@ -11,12 +13,16 @@
   - notes: sunset 2026-07-27 — superseded by ArcticTern; repo kept, resurrect via docker compose up
   - status: done
 - [project] huntrx
+  - type: finance
   - status: unset
 - [project] huntrx-tracker
+  - type: finance
   - status: unset
 - [project] husk
+  - type: AI
   - status: unset
 - [project] metagross
+  - type: game
   - status: unset
 - [project] personal-projects
   - status: unset

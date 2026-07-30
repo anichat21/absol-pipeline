@@ -225,6 +225,8 @@ stored here. Written via `portfolio` verbs.
   - notes: free line                                (optional)
   - prod_url: http://…                              (optional — deployed app, prod; ArcticTern's
   - dev_url: http://…                               (optional — and dev; drives the Apps row)
+  - type: game | hardware | pipeline | finance | AI | …   (optional — free vocabulary; drives
+                                                    ←   the tile type icon, text chip if unknown)
 ```
 
 ## Verdict — when an agent returns to its caller
