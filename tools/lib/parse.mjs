@@ -152,7 +152,7 @@ export function deriveViews(itemsJSON) {
   for (const it of itemsJSON) {
     it.planned = it.has_plan || covered.has(it.id) || !!it.planned_with;
     it.primed = it.shaped && it.planned;
-    it.ready = it.tags.includes('rtr') && it.primed;
+    it.ready = it.tags.includes('rtr') && it.primed && !it.tags.includes('parked');
   }
   return itemsJSON;
 }

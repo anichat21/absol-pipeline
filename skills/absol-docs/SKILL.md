@@ -1,6 +1,6 @@
 ---
 name: absol-docs
-description: Manage the hosted project documentation served by homer (http://aidev:8080/docs/). Scaffolds new project doc folders, registers them in the central docs hub, swaps per-project themes. Owns the workspace docs/-vs-references/ folder convention. User-invoked. Use when the user says `/absol-docs`, "add docs to <project>", "register <project> in the docs hub", "theme <project>", "set up the docs hub", asks where reference material belongs, or otherwise asks to create, register, restyle, or rewire a hosted HTML doc. Not for `.absol/` pipeline files — those are owned by other absol skills.
+description: LEGACY (homer retired 2026-07-27; ArcticTern serves docs now). Still owns the shared doc assets ArcticTern serves at /docs/_assets/ (css/js/templates) and per-project theme swaps. Use on `/absol-docs`, "theme <project>", or shared doc-asset work. NOT for creating/registering docs — docs are filesystem-discovered, conventions live in knowledge.md; not for `.absol/` pipeline files.
 ---
 
 # absol-docs

@@ -219,7 +219,7 @@ stored here. Written via `portfolio` verbs.
 
 ```
 - [project] snowowl
-  - status: active | simmering | frozen | done
+  - status: active | simmering | frozen | done | unset
   - next: one line — the next meaningful action     (optional while status is unset-fresh)
   - re-entry: one line — how to resume              (mandatory when frozen)
   - notes: free line                                (optional)

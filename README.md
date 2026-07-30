@@ -58,6 +58,7 @@ that fires the same run headless in AFK mode.
 | absol-scratchpad | skill | interactive mode on the same run/event model |
 | absol-explain | skill | one-minute orientation |
 | absol-feedback | skill | log problems with absol itself → `feedback/YYYYMMDD-NNN-title.md` |
+| absol-codex | skill | delegate volume work to Codex CLI (execution batches, reviews, bulk reads) |
 | absol-newproject / absol-migrate / absol-docs | skills | scaffold / schema upgrades / legacy docs tooling; owner reference: [knowledge_base/absol](../../knowledge_base/absol/docs/index.html) |
 
 Agents carry no pinned models — they inherit the session (pin only where a cheap model is a

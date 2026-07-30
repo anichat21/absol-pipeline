@@ -252,6 +252,7 @@ const verbs = {
       }
       deriveViews(items);
       if (opts.id) items = items.filter((i) => i.id === opts.id);
+      else if (opts.tag !== 'parked') items = items.filter((i) => !i.tags.includes('parked'));
       if (opts.type) items = items.filter((i) => i.type === opts.type);
       if (opts.priority) items = items.filter((i) => i.priority === opts.priority);
       if (opts.tag) items = items.filter((i) => i.tags.includes(opts.tag));
