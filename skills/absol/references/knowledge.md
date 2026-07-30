@@ -24,8 +24,8 @@ the reader is who they serve.
 7. **Workspace doc rules apply inside**: rewrite to current truth, no notes on notes,
    concise and clean.
 
-## Transition
+## Production
 
-The homer-mounted hub still serves entries until ArcticTern reaches parity (docs + tracker
-+ links). absol-docs' registry editing and compose-mount machinery is legacy from that era —
-don't extend it; it retires with homer.
+ArcticTern has been the production face since 2026-07-28 and discovers entries from the
+filesystem. Homer was sunset on 2026-07-27; absol-docs' registry editing and compose-mount
+machinery is legacy and must not be extended.

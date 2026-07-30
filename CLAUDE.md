@@ -23,5 +23,5 @@ material below.
 | `skills/` `agents/` | the shipped system — symlinked into `~/.claude/skills/` and `~/.claude/agents/` |
 | `meta/` | the repo's own working material: `authoring.md`, `model-doctrine.md` |
 | `feedback/` | dated problem reports (absol-feedback inbox) — swept, not accumulated |
-| `docs/` | hub-hosted HTML only (`http://aidev:8080/docs/`) |
+| `docs/` | working docs discovered from the filesystem by ArcticTern (`http://aidev:8191/docs/`); absol's published page lives in `knowledge_base/absol/docs/index.html` |
 | `references/` | external source material consumed here |

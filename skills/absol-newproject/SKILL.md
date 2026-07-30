@@ -15,7 +15,7 @@ CONTEXT.md. Skip questions the conversation already answered.
 <slug>/
 ├── CLAUDE.md          project brief + binding ops rules (user-owned)
 ├── state.md           truth snapshot (finalizer-owned)
-├── docs/              hosted/working docs — hub-registered HTML (absol-docs owns the hub)
+├── docs/              working/published docs — ArcticTern discovers HTML or Markdown
 ├── references/        project info files — source PDFs, corpus dumps, study mds
 └── .absol/
     ├── CONTEXT.md     domain glossary, lazy-grown
@@ -25,9 +25,11 @@ CONTEXT.md. Skip questions the conversation already answered.
     └── reviews/       review & research artifacts (megareview reports, research overflow)
 ```
 
-`docs/` vs `references/` is the workspace-wide convention (absol-docs owns it): `docs/` is what
-the project publishes; `references/` is what the project consumes. Always these two names —
-never `Reference/`, `archives/`, or per-project inventions. Scaffold both with a `.gitkeep`.
+`docs/` vs `references/` is the workspace-wide convention in
+`skills/absol/references/knowledge.md`: `docs/` is what the project publishes; `references/`
+is what the project consumes. ArcticTern discovers it from the filesystem; there is no registry.
+Always these two names — never `Reference/`, `archives/`, or per-project inventions. Scaffold
+both with a `.gitkeep`.
 
 `run.md` is created per run by orchestrate/scratchpad — never scaffolded.
 

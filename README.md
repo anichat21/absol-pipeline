@@ -58,7 +58,7 @@ that fires the same run headless in AFK mode.
 | absol-scratchpad | skill | interactive mode on the same run/event model |
 | absol-explain | skill | one-minute orientation |
 | absol-feedback | skill | log problems with absol itself → `feedback/YYYYMMDD-NNN-title.md` |
-| absol-newproject / absol-migrate / absol-docs | skills | scaffold / schema upgrades / docs hub |
+| absol-newproject / absol-migrate / absol-docs | skills | scaffold / schema upgrades / legacy docs tooling; owner reference: [knowledge_base/absol](../../knowledge_base/absol/docs/index.html) |
 
 Agents carry no pinned models — they inherit the session (pin only where a cheap model is a
 deliberate choice). Event records carry roles (`worker: executor`), never model names. Every
@@ -84,7 +84,7 @@ land on items as `open:`, and the next session's banner surfaces everything.
 my-app/
 ├── CLAUDE.md            brief, stack, ## Pipeline Commands, ## Shipping & Git   user-owned
 ├── state.md             snapshot: Last Session, Open Threads               finalizer-owned
-├── docs/                hosted/working docs (hub-registered HTML)
+├── docs/                working/published docs (ArcticTern-discovered HTML or Markdown; no registry)
 ├── references/          source material the project consumes (PDFs, corpora, study mds)
 └── .absol/
     ├── CONTEXT.md  adr/                        knowledge (shaper/architect grown)
