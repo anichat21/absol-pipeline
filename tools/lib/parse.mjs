@@ -178,7 +178,7 @@ export function parseRun(text) {
 const ARCHIVE_RUN_ID_RE = /\b((?:RUN|SCR)-(\d{4}-\d{2}-\d{2})(?:-[A-Za-z0-9]+)*)\b/;
 const ARCHIVE_DATE_RE = /\b(\d{4}-\d{2}-\d{2})\b/;
 const ARCHIVE_EFFORT_RE = /(?:^|[·,]\s*|\s)([~≥]?\s*\d+\s*(?:h(?:\s*\d+\s*(?:m|min))?|m|min))(?:\s+wall)?(?=\s|$|[·,)])/i;
-const ARCHIVE_TOKEN_RE = /(?:^|[·,]\s*|\s)([≥]?\s*\d+(?:\.\d+)?)\s*([KM]?)\s*tok(?:ens?)?\b/i;
+const ARCHIVE_TOKEN_RE = /(?:^|[·,]\s*|\s)([~≥]?\s*\d+(?:\.\d+)?)\s*([KM]?)\s*tok(?:ens?)?\b/i;
 
 function archiveDurationMinutes(label) {
   if (!label) return null;
@@ -193,7 +193,7 @@ function archiveTokenCount(text) {
   if (!match) return null;
   const multiplier = match[2].toUpperCase() === 'M' ? 1_000_000
     : match[2].toUpperCase() === 'K' ? 1_000 : 1;
-  return Math.round(Number(match[1].replace(/\s/g, '').replace('≥', '')) * multiplier);
+  return Math.round(Number(match[1].replace(/\s/g, '').replace(/[~≥]/, '')) * multiplier);
 }
 
 function archiveCounts(text) {
