@@ -173,6 +173,112 @@ export function parseRun(text) {
   return { runId, header, events: entries, stray, lines };
 }
 
+// --- monthly run archives ---
+
+const ARCHIVE_RUN_ID_RE = /\b((?:RUN|SCR)-(\d{4}-\d{2}-\d{2})(?:-[A-Za-z0-9]+)*)\b/;
+const ARCHIVE_DATE_RE = /\b(\d{4}-\d{2}-\d{2})\b/;
+const ARCHIVE_EFFORT_RE = /(?:^|[·,]\s*|\s)([~≥]?\s*\d+\s*(?:h(?:\s*\d+\s*(?:m|min))?|m|min))(?:\s+wall)?(?=\s|$|[·,)])/i;
+const ARCHIVE_TOKEN_RE = /(?:^|[·,]\s*|\s)([≥]?\s*\d+(?:\.\d+)?)\s*([KM]?)\s*tok(?:ens?)?\b/i;
+
+function archiveDurationMinutes(label) {
+  if (!label) return null;
+  const hours = label.match(/(\d+)\s*h/i);
+  const minutes = label.match(/(\d+)\s*(?:m|min)\b/i);
+  if (!hours && !minutes) return null;
+  return (hours ? Number(hours[1]) * 60 : 0) + (minutes ? Number(minutes[1]) : 0);
+}
+
+function archiveTokenCount(text) {
+  const match = text.match(ARCHIVE_TOKEN_RE);
+  if (!match) return null;
+  const multiplier = match[2].toUpperCase() === 'M' ? 1_000_000
+    : match[2].toUpperCase() === 'K' ? 1_000 : 1;
+  return Math.round(Number(match[1].replace(/\s/g, '').replace('≥', '')) * multiplier);
+}
+
+function archiveCounts(text) {
+  const done = text.match(/\b(\d+)\s+done\b/i);
+  const failed = text.match(/\b(\d+)\s+failed\b/i);
+  return {
+    doneCount: done ? Number(done[1]) : null,
+    failedCount: failed ? Number(failed[1]) : null,
+  };
+}
+
+// Parses only ID-bearing level-two headings. Non-ID level-two headings belong to
+// the current run's prose; legacy per-run files with only Tasks/Notable headings
+// therefore correctly produce no entries.
+export function parseMonthlyArchive(text) {
+  const lines = text.split(/\r?\n/);
+  const runs = [];
+  let current = null;
+
+  const close = () => {
+    if (!current) return;
+    const heading = current.heading;
+    const bodyLines = current.body;
+    const legacyMetaIndex = bodyLines.findIndex((line) => (
+      /^\s*\*—\s*\d{4}-\d{2}-\d{2}(?:\s*→\s*\d{4}-\d{2}-\d{2})?\s+\([^)]+\)\*\s*$/.test(line)
+    ));
+    const legacyMeta = legacyMetaIndex === -1 ? null : bodyLines[legacyMetaIndex];
+    const bodySummary = bodyLines.find((line) => /\b\d+\s+done\b/i.test(line)) || '';
+    const remainder = heading.slice(heading.match(ARCHIVE_RUN_ID_RE).index
+      + heading.match(ARCHIVE_RUN_ID_RE)[0].length);
+
+    let mode = null;
+    const dotParts = remainder.split('·').map((part) => part.trim()).filter(Boolean);
+    if (dotParts.length && !ARCHIVE_DATE_RE.test(dotParts[0])) mode = dotParts[0];
+    const dashMode = remainder.match(/—\s*\d{4}-\d{2}-\d{2}(?:\s*→\s*\d{4}-\d{2}-\d{2})?\s+\(([^)]+)\)/);
+    if (!mode && dashMode) mode = dashMode[1].trim();
+    const legacyMode = legacyMeta?.match(/\(([^)]+)\)/);
+    if (!mode && legacyMode) mode = legacyMode[1].trim();
+
+    const explicitDate = remainder.match(ARCHIVE_DATE_RE)?.[1]
+      || legacyMeta?.match(ARCHIVE_DATE_RE)?.[1];
+    const headingCounts = archiveCounts(heading);
+    const bodyCounts = archiveCounts(bodySummary);
+    const effortMatch = heading.match(ARCHIVE_EFFORT_RE)
+      || bodySummary.match(ARCHIVE_EFFORT_RE);
+    const effort = effortMatch ? effortMatch[1].trim() : null;
+    const tokenCount = archiveTokenCount(heading) ?? archiveTokenCount(bodySummary);
+    const outcome = bodyLines
+      .filter((_line, index) => index !== legacyMetaIndex)
+      .join('\n')
+      .trim();
+
+    runs.push({
+      id: current.idMatch[1],
+      mode,
+      date: explicitDate || current.idMatch[2],
+      doneCount: headingCounts.doneCount ?? bodyCounts.doneCount,
+      failedCount: headingCounts.failedCount ?? bodyCounts.failedCount,
+      durationMinutes: archiveDurationMinutes(effort),
+      tokenCount,
+      effort,
+      crashed: /\bCrashed:\s*yes\b/i.test(heading),
+      outcome,
+    });
+    current = null;
+  };
+
+  for (const line of lines) {
+    if (/^\s*---+\s*$/.test(line)) {
+      close();
+      continue;
+    }
+    const heading = line.match(/^##\s+(.+?)\s*$/);
+    const idMatch = heading?.[1].match(ARCHIVE_RUN_ID_RE);
+    if (idMatch) {
+      close();
+      current = { heading: heading[1], idMatch, body: [] };
+      continue;
+    }
+    if (current) current.body.push(line);
+  }
+  close();
+  return runs;
+}
+
 // --- portfolio ---
 
 export function parsePortfolio(text) {
