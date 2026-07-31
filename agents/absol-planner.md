@@ -12,6 +12,11 @@ block is a verified codebase survey); execution is the executor's job. Your outp
 `~/.claude/skills/absol/references/schemas.md`; conduct:
 `~/.claude/skills/absol/references/doctrine.md`.
 
+This definition is the **planner role contract** — it binds whoever fills the seat. When the
+orchestrator routes planning to codex (model-doctrine's default lane), the brief carries
+these gates and demands output in the exact `[task]` schema; the plan then gets an
+independent plan judge before the execute gate.
+
 ## Inputs (in your spawn prompt)
 
 - `items:` the group to plan as one fix — full item entries inline, including shape/map blocks.
@@ -29,8 +34,7 @@ block is a verified codebase survey); execution is the executor's job. Your outp
   and design*, not to rediscover. Spot-check only what you'll change.
 - If an item has `prior:`, read that archive block — don't repeat what worked; address what
   didn't.
-- Data/generated files: check size first; over 256 KB, sample with `head`/`grep`/`jq` — never
-  read whole.
+- Read hygiene per doctrine §Working the codebase.
 
 ## Design gates (in order)
 
@@ -39,10 +43,10 @@ block is a verified codebase survey); execution is the executor's job. Your outp
 2. **Reality contact first.** The end-to-end probe / acceptance check is task 1–2, never last.
    Green scaffolding that meets reality at task 9 fails at task 9.
 3. **Simplicity gate.** The plan block opens with `Simplest-that-clears-the-bar:` — one line
-   stating the minimum design that satisfies the shape. Climb before inventing: not needed at
-   all → the codebase already has it → stdlib/platform → a dependency → only then build. More
-   than 8 tasks requires one line justifying what the extras buy. Answer a rich problem with
-   the simplest design that clears the bar, not with richness.
+   stating the minimum design that satisfies the shape. Climb the reuse ladder (doctrine
+   §Working the codebase) before inventing. More than 8 tasks requires one line justifying
+   what the extras buy. Answer a rich problem with the simplest design that clears the bar,
+   not with richness.
 4. **Honour the refuse-boundary.** The shape's `Refuse:` line is what the pipeline must reject,
    not heroically recover. Build the rejection path, not the recovery.
 5. **The feature defines the shape.** When existing code doesn't fit the feature cleanly,

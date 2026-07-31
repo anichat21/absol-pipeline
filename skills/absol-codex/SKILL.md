@@ -5,17 +5,18 @@ description: Delegate work to OpenAI Codex CLI (GPT, $0 marginal on the ChatGPT 
 
 # absol-codex
 
+Interface layer only: how to invoke codex, keep it safe, and compile a brief for it. *When*
+codex is the right pick — roles, tiers, calibration evidence — lives in the model doctrine
+(`/mnt/nas/dev/projects/absol/meta/model-doctrine.md`); role definitions (planner gates,
+executor rules, reviewer checks) bind whoever fills the seat and live in `agents/`.
+
 Shells out to `codex exec` (non-interactive). Auth is the ChatGPT $20 subscription — no API
 billing possible, quota is Plus-tier rolling windows, and it does **not** drain the Claude
-usage window. Evidence for *when* GPT is the right pick lives in the absol model doctrine
-(`/mnt/nas/dev/projects/absol/meta/model-doctrine.md`); this skill owns the *how*.
+usage window. The model is a frontier-class near-peer: treat it as a competent agent working
+directly in the real checkout; safety is git's commit gate, not containment choreography
+(evidence and the one counter-incident: model-doctrine).
 
-Codex runs `gpt-5.6-sol` — a frontier-class near-peer, treated as a competent agent, not a
-caged junior. It works directly in the real checkout; safety is git's commit gate, not
-containment choreography. (Worktree + symlink + merge ceremony destroyed irreplaceable data
-once, orchestrator-side: `meta/incident-2026-07-20-husk-data-loss.md`.)
-
-## The system — three rules
+## The safety contract — three rules
 
 1. **Codex reads the project docs itself.** Each project carries a committed one-line
    `AGENTS.md` (codex auto-ingests it): *"Read `CLAUDE.md` before working — it is binding
@@ -27,59 +28,50 @@ once, orchestrator-side: `meta/incident-2026-07-20-husk-data-loss.md`.)
 3. **Codex edits, absol gits.** The AGENTS.md line forbids codex git; orchestrator git is
    nothing but `status` / `diff` / `commit`.
 
-Read-only asks (opinions, reviews, planning) need none of this — just prompt it. For a
+Read-only asks (opinions, reviews, planning) need none of this — just prompt it, and
+parallelize freely as background calls; **writers stay serial per checkout**. For a
 read-source/write-elsewhere shape, set cwd to a scratch dir and state "the repo is
-READ-ONLY, I will diff it" — held byte-identical at 4K-line scale (artemis, 2026-07-20).
+READ-ONLY, I will diff it". The gate covers *tracked* files only; write targets outside any
+gate (non-repo paths, deliberately-ignored files) get a tar backup first — that's the
+rollback there.
 
-The gate covers *tracked* files only; the workspace hoard convention (dev workspace
-`CLAUDE.md`) guarantees that's everything valuable — gitignore hides regenerable junk only.
-Some write targets sit outside any gate regardless (non-repo paths like `knowledge_base/`,
-repos that deliberately ignore their docs): tar-backup those files before codex writes —
-the backup is the rollback there.
+## Brief compilation — codex is one-shot
 
-## What to send it, and how to brief it
+No follow-up questions, no live steering: the brief must be complete when it leaves. Compile
+every brief against this checklist:
 
-Codex is the volume lane — execution batches, review passes, bulk reading; judgment and
-gates (shaping, plan approval, commits) stay with Claude. Quota is generous: treat it as
-free parallel power, not a scarce fallback. Calibration evidence lives in the model doctrine.
-
-- **Brief it like a respected peer**: goal, acceptance criteria, constraints/refuse-lines —
-  never a step-by-step how. The validated runs won *because* codex planned its own path
-  (caught ADR contradictions, self-scoped work the brief didn't ask for).
-- **Flag-don't-force is part of every brief**: "if a listed item looks wrong after reading,
-  flag it with a citation instead of forcing the edit." A refusal is a review event —
-  adjudicate it before overriding; the one exercised refusal (2026-07-25) was correct and
-  beat both the upstream reader and the orchestrator's spot-check.
-- **Improvise freely inside the app's API surface.** Storage-layer writes on live data are a
-  flagged blocker back to the orchestrator — if cleanup fails, report it rather than touching
-  the datastore directly (huntrx RUN-2026-07-26: codex wrote fixture cleanup straight to the
-  live SQLite DB when a DELETE endpoint 500'd).
-- **Brief hazards inline.** Codex under-weights artifacts the brief only references — a
-  hazard flagged in a linked map file was acted on only once restated in the brief body
-  (husk RUN-2026-07-17-4). Binding constraints, refuse-lines, and vocabulary go in the
-  prompt text; file references are background only.
-- **Effort split (validated)**: plan at `high`, execute at `medium` — a well-briefed
-  executor doesn't need high.
-- **Reading is sanctioned** (owner call, 2026-07-25; tier calibration via the docs-hub race).
-  Read-only calls carry no commit gate — parallelize freely as background `ask.sh` calls.
-  Writers stay serial on the one checkout.
-- **Second opinions / plan review** — free adversary before the execute gate.
-- **Bulk ports: go two-phase** — framework/contract first, volume second, with "tell me if
-  the contract breaks" standing; the phase-1 diff is what makes the architecture claim
-  verifiable (LVGL→HTML port, 2026-07-20: 1,198 lines added phase 2, 4 changed).
+- **Goal, acceptance criteria, constraints — never a step-by-step how.** The role
+  definition's gates (planner/executor/reviewer) travel in the brief when codex fills that
+  seat; for planners, demand output in the exact `[task]` schema so transcription is
+  mechanical.
+- **Hazards, refuse-lines, and vocabulary go in the prompt body.** Codex under-weights
+  artifacts the brief only references — a linked map file is background, not instruction.
+- **Flag-don't-force, in every brief**: "if a listed item looks wrong after reading, flag it
+  with a citation instead of forcing the edit." A refusal is a review event — adjudicate
+  before overriding.
+- **State environment reality.** Name what's already there — "Playwright Chromium is at
+  `~/.cache/ms-playwright`, drive it"; ports, running servers, fixtures — or the worker
+  probes, gives up, and hides the gap behind weaker assertions.
+- **Boundary**: improvise freely inside the app's API surface; storage-layer writes on live
+  data are a flagged blocker back to the orchestrator, never a workaround.
+- **Effort**: plan/judge/review `high`, execute `medium` (pass `-e medium` — the wrapper
+  defaults to `high`).
 
 ## Invocation
 
 Preferred — the wrapper (bakes the traps, prints only the final message):
 
 ```bash
-~/.claude/skills/absol-codex/scripts/ask.sh [-m MODEL] [-e EFFORT] [-C DIR] [-s SCHEMA.json] [-t SECS] "prompt"
+~/.claude/skills/absol-codex/scripts/ask.sh [-m MODEL] [-e EFFORT] [-C DIR] [-s SCHEMA.json] [-t SECS] [-b] "prompt"
 ```
 
-Defaults: `gpt-5.6-sol`, effort `high`, cwd, 900s timeout. For project work pass
-`-C <project root>` so `AGENTS.md` is picked up. Output is the final agent message only —
-progress/reasoning noise never reaches the caller's context. Non-zero exit prints the log
-tail to stderr.
+Defaults: `gpt-5.6-sol`, effort `high`, cwd, 540s timeout. For project work pass
+`-C <project root>` so `AGENTS.md` is picked up. The wrapper starts codex detached and
+prints `pid/out/log` paths to stderr up front, so a killed wrapper never orphans a hidden
+run — on timeout it leaves codex running and tells you where to collect. Output is the final
+agent message only. **Anything execution-sized runs `-b` (background: print paths, exit) or
+inside a `run_in_background` Bash call** — the harness caps foreground Bash at 600s; never
+raise `-t` past it in the foreground.
 
 Raw incantation, when the wrapper doesn't fit:
 
@@ -98,17 +90,19 @@ codex exec --skip-git-repo-check --sandbox danger-full-access \
 
 ## Models & sessions
 
-- Available on this plan: `gpt-5.6-sol` (flagship, quality pick), `gpt-5.6-terra` (lower-cost
-  tier, verified 2026-07-25), `gpt-5.5` (config default; superseded — prefer the 5.6 tiers).
-  Bare `gpt-5.6` / `gpt-5.6-codex` are rejected server-side.
+- Available on this plan: `gpt-5.6-sol` (flagship), `gpt-5.6-terra` (lower-cost tier),
+  `gpt-5.5` (config default; superseded — prefer the 5.6 tiers). Bare `gpt-5.6` /
+  `gpt-5.6-codex` are rejected server-side. Which tier fits which role: model-doctrine.
 - Multi-turn: `codex exec … resume --last` (or `resume <id>`) — every exec-level flag goes
-  **before** `resume`, e.g.
-  `codex exec --skip-git-repo-check --sandbox danger-full-access -m gpt-5.6-sol -C <dir> -o <out> resume --last "<prompt>"`;
-  flags after `resume` error out. Chunk long work into checkpointed execs — there's no live
-  steering. `--ephemeral` kills resumability.
+  **before** `resume`; flags after it error out. Chunk long work into checkpointed execs —
+  there's no live steering. `--ephemeral` kills resumability.
 
 ## Traps
 
+- **Wedge detection**: rollout file (`~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`) mtime
+  stale ≥5 min AND no child process under the codex pid = wedged (it can poll a dead
+  internal shell session forever). Kill the pid and salvage — **the tree, not the wrapper
+  output, is the source of truth for completed work.**
 - Global flags (`-a/--ask-for-approval`, `--search`) go **before** `exec`, not after.
 - A positional prompt makes piped stdin ignored; to feed stdin as the prompt use `codex exec -`.
 - Outside a git repo, `--skip-git-repo-check` is required or codex refuses to run.
@@ -116,6 +110,6 @@ codex exec --skip-git-repo-check --sandbox danger-full-access \
   writes outside its `-C` dir as a matter of course; don't treat `-C` as containment.
 - No quota-query surface — on rate-limit errors, back off; GPT quota exhaustion is not a
   Claude problem, just report it.
-- Token accounting: per-run usage lives in `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`
-  (`token_count` events; last one carries the totals — read cached vs uncached input apart,
-  the cached bulk is nearly free). Match runs to lanes by start timestamp.
+- Token accounting: per-run usage lives in the rollout files (`token_count` events; the last
+  one carries totals — read cached vs uncached input apart, the cached bulk is nearly free).
+  Match runs to lanes by start timestamp.

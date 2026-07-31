@@ -32,7 +32,10 @@ skip this step and continue cleanup — you're resuming a partial finalize.
 
 Ledger writes here — item deletion, partial edits, VERIFY appends — go through the toolset
 (`remove`, `update`, `add`); archive blocks (§2) and state.md (§5) stay prose writes. Hand-edits
-remain legal but must pass `lint` (schemas.md §The toolset).
+remain legal but must pass `lint` (schemas.md §The toolset). **Mint before prose**: when a
+write both allocates an ID and mentions it elsewhere (a VERIFY item named in the archive
+block), call `add` first and write the prose with the ID it returns — drafting a future ID
+burns it.
 
 Per item in the run:
 

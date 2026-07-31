@@ -31,8 +31,7 @@ ripple is exactly what a single context misses. Readers are read-only (no Edit/W
 worktrees). Audit-grade maps: add a codex-sol reader in parallel (free pool; per the model
 doctrine it finds semantic defects Claude readers miss — union the results). **Embed the items as a literal `const` in the script** — the Workflow `args`
 field does not reach the script in this environment (see workspace CLAUDE.md). Give every
-reader the read-hygiene rule: check file size first; over 256 KB, sample with
-`head`/`grep`/`jq`, never read whole.
+reader the read-hygiene rule verbatim in its prompt (doctrine §Working the codebase).
 
 ```js
 export const meta = { name: 'absol-research', description: 'Map blast radius', phases: [{title:'Map'},{title:'Trace'}] }

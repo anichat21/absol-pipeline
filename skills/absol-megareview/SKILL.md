@@ -36,10 +36,9 @@ Measure first: `git ls-files '*.<ext>' | xargs wc -l` (or equivalent) on the sou
 
 Dispatch one workflow shaped by the size rule above. Constraints that are
 not optional: **embed the file list / dimensions as literal consts** (Workflow `args` doesn't
-reach the script here — workspace CLAUDE.md); every agent gets the read-hygiene rule (*check
-size first; >256 KB → sample with `head`/`grep`/`jq`, never read whole*); finders are
-read-only; **never run the project's build/tests uncapped** — aidev OOM-freezes (workspace
-compute rules; use the project's capped commands only).
+reach the script here — workspace CLAUDE.md); every agent gets the read-hygiene rule verbatim
+in its prompt (doctrine §Working the codebase); finders are read-only; **never run the
+project's build/tests uncapped** — aidev OOM-freezes (use the project's capped commands only).
 
 Finder dimensions — the coverage checklist (one agent each on large repos; fold into fewer
 passes on small ones):
@@ -71,17 +70,14 @@ per finding, and a suggested order. Scannable — a future planner will read thi
 
 ## The ledger pointer
 
-Append one item to `.absol/inbox.md`:
+Append one item to `.absol/inbox.md` via the toolset's `add` — **it allocates the ID; never
+draft text naming a future ID** (mint-before-prose, schemas.md). Fields:
 
 ```
-- [item] INBOX-NNN
-  - title: megareview {date} — {n} verified findings ({n} high)
-  - type: ARCH · priority: by top severity · subsystem: cross-cutting
-  - description: Report at .absol/reviews/{date}-megareview.md. Top: <three one-liners>.
+title: megareview {date} — {n} verified findings ({n} high)
+type: ARCH · priority: by top severity · subsystem: cross-cutting
+description: Report at .absol/reviews/{date}-megareview.md. Top: <three one-liners>.
 ```
-
-Append via the toolset (`add`) — schemas.md §The toolset; hand-edits remain legal but must
-pass `lint`.
 
 The gate takes it from there — shaping selects which findings to act on; the report is the map.
 

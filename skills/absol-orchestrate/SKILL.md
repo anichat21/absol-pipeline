@@ -12,13 +12,15 @@ inline and the close-out sweep (Step 5) — mid-run you stay on plan, collecting
 for the sweep.
 
 Inputs from `/absol`: `project_path`, `items:` (ledger item IDs), `afk: yes|no`, and
-optionally `planner_model:` (front-door-approved upgrade — pass it to every planner spawn;
-default Opus).
+optionally `planner_model:` (front-door-approved override — pass it to every planner spawn;
+the default lane is model-doctrine's).
 
-**Lanes:** judgment and gates (shaping, plan approval, commits) stay here; volume work —
-mechanical execution batches, whole-diff review, bulk reading — routes to codex by default
-(`absol-codex` owns the how, `meta/model-doctrine.md` the evidence). Report the routing in
-one line; don't ask.
+**Lanes** (`meta/model-doctrine.md` owns routing; `absol-codex` the how): judgment and gates
+(shaping, plan approval, adjudication, commits) stay here; volume work — execution batches,
+whole-diff review, bulk reading, plan drafts — routes to codex by default. Report the
+routing in one line; don't ask. The agent definitions (`agents/absol-*.md`) are role
+contracts — they bind whoever fills the seat, so a codex brief for a seat carries that
+definition's gates and output shape.
 
 If `.absol/run.md` already exists, recovery is `/absol`'s job — refuse and point there.
 
@@ -73,11 +75,8 @@ Walk all primed items' tasks by `execution_order`, dependencies first. Per task:
 
 **Retry loop — re-aim, don't patch.** On `verification_result: fail` or `task-failed`: count
 this task's `task-retry` events. If < 2, spawn `absol-planner` **in retry mode** (its
-definition has the protocol): it must answer *"is this the right way?"* before touching the
-task — a mechanical slip gets an amendment; a wrong approach gets a redesigned task or a
-`blocked` verdict with the smell named. An amendment that layers a workaround on the previous
-attempt is forbidden — that's the rabbit hole. Append `task-retry` with the amendment (or
-re-aim), re-execute. At 2 the patching stops, period:
+definition owns the diagnosis protocol). Append `task-retry` with the amendment (or re-aim),
+re-execute. At 2 the patching stops, period:
 - append a final `task-failed` event carrying a one-line `smell:` composed from the retry
   trail — what kept failing and what that pattern points at (event-folding takes the latest,
   and the finalizer copies it onto the item, so the next attempt starts from the diagnosis).
@@ -89,13 +88,14 @@ re-aim), re-execute. At 2 the patching stops, period:
 
 ## Step 4 — Review
 
-Collect tasks with `review_flag: yes` or `task-failed`. None → skip. Spawn `absol-reviewer`
-with the task entries + their completion events inline (batch related tasks).
+Collect tasks with `review_flag: yes` or `task-failed`. None → skip the per-task pass. Spawn
+`absol-reviewer` with the task entries + their completion events inline (batch related tasks).
 
-**Items that ran as multiple tasks additionally get one item-scope review** — the whole diff,
-pre-run commit → tree (name the commit in the prompt) — regardless of flags: serial executors
-each pass their own acceptance while the seams between tasks drift; per-task review is scoped
-blind to that. Seam findings enter the same retry loop.
+**Every run that changed code ends with one whole-diff seam review** — pre-run commit → tree
+(name the commit in the prompt), regardless of flags (owner ruling 2026-07-31: near-essential;
+route per model-doctrine — codex by default). Serial executors each pass their own acceptance
+while the seams between tasks drift; per-task review is scoped blind to that. Seam findings
+enter the same retry loop.
 
 - `fix-required` → re-enters the retry loop with the `fix_request` (shared cap of 2 retries
   per task, verification + review combined). Exhausted → same attended/afk fork as above.
@@ -135,4 +135,4 @@ banner surfaces all of it.
   run.md events; the finalizer does all fold-back).
 - Unattended means unattended: in afk mode nothing blocks on a question — every fork has the
   logged default above.
-- Data/generated files: check size first; over 256 KB, sample with `head`/`grep`/`jq`.
+- Read hygiene per doctrine §Working the codebase.

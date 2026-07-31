@@ -26,6 +26,8 @@ the reader is who they serve.
 
 ## Production
 
-ArcticTern has been the production face since 2026-07-28 and discovers entries from the
-filesystem. Homer was sunset on 2026-07-27; absol-docs' registry editing and compose-mount
-machinery is legacy and must not be extended.
+Homer was sunset 2026-07-27; ArcticTern has been the production face since, discovering
+entries from the filesystem. The shared assets behind `/docs/_assets/` (css/js/templates,
+per-project themes) are served from `projects/absol/skills/absol-docs/assets/` — a legacy
+path ArcticTern's server.mjs pins; the absol-docs skill itself is retired. Theme swap = point
+the page at a different `css/themes/*.css` there.

@@ -48,7 +48,9 @@ a scribe. Drafts bind nothing until ratified — back-and-forth on them is cheap
      ADRs informing) per `~/.claude/skills/absol/references/schemas.md`. The gate's shape
      check is already satisfied — the next run maps, plans, and executes it.
    - **Rejected with a load-bearing reason** → ADR (the durable record); nothing in the ledger.
-   - **Parked** → nothing written; it'll resurface next pass.
+   - **Deferred** → a candidate not yet in the ledger gets nothing written (it resurfaces
+     next pass); an existing ledger item the owner defers gets `tags: parked` (quiet lane,
+     via the toolset), same as everywhere.
 6. **Existing debt review**: walk top tech-debt items by priority; each resolves the same
    three ways (shape it / ADR-accept it and delete the item / leave it).
 

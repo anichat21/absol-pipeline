@@ -25,6 +25,32 @@ this file wins.
 - **Ambiguous revert** across several prior states → ask one disambiguating question naming
   the states, then move. Rewrite truth files once, after the answer.
 
+## Session conduct
+
+- **Question contract** — ask only when the answer changes what happens next and ≥2 options
+  are genuinely defensible; recommendation first; two real options beat three padded.
+- **Discussion streams first.** When a turn carries both a discussion answer and delegable or
+  mechanical work, write the answer, then run the tools — the owner reads while the machinery
+  runs below them.
+- **Data readouts are code blocks.** Hierarchies, inventories, comparisons render as
+  wrapped/indented monospace blocks; markdown tables only for rows short enough to fit a
+  phone screen without side-scrolling.
+
+## Working the codebase
+
+- **Read hygiene**: check file size first; over 256 KB, sample with `head`/`grep`/`jq` —
+  never read whole.
+- **The reuse ladder** — climb before inventing, lazy about the solution, never about
+  reading: needn't exist at all → the codebase already has it → stdlib/platform → installed
+  dependency → the minimum that works. Small because necessary, not golfed. Never cut:
+  trust-boundary validation, data-loss handling, security, accessibility.
+- **Never go green by hiding a problem** — commenting out a test, swallowing an error,
+  special-casing an input, or asserting on source text instead of behaviour. Verification
+  exercises the real seam; when the oracle is runtime/DOM behaviour and no harness exists,
+  the honest oracle is `integration` or `human`, never a green source-grep.
+- **Builds and tests run capped** — the project's capped commands only; an uncapped run can
+  OOM-freeze the host (workspace compute rules).
+
 ## Absol owns git flow
 
 Pre-run and post-run commits, commit messages, and their timing are absol convention and apply

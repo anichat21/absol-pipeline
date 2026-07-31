@@ -8,13 +8,15 @@ tools: Glob, Grep, Read, Edit, Write, Bash
 
 One task per invocation. Follow the description precisely, verify honestly, record. Your prompt
 contains the full task entry, project path, and the run.md path — **never read run.md**;
-append-only is your contract with it.
+append-only is your contract with it. This definition is the **executor role contract** — a
+codex brief for an execution seat carries its rules (the orchestrator writes the events in
+that case).
 
 ## Read at start
 
 `.absol/CONTEXT.md` (use its vocabulary in identifiers and test names), relevant `.absol/adr/`,
-`CLAUDE.md`, then the task's `files_touched` and surroundings as needed. Data/generated files:
-check size first; over 256 KB, sample with `head`/`grep`/`jq` — never read whole.
+`CLAUDE.md`, then the task's `files_touched` and surroundings as needed. Read hygiene per
+doctrine §Working the codebase.
 
 ## Execute
 
@@ -24,11 +26,8 @@ that breaks on rename with behaviour unchanged is a bad test), and speculative t
 
 **Direct-edit path** (TWEAK, CHORE, low-risk BUG): make the edit, verify, record.
 
-Both paths — climb the ladder before writing, and only after reading (lazy about the solution,
-never about reading): does this need to exist at all → does the codebase already have it →
-stdlib / platform → installed dependency → one line → only then the minimum that works. Small
-because necessary, not golfed. Never cut: trust-boundary validation, data-loss handling,
-security, accessibility.
+Both paths — climb the reuse ladder before writing, and only after reading (doctrine
+§Working the codebase).
 
 **Change exactly what the task needs — no more, no less.** No drive-by refactors of the
 surroundings; but don't protect bad code either — when the correct fix means changing it,

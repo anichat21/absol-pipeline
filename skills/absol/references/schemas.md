@@ -63,10 +63,8 @@ in run.md), never stored.
   - prior: archive/2026-06.md#RUN-…  ← earlier run touched this (optional)
   - open: <question> (YYYY-MM-DD)    ← the question that blocked AFK shaping (optional)
   - smell: <diagnosis> (YYYY-MM-DD)  ← why attempts kept failing — zoom-out, not patch trail (optional)
-  - tags: tuning, rtr, parked        ← optional. tuning = quiet lane: real work, suppressed from
+  - tags: tuning, parked             ← optional. tuning = quiet lane: real work, suppressed from
                                      ←   the banner and default lists; shown on request.
-                                     ←   rtr = owner pre-authorization for unattended execution;
-                                     ←   records the authorization only — readiness stays derived.
                                      ←   parked = owner deferred it: quiet lane, excluded from
                                      ←   type-wide run selections; only an explicit ID runs it
 ```
@@ -74,8 +72,12 @@ in run.md), never stored.
 - Task IDs are namespaced by item (`BUG-014.1`) — no global counter, no allocation races.
 - Item counters are per-file and **never reset**: next = max(every ID trace in `.absol/`,
   the `<!-- counter: N -->` preamble line). The counter line is the allocation floor the
-  toolset's `add` maintains — it keeps IDs monotonic even when an item is removed before
-  leaving an archive trace; max() semantics make a stale line harmless.
+  toolset's `add` maintains (created lazily — scaffolds don't need it); it keeps IDs
+  monotonic even when an item is removed before leaving an archive trace; max() semantics
+  make a stale line harmless. **Mint before prose**: `add` first, then write any text that
+  names the ID — drafting "INBOX-071" before `add` returns it burns the number forever.
+- An empty ledger file is its `# <Name> — {Inbox|Bugs|Tech Debt}` header plus `None.` — the
+  placeholder the parser expects.
 - `type: VERIFY` items are the **smoke ledger** — a reference checklist the user consults so
   nothing gets missed, appended by the finalizer (`title: eyeball <what>`, description says
   what to check and which run built it). The front door deletes one when the user confirms the
@@ -96,8 +98,11 @@ in run.md), never stored.
   just those tasks at launch.
 - **verify_oracle** — who can judge correctness. `unit`: the suite settles it. `integration`:
   a runtime probe must exercise the real seam and assert the real result — string-inspecting
-  generated output is never enough. `human`: only a person can judge (visual/audio/device
-  feel); the run records it as an owed VERIFY item, never as silently done.
+  generated output, or asserting on source text, is never enough. `human`: only a person can
+  judge (visual/audio/device feel); the run records it as an owed VERIFY item, never as
+  silently done. When the oracle is runtime/DOM behaviour and the project has no harness,
+  the honest oracle is `integration` or `human` — a plan that tags it `unit` ships green
+  source-greps over a dead feature (doctrine).
 - **executor_tier** — `micro`: single-file, low-risk, unambiguous → orchestrator edits inline.
   `full` → executor agent.
 
@@ -239,7 +244,7 @@ don't share a fix.)
 
 - Item is **planned** ⇔ its ID appears in a plan block (own or a lead's `covers:`).
 - Item is **primed** ⇔ shaped (or trivially unambiguous) + has a fresh plan.
-- Item is **ready** (the night-run pickup set) ⇔ tagged `rtr` AND primed.
+- Item is **ready** (runnable without gate work) ⇔ primed AND not tagged `parked`.
 - Banner counts exclude `tags: tuning` and `tags: parked` items and enumerate no VERIFY items —
   quiet lanes show as counts only, listed on request.
 - Run **live** ⇔ run.md exists and mtime < 15 min. **Paused** ⇔ last event is `pause`.

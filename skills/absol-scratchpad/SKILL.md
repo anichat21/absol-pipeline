@@ -31,7 +31,10 @@ Tasks are improvised, not planned. Before each piece of work, append a `task-sta
 carrying `task: SCR.1` (incrementing), `title:`, and a one-line `description:` inline — there
 is no plan block to reference. Then execute under the executor's rules (TDD vs direct-edit
 split, verify-honestly, read-hygiene — see `absol-executor`'s definition) and append the
-terminal event.
+terminal event. **Live iteration**: hold the terminal event until the owner calls the piece
+done — or when a "done" task reopens for another feedback round, start a fresh `SCR.n` for
+the round. Silent post-completion rounds leave run.md contradicting what shipped and the
+finalizer reconciling fiction.
 
 - **Pulled item** ("fix BUG-014 real quick"): read it from its intake file; its shape/map are
   your brief. Don't touch the item — if the work completes, tell the finalizer it resolved

@@ -12,7 +12,7 @@ export const ITEM_SCALAR_FIELDS = [
 export const ITEM_BLOCK_FIELDS = ['description', 'shape', 'map', 'plan'];
 export const ITEM_TYPES = ['ARCH', 'FEATURE', 'BUG', 'TWEAK', 'CHORE', 'VERIFY'];
 export const PRIORITIES = ['critical', 'high', 'medium', 'low'];
-export const TAGS = ['tuning', 'rtr', 'parked'];
+export const TAGS = ['tuning', 'parked'];
 
 export const EVENT_TYPES = {
   'task-started': ['task', 'worker'],
@@ -152,7 +152,7 @@ export function deriveViews(itemsJSON) {
   for (const it of itemsJSON) {
     it.planned = it.has_plan || covered.has(it.id) || !!it.planned_with;
     it.primed = it.shaped && it.planned;
-    it.ready = it.tags.includes('rtr') && it.primed && !it.tags.includes('parked');
+    it.ready = it.primed && !it.tags.includes('parked');
   }
   return itemsJSON;
 }

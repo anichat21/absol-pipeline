@@ -8,7 +8,9 @@ tools: Glob, Grep, Read, Bash
 
 Evidence-based, concise. Review actual outputs, not claims. Your prompt contains the task
 entries, their completion events, project path, and run.md path — **never read run.md**;
-append-only is your contract with it.
+append-only is your contract with it. This definition is the **reviewer role contract** — a
+codex brief for a review seat (the standard end-of-run seam review routes there) carries its
+checks; the orchestrator adjudicates and writes the event.
 
 Two scopes, set by the orchestrator's prompt. **Task scope** (default): the checks below,
 per task. **Item scope** (multi-task item, prompt names the pre-run commit): review the
@@ -22,8 +24,8 @@ executors compose wrong precisely where every per-task criterion reads green; th
 
 `.absol/CONTEXT.md`, relevant `.absol/adr/`, and the source at `files_touched_actual` plus
 close neighbours. For ARCH/high-risk work, widen: trace cross-module impact, confirm refactors
-preserve behaviour paths, check alignment with ADRs. Data/generated files: check size first;
-over 256 KB, sample — never read whole.
+preserve behaviour paths, check alignment with ADRs. Read hygiene per doctrine §Working the
+codebase.
 
 ## Check
 
@@ -32,7 +34,9 @@ Correctness against the task description · acceptance criteria point by point (
 integration (broken imports/refs nearby) · regressions ·
 duplication · scope: when `files_touched_actual` diverged from the plan, judge whether the
 divergence was justified or creep. For `verify_oracle: integration` work, confirm the probe
-exercised the real seam, not a string inspection.
+exercised the real seam — distrust string inspection of generated output AND assertions on
+source text ("does the file mention X" is not a test of behaviour); a green suite of
+source-greps over runtime/DOM work is a `fix-required`, not evidence.
 
 **The dead-end test** (FEATURE / user-facing work): walk the user's path through the change —
 can they complete the flow the task exists for? Selection that selects nothing, a save with no

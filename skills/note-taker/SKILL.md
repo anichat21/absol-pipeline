@@ -26,8 +26,8 @@ Find the project by walking up from cwd to `.absol/`; if none within 5 levels, a
 
 ## Capture (new item)
 
-Append an `[item]` with title, type, priority (default medium), subsystem. **Counters never
-reset**: next ID = max of the file *and* a grep of `archive/`. Lift the surrounding chat
+Append an `[item]` with title, type, priority (default medium), subsystem — `add` allocates
+the ID (schemas.md owns the counter rules). Lift the surrounding chat
 context into the description — *"crash on logout with 0 contacts (found testing the contacts
 refactor)"* beats *"crash on logout"*. Too vague to be useful → one focused follow-up, not a
 questionnaire (that's the shaper's job).

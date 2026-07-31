@@ -34,11 +34,11 @@ skip-and-report ambiguous unshaped items instead of guessing. Plan staleness is 
 
 ## Front door
 
-`/absol <project>` opens a session, recovers crashed/paused runs (one rule: stale `run.md` →
-finalize as crashed), prints a derived banner, and routes: **note-taker** (capturing),
-**scratchpad** (explicit "quick fix"/"let's build it here" — interactive, same event model),
-or a **run** (default for action requests). Scheduling: the front door creates a cron entry
-that fires the same run headless in AFK mode.
+`/absol <project>` opens a session, recovers crashed/paused runs (live/paused/crashed matrix
+in the front door — liveness is run.md's mtime), prints a derived banner, and routes:
+**note-taker** (capturing), **scratchpad** (explicit "quick fix"/"let's build it here" —
+interactive, same event model), or a **run** (default for action requests). Scheduling: the
+front door uses the `schedule` skill to fire the same run headless in AFK mode.
 
 ## Components
 
@@ -58,26 +58,20 @@ that fires the same run headless in AFK mode.
 | absol-scratchpad | skill | interactive mode on the same run/event model |
 | absol-explain | skill | one-minute orientation |
 | absol-feedback | skill | log problems with absol itself → `feedback/YYYYMMDD-NNN-title.md` |
-| absol-codex | skill | delegate volume work to Codex CLI (execution batches, reviews, bulk reads) |
-| absol-newproject / absol-migrate / absol-docs | skills | scaffold / schema upgrades / legacy docs tooling; owner reference: [knowledge_base/absol](../../knowledge_base/absol/docs/index.html) |
+| absol-codex | skill | interface to Codex CLI (safety contract, brief compilation, invocation) — routing lives in `meta/model-doctrine.md` |
+| absol-newproject / absol-migrate | skills | scaffold / schema upgrades; owner reference: [knowledge_base/absol](../../knowledge_base/absol/docs/index.html) |
 
-Agents carry no pinned models — they inherit the session (pin only where a cheap model is a
-deliberate choice). Event records carry roles (`worker: executor`), never model names. Every
-reader follows read hygiene: files over 256 KB are sampled, never read whole.
-
-Build ethos: skip what needn't exist → reuse the codebase → stdlib/platform → dependency → the
-minimum that works — lazy about the solution, never about reading; small because necessary,
-not golfed; trust boundaries, data-loss handling, security, and accessibility never cut.
-Change exactly what the task needs: no drive-by refactors, no protecting bad code, and never
-go green by hiding a problem.
+Agents carry no pinned models — they inherit the session; routing follows
+`meta/model-doctrine.md`. Event records carry roles (`worker: executor`), never model names.
+Build ethos and conduct (reuse ladder, read hygiene, honest verification, question contract)
+live in `skills/absol/references/doctrine.md` and bind every component.
 
 Pipeline runs are bracketed by commits when the project has git: `absol: pre-run {run_id}
 snapshot` before execution (the rollback anchor) and `absol: {run_id} — n done, n failed` at
-finalize. absol never pushes. Failed tasks re-aim instead of patching: retry 1 forces a
-mechanical-slip vs wrong-approach diagnosis; retry 2 exhausts into a recorded `smell:` on the
-item — no patch-on-patch, no rabbit holes. AFK runs end the turn completely (prompt-cache TTL
-is ~5 min; a run parked on a question pays a full-context re-read per answer) — open questions
-land on items as `open:`, and the next session's banner surfaces everything.
+finalize. absol never pushes. Failed tasks re-aim instead of patching (the planner's retry
+protocol; two retries, then a recorded `smell:` on the item). Every code-changing run ends
+with a whole-diff seam review. AFK runs end the turn completely — open questions land on
+items as `open:`, and the next session's banner surfaces everything.
 
 ## Project layout
 

@@ -5,7 +5,8 @@ description: Migrates an absol project to the current schema after a release cha
 
 # absol-migrate
 
-Schema current as of 2026-07-27 (toolset introduced; `lint` is the conformance check).
+Schema current as of 2026-07-31 (v2 + toolset; tag vocabulary `tuning`/`parked`; `lint` is
+the conformance check). Post-v2 additions are backward-compatible — no delta needed for them.
 
 Reusable shell; the **Migration delta** below is rewritten by each schema-changing release.
 Pre-flight: the project must be a clean git tree (or the user accepts migrating dirty —
