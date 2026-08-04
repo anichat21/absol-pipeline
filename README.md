@@ -1,5 +1,10 @@
 # absol-pipeline
 
+> **Migrated 2026-08-04, repo frozen.** Absol now lives at
+> [anichat21/Absol](https://github.com/anichat21/Absol) — one repo merging this pipeline with
+> ArcticTern (`skills/` + `cli/` + `arctic-tern/`). This repo is the pre-merge history archive;
+> swept-feedback and sweep-commit records up to the merge live here.
+
 A project workflow for [Claude Code](https://docs.anthropic.com/en/docs/claude-code): ideas go
 in as **ledger items**, work comes out as verified, archived **runs**. The human decides during
 shaping; runs execute unattended (AFK and scheduled runs included).
